@@ -2,41 +2,58 @@ import { DatabaseSchema } from '../types/feedback';
 
 const STORAGE_KEY = 'parents_feedback_data_backup';
 
+function getApiUrl(): string {
+  // Якщо запущено через Vite dev сервер
+  if (typeof window !== 'undefined' && window.location.port === '5173') {
+    return '/api/data';
+  }
+  // На звичайному PHP хостингу
+  return 'api.php';
+}
+
+export function logout(): void {
+  if (typeof window !== 'undefined') {
+    window.location.href = 'index.php?logout=1';
+  }
+}
+
 export async function fetchDatabase(): Promise<DatabaseSchema> {
+  const url = getApiUrl();
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch(url);
+    if (res.status === 401) {
+      logout();
+      throw new Error('Необхідна авторизація');
+    }
     if (res.ok) {
       const data = await res.json();
-      // Зберігаємо локальну резервну копію
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       return data;
     }
   } catch (err) {
-    console.warn('Неможливо отримати дані з /api/data, спроба з локального кешу:', err);
+    console.warn('Неможливо отримати дані з API, спроба з локального кешу:', err);
   }
 
   // Fallback до LocalStorage
-  const cached = localStorage.getItem(STORAGE_KEY);
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      // Якщо в кеші немає кракозябр (символів подвійного кодування UTF-8)
-      const cachedStr = JSON.stringify(parsed);
-      if (!cachedStr.includes('Ð') && !cachedStr.includes('Ñ')) {
-        return parsed;
+  if (typeof window !== 'undefined') {
+    const cached = localStorage.getItem(STORAGE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        const cachedStr = JSON.stringify(parsed);
+        if (!cachedStr.includes('Ð') && !cachedStr.includes('Ñ')) {
+          return parsed;
+        }
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ігноруємо
       }
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ігноруємо
     }
   }
 
-  // Дефолтна структура
+  // Початкова дефолтна структура
   return {
-    classes: [
-      { id: 'cls-6a', name: '6-А' },
-      { id: 'cls-6b', name: '6-Б' }
-    ],
+    classes: [],
     students: [],
     criteria: [
       { id: 'behavior', name: 'Поведінка' },
@@ -52,17 +69,25 @@ export async function fetchDatabase(): Promise<DatabaseSchema> {
 }
 
 export async function saveDatabase(data: DatabaseSchema): Promise<boolean> {
-  // Завжди оновлюємо браузерний бекап
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
 
+  const url = getApiUrl();
   try {
-    const res = await fetch('/api/data', {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(data)
     });
+
+    if (res.status === 401) {
+      logout();
+      return false;
+    }
+
     return res.ok;
   } catch (err) {
     console.error('Помилка збереження на сервері:', err);

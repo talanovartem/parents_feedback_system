@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DatabaseSchema, Student } from './types/feedback';
-import { fetchDatabase, saveDatabase, exportDatabaseToFile } from './services/storage';
+import { fetchDatabase, saveDatabase, exportDatabaseToFile, logout } from './services/storage';
 import { JournalTable } from './components/Journal/JournalTable';
 import { ManageClassesModal } from './components/Modals/ManageClassesModal';
 import { AddStudentModal } from './components/Modals/AddStudentModal';
@@ -20,6 +20,7 @@ import {
   Loader2,
   FolderOpen,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -382,6 +383,17 @@ export const App: React.FC = () => {
                 className="hidden"
               />
             </label>
+
+            <div className="h-4 w-px bg-slate-200 my-auto mx-1" />
+
+            <button
+              onClick={() => logout()}
+              title="Вийти з системи"
+              className="px-3 py-1.5 text-xs font-semibold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-600" />
+              Вийти
+            </button>
           </div>
         </div>
 
