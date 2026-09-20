@@ -85,23 +85,23 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
   const hoveredPoint = hoveredPointIndex !== null ? trendData.points[hoveredPointIndex] : null;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
       {/* Chart Mode Switcher Header */}
-      <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
+      <div className="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
             Візуалізація успішності:
           </span>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-800 p-1 rounded-xl">
+        <div className="flex items-center gap-1 bg-slate-200/70 p-1 rounded-xl">
           <button
             type="button"
             onClick={() => setActiveMode('line')}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
               activeMode === 'line'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white text-indigo-600 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
@@ -113,8 +113,8 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
             onClick={() => setActiveMode('bar')}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
               activeMode === 'bar'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white text-indigo-600 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
@@ -126,8 +126,8 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
             onClick={() => setActiveMode('criteria')}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
               activeMode === 'criteria'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white text-indigo-600 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
@@ -139,8 +139,8 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
             onClick={() => setActiveMode('matrix')}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
               activeMode === 'matrix'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white text-indigo-600 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                           y2={y}
                           stroke="currentColor"
                           strokeDasharray="4,4"
-                          className="text-slate-200 dark:text-slate-700/60"
+                          className="text-slate-200"
                         />
                         <text
                           x={paddingX - 8}
@@ -195,7 +195,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                     <path
                       d={`${pathD} L ${svgLinePoints[svgLinePoints.length - 1].x},${chartHeight - paddingBottom} L ${svgLinePoints[0].x},${chartHeight - paddingBottom} Z`}
                       fill="currentColor"
-                      className="text-indigo-500/10 dark:text-indigo-400/10"
+                      className="text-indigo-500/10"
                     />
                   )}
 
@@ -207,7 +207,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-indigo-600 dark:text-indigo-400"
+                    className="text-indigo-600"
                   />
 
                   {/* Points */}
@@ -227,10 +227,10 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                           r={isHovered ? 6 : 4}
                           className={`transition-all duration-150 ${
                             score >= 10
-                              ? 'fill-emerald-500 stroke-white dark:stroke-slate-900'
+                              ? 'fill-emerald-500 stroke-white'
                               : score < 6
-                              ? 'fill-rose-500 stroke-white dark:stroke-slate-900'
-                              : 'fill-indigo-600 stroke-white dark:stroke-slate-900'
+                              ? 'fill-rose-500 stroke-white'
+                              : 'fill-indigo-600 stroke-white'
                           }`}
                           strokeWidth={2}
                         />
@@ -249,7 +249,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
 
                 {/* Floating Tooltip */}
                 {hoveredPoint && (
-                  <div className="absolute top-2 right-4 bg-slate-900/90 text-white dark:bg-slate-800 text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none transition-all duration-150 border border-slate-700">
+                  <div className="absolute top-2 right-4 bg-slate-900/90 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none transition-all duration-150 border border-slate-700">
                     <div className="font-semibold text-indigo-300">
                       Урок {hoveredPoint.date} (№{hoveredPoint.lessonNumber})
                     </div>
@@ -301,7 +301,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                           y2={y}
                           stroke="currentColor"
                           strokeDasharray="4,4"
-                          className="text-slate-200 dark:text-slate-700/60"
+                          className="text-slate-200"
                         />
                         <text
                           x={paddingX - 8}
@@ -335,7 +335,6 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                         onMouseEnter={() => setHoveredPointIndex(idx)}
                         onMouseLeave={() => setHoveredPointIndex(null)}
                       >
-                        {/* Bar Rect */}
                         <rect
                           x={x}
                           y={y}
@@ -344,28 +343,26 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                           rx={3}
                           className={`transition-all duration-150 ${
                             pt.absent
-                              ? 'fill-rose-300 dark:fill-rose-900/60 stroke-rose-500'
+                              ? 'fill-rose-300 stroke-rose-500'
                               : score >= 10
                               ? 'fill-emerald-500 hover:fill-emerald-400'
                               : score >= 7
-                              ? 'fill-blue-500 hover:fill-blue-400'
+                              ? 'fill-indigo-600 hover:fill-indigo-500'
                               : score >= 4
                               ? 'fill-amber-500 hover:fill-amber-400'
                               : 'fill-rose-500 hover:fill-rose-400'
                           } ${isHovered ? 'opacity-100 ring-2 ring-indigo-400' : 'opacity-90'}`}
                         />
 
-                        {/* Bar Score Label */}
                         <text
                           x={x + barWidth / 2}
                           y={y - 4}
                           textAnchor="middle"
-                          className="text-[9px] font-bold fill-slate-700 dark:fill-slate-300 font-mono"
+                          className="text-[9px] font-bold fill-slate-700 font-mono"
                         >
                           {pt.absent ? 'Н' : score}
                         </text>
 
-                        {/* X-axis date */}
                         <text
                           x={x + barWidth / 2}
                           y={chartHeight - paddingBottom + 16}
@@ -381,7 +378,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
 
                 {/* Floating Tooltip */}
                 {hoveredPoint && (
-                  <div className="absolute top-2 right-4 bg-slate-900/90 text-white dark:bg-slate-800 text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none transition-all duration-150 border border-slate-700">
+                  <div className="absolute top-2 right-4 bg-slate-900/90 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none transition-all duration-150 border border-slate-700">
                     <div className="font-semibold text-indigo-300">
                       Урок {hoveredPoint.date} (№{hoveredPoint.lessonNumber})
                     </div>
@@ -408,14 +405,14 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
         {/* 3. CRITERIA COMPARISON (STUDENT VS CLASS) */}
         {activeMode === 'criteria' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between text-xs text-slate-500 pb-2 border-b border-slate-100">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full bg-indigo-600 inline-block" />
                   <span>Учень: <strong>{student.name}</strong></span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-slate-300 inline-block" />
                   <span>Середнє по класу: <strong>{studentClass?.name}</strong></span>
                 </span>
               </div>
@@ -431,9 +428,9 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                 return (
                   <div key={crit.id} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-slate-800 dark:text-slate-200">{crit.name}</span>
+                      <span className="text-slate-800">{crit.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                        <span className="text-indigo-600 font-bold">
                           {studentScore} б.
                         </span>
                         <span className="text-slate-400 font-normal">
@@ -443,8 +440,8 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
                               diff > 0
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-rose-100 text-rose-700'
                             }`}
                           >
                             {diff > 0 ? `+${diff}` : diff}
@@ -453,19 +450,17 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                       </div>
                     </div>
 
-                    {/* Comparative Dual Bars */}
+                    {/* Dual comparative progress bars */}
                     <div className="space-y-1">
-                      {/* Student bar */}
-                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden flex">
+                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden flex">
                         <div
-                          className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full transition-all duration-300"
+                          className="bg-indigo-600 h-full rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(Math.max((studentScore / 12) * 100, 0), 100)}%` }}
                         />
                       </div>
-                      {/* Class bar */}
-                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden flex">
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden flex">
                         <div
-                          className="bg-slate-400 dark:bg-slate-600 h-full rounded-full transition-all duration-300"
+                          className="bg-slate-400 h-full rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(Math.max((classAvg / 12) * 100, 0), 100)}%` }}
                         />
                       </div>
@@ -489,38 +484,38 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
                   key={pt.lessonId}
                   className={`p-2.5 rounded-xl border transition-all text-xs space-y-1.5 ${
                     isAbsent
-                      ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50'
+                      ? 'bg-rose-50 border-rose-200'
                       : score >= 10
-                      ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50'
+                      ? 'bg-emerald-50/60 border-emerald-200'
                       : score >= 7
-                      ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50'
-                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                      ? 'bg-blue-50/60 border-blue-200'
+                      : 'bg-slate-50 border-slate-200'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-mono font-bold text-slate-800 dark:text-slate-200">
+                  <div className="flex items-center justify-between font-mono font-bold text-slate-800">
                     <span>{pt.date.slice(5)}</span>
                     <span className="text-[10px] text-slate-400 font-normal">№{pt.lessonNumber}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     {isAbsent ? (
-                      <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold text-[11px]">
+                      <span className="inline-flex items-center gap-1 text-rose-600 font-bold text-[11px]">
                         <XCircle className="w-3 h-3" /> Пропуск
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                      <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-[11px]">
                         <CheckCircle2 className="w-3 h-3" /> {score} / 12
                       </span>
                     )}
                   </div>
 
                   {pt.topic && (
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 truncate">
+                    <p className="text-[10px] text-slate-500 line-clamp-1 truncate">
                       {pt.topic}
                     </p>
                   )}
                   {pt.notes && (
-                    <p className="text-[10px] text-amber-700 dark:text-amber-300 italic line-clamp-1 truncate">
+                    <p className="text-[10px] text-amber-700 italic line-clamp-1 truncate">
                       {pt.notes}
                     </p>
                   )}

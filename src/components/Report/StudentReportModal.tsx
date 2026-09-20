@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, generateAiPromptForParents } from '../../utils/analytics';
+import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { AiQuickActions } from './AiQuickActions';
+import { PeriodSelector } from './PeriodSelector';
 import { X, Sparkles, FileText, Calendar } from 'lucide-react';
 
 interface StudentReportModalProps {
@@ -20,7 +22,10 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   className,
   db,
 }) => {
-  const [periodText, setPeriodText] = useState('за останні уроки');
+  const defaultPreset = getPeriodPresets()[0];
+  const [periodText, setPeriodText] = useState(defaultPreset.description);
+  const [startDate, setStartDate] = useState<string | undefined>(defaultPreset.startDate);
+  const [endDate, setEndDate] = useState<string | undefined>(defaultPreset.endDate);
 
   if (!isOpen) return null;
 
@@ -29,7 +34,11 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
     .filter((l) => l.classId === student.classId)
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const analytics = calculateStudentAnalytics(student, db, classLessons);
+  // Уроки за вибраний діапазон дат
+  const matchedLessons = filterLessonsByDateRange(classLessons, startDate, endDate);
+  const periodLessons = matchedLessons.length > 0 ? matchedLessons : classLessons;
+
+  const analytics = calculateStudentAnalytics(student, db, periodLessons);
   const aiPrompt = generateAiPromptForParents(analytics, db.criteria, className, periodText);
 
   return (
@@ -124,22 +133,23 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
 
           {/* Промпт для ШІ */}
           <div className="border-t border-slate-100 pt-4 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-500" />
-                <h3 className="text-sm font-bold text-slate-800">
-                  Промпт для ШІ для повідомлення батькам
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={periodText}
-                  onChange={(e) => setPeriodText(e.target.value)}
-                  placeholder="Період: наприклад, за вересень"
-                  className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none w-44"
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <h3 className="text-sm font-bold text-slate-800">
+                Промпт для ШІ для повідомлення батькам
+              </h3>
+            </div>
+
+            {/* Вибір періоду */}
+            <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+              <PeriodSelector
+                value={periodText}
+                onChange={(newText, start, end) => {
+                  setPeriodText(newText);
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
+              />
             </div>
 
             <AiQuickActions prompt={aiPrompt} />

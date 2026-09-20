@@ -147,7 +147,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     };
   }, [studentsAnalytics]);
 
-  // Лідери прогресу (найбільше зростання динаміки)
+  // Лідери прогресу
   const topProgressStudents = useMemo(() => {
     return studentsAnalytics
       .filter((s) => s.trend.difference > 0 && s.trend.attendedCount >= 2)
@@ -155,12 +155,11 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
       .slice(0, 6);
   }, [studentsAnalytics]);
 
-  // Зона уваги (учні з пропущеними уроками або суттєвим спадом)
+  // Зона уваги
   const attentionStudents = useMemo(() => {
     return studentsAnalytics
       .filter((s) => s.trend.absentCount > 0 || s.trend.difference <= -0.5)
       .sort((a, b) => {
-        // Спочатку за спадом динаміки, потім за кількістю пропусків
         if (a.trend.difference !== b.trend.difference) {
           return a.trend.difference - b.trend.difference;
         }
@@ -184,11 +183,11 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <BarChart2 className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
+            <BarChart2 className="w-7 h-7 text-indigo-600" />
             Аналітичний дашборд школи
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Загальні показники, порівняння паралелей, розподіл рівнів знань та моніторинг динаміки
           </p>
         </div>
@@ -207,35 +206,35 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
 
       {/* Global KPI Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
             <Users className="w-4 h-4 text-indigo-600" />
             <span>Учнів у базі</span>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+          <div className="mt-2 text-2xl font-black text-slate-900">
             {schoolKpi.totalStudents}
           </div>
           <span className="text-[11px] text-slate-400">{schoolKpi.totalClasses} класів</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
             <Calendar className="w-4 h-4 text-indigo-600" />
             <span>Уроків проведено</span>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+          <div className="mt-2 text-2xl font-black text-slate-900">
             {schoolKpi.totalLessons}
           </div>
           <span className="text-[11px] text-slate-400">по всіх класах</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
             <GraduationCap className="w-4 h-4 text-indigo-600" />
             <span>Середній бал школи</span>
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
+            <span className="text-2xl font-black text-slate-900">
               {schoolKpi.schoolAverage}
             </span>
             <span className="text-xs text-slate-400">/ 12</span>
@@ -243,23 +242,23 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
           <span className="text-[11px] text-slate-400">загальний показник</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
             <Award className="w-4 h-4 text-indigo-600" />
             <span>Відвідуваність</span>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+          <div className="mt-2 text-2xl font-black text-slate-900">
             {schoolKpi.schoolAttendanceRate}%
           </div>
           <span className="text-[11px] text-slate-400">рівень присутності</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs col-span-2 sm:col-span-1">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
             <Layers className="w-4 h-4 text-indigo-600" />
             <span>Паралелей</span>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+          <div className="mt-2 text-2xl font-black text-slate-900">
             {parallels.length}
           </div>
           <span className="text-[11px] text-slate-400">6, 7, 8, 9, 10 класи</span>
@@ -267,26 +266,26 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
       </div>
 
       {/* Comparative Bar Chart Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-base font-bold text-slate-900">
               Порівняння середнього балу успішності
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               Клікніть на стовпчик класу, щоб перейти до його журналу
             </p>
           </div>
 
           {/* Toggle Button */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             <button
               type="button"
               onClick={() => setChartViewMode('parallels')}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
                 chartViewMode === 'parallels'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               За паралелями ({parallelsStats.length})
@@ -296,8 +295,8 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
               onClick={() => setChartViewMode('classes')}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
                 chartViewMode === 'classes'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               За окремими класами ({classesStats.length})
@@ -323,7 +322,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                     y2={y}
                     stroke="currentColor"
                     strokeDasharray="4,4"
-                    className="text-slate-200 dark:text-slate-700/60"
+                    className="text-slate-200"
                   />
                   <text
                     x={paddingX - 8}
@@ -345,12 +344,9 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
               const x = paddingX + idx * slotWidth + (slotWidth - barWidth) / 2;
 
               const score = item.averageScore || 0;
-              const barHeight = (score / 12) * innerHeight;
+              const hasScore = score > 0;
+              const barHeight = hasScore ? (score / 12) * innerHeight : 4;
               const y = paddingTop + innerHeight - barHeight;
-
-              const isHigh = score >= 10;
-              const isGood = score >= 8;
-              const isMedium = score >= 6;
 
               return (
                 <g
@@ -369,30 +365,32 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                     y={y}
                     width={barWidth}
                     height={barHeight}
-                    rx={4}
+                    rx={3}
                     className={`transition-all duration-150 ${
-                      isHigh
-                        ? 'fill-emerald-500 hover:fill-emerald-400'
-                        : isGood
-                        ? 'fill-indigo-600 hover:fill-indigo-500'
-                        : isMedium
-                        ? 'fill-blue-500 hover:fill-blue-400'
-                        : 'fill-amber-500 hover:fill-amber-400'
+                      hasScore
+                        ? score >= 10
+                          ? 'fill-emerald-500 hover:fill-emerald-400'
+                          : score >= 8
+                          ? 'fill-indigo-600 hover:fill-indigo-500'
+                          : score >= 6
+                          ? 'fill-blue-500 hover:fill-blue-400'
+                          : 'fill-amber-500 hover:fill-amber-400'
+                        : 'fill-slate-300 hover:fill-slate-400'
                     }`}
                   />
                   <text
                     x={x + barWidth / 2}
                     y={y - 6}
                     textAnchor="middle"
-                    className="text-[10px] font-bold fill-slate-800 dark:fill-slate-200 font-mono"
+                    className="text-[10px] font-bold fill-slate-700 font-mono"
                   >
-                    {score > 0 ? score : '—'}
+                    {hasScore ? score : '—'}
                   </text>
                   <text
                     x={x + barWidth / 2}
                     y={chartHeight - paddingBottom + 16}
                     textAnchor="middle"
-                    className="text-[10px] font-medium fill-slate-600 dark:fill-slate-300"
+                    className="text-[10px] font-medium fill-slate-600"
                   >
                     {item.name}
                   </text>
@@ -404,16 +402,16 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
       </div>
 
       {/* Levels Distribution Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-base font-bold text-slate-900">
             Розподіл успішності за державними рівнями
           </h2>
-          <span className="text-xs text-slate-400">Всього: {schoolKpi.totalStudents} учнів</span>
+          <span className="text-xs text-slate-500">Всього: {schoolKpi.totalStudents} учнів</span>
         </div>
 
         {/* Multi-segment Progress Bar */}
-        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-xl h-4 overflow-hidden flex gap-0.5">
+        <div className="w-full bg-slate-100 rounded-xl h-4 overflow-hidden flex gap-0.5">
           {levelDistribution.high.count > 0 && (
             <div
               className="bg-emerald-500 transition-all duration-300"
@@ -444,50 +442,50 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
           )}
           {levelDistribution.noScores.count > 0 && (
             <div
-              className="bg-slate-300 dark:bg-slate-700 transition-all duration-300"
+              className="bg-slate-200 transition-all duration-300"
               style={{ width: `${levelDistribution.noScores.percent}%` }}
-              title={`Без оцінок: ${levelDistribution.noScores.count} учнів`}
+              title={`Оцінки ще не виставлені: ${levelDistribution.noScores.count} учнів`}
             />
           )}
         </div>
 
         {/* Legend */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50">
-            <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 block">
+          <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200">
+            <span className="text-[11px] font-bold text-emerald-800 block">
               Високий (10–12 б.)
             </span>
-            <span className="text-lg font-black text-emerald-900 dark:text-emerald-200">
+            <span className="text-lg font-black text-emerald-900">
               {levelDistribution.high.count}{' '}
               <span className="text-xs font-normal text-emerald-700">({levelDistribution.high.percent}%)</span>
             </span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50">
-            <span className="text-[11px] font-bold text-indigo-800 dark:text-indigo-300 block">
+          <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200">
+            <span className="text-[11px] font-bold text-indigo-800 block">
               Достатній (7–9 б.)
             </span>
-            <span className="text-lg font-black text-indigo-900 dark:text-indigo-200">
+            <span className="text-lg font-black text-indigo-900">
               {levelDistribution.sufficient.count}{' '}
               <span className="text-xs font-normal text-indigo-700">({levelDistribution.sufficient.percent}%)</span>
             </span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
-            <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 block">
+          <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+            <span className="text-[11px] font-bold text-amber-800 block">
               Середній (4–6 б.)
             </span>
-            <span className="text-lg font-black text-amber-900 dark:text-amber-200">
+            <span className="text-lg font-black text-amber-900">
               {levelDistribution.average.count}{' '}
               <span className="text-xs font-normal text-amber-700">({levelDistribution.average.percent}%)</span>
             </span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50">
-            <span className="text-[11px] font-bold text-rose-800 dark:text-rose-300 block">
+          <div className="p-3 rounded-xl bg-rose-50/70 border border-rose-200">
+            <span className="text-[11px] font-bold text-rose-800 block">
               Початковий (1–3 б.)
             </span>
-            <span className="text-lg font-black text-rose-900 dark:text-rose-200">
+            <span className="text-lg font-black text-rose-900">
               {levelDistribution.initial.count}{' '}
               <span className="text-xs font-normal text-rose-700">({levelDistribution.initial.percent}%)</span>
             </span>
@@ -498,39 +496,39 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
       {/* Focus Grids: Progress Leaders & Attention Required */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Progress Leaders */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <TrendingUp className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-base font-bold text-slate-900">
               Лідери позитивної динаміки
             </h2>
           </div>
 
           {topProgressStudents.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-4">Недостатньо уроків для підрахунку динаміки</p>
+            <p className="text-xs text-slate-400 italic py-4">Оцінки ще не виставлені або недостатньо уроків</p>
           ) : (
             <div className="space-y-2">
               {topProgressStudents.map((s) => (
                 <div
                   key={s.student.id}
-                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between"
+                  className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between hover:bg-indigo-50/40 transition"
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                      <span className="font-semibold text-slate-800 text-xs">
                         {s.student.name}
                       </span>
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-200 text-slate-700">
                         {s.className}
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-500">
                       Динаміка: {s.trend.previousAverage} → {s.trend.recentAverage} б.
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center">
+                    <span className="text-xs font-black text-emerald-600 flex items-center">
                       +{s.trend.difference} ↗
                     </span>
 
@@ -538,7 +536,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                       href={getStudentHash(s.student.id)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-white transition"
                       title="Відкрити картку учня в новій вкладці"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -551,35 +549,35 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
         </div>
 
         {/* Attention Required */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-base font-bold text-slate-900">
               Зона уваги (пропуски та спад)
             </h2>
           </div>
 
           {attentionStudents.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-4">Всі учні мають стабільні результати</p>
+            <p className="text-xs text-slate-400 italic py-4">Всі учні мають стабільні результати або пропусків немає</p>
           ) : (
             <div className="space-y-2">
               {attentionStudents.map((s) => (
                 <div
                   key={s.student.id}
-                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between"
+                  className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between hover:bg-rose-50/30 transition"
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                      <span className="font-semibold text-slate-800 text-xs">
                         {s.student.name}
                       </span>
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-200 text-slate-700">
                         {s.className}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500">
                       {s.trend.absentCount > 0 && (
-                        <span className="text-rose-600 dark:text-rose-400 font-semibold">
+                        <span className="text-rose-600 font-semibold">
                           {s.trend.absentCount} пропуск.
                         </span>
                       )}
@@ -589,7 +587,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
 
                   <div className="flex items-center gap-3 shrink-0">
                     {s.trend.trendDirection === 'down' && (
-                      <span className="text-xs font-black text-rose-600 dark:text-rose-400 flex items-center">
+                      <span className="text-xs font-black text-rose-600 flex items-center">
                         <TrendingDown className="w-3.5 h-3.5 mr-0.5" />
                         {s.trend.difference}
                       </span>
@@ -599,7 +597,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                       href={getStudentHash(s.student.id)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-white transition"
                       title="Відкрити картку учня в новій вкладці"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />

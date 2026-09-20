@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, calculateStudentTrend, generateAiPromptForParents } from '../../utils/analytics';
+import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
 import { StudentChartSwitcher } from './StudentChartSwitcher';
 import { AiQuickActions } from '../Report/AiQuickActions';
+import { PeriodSelector } from '../Report/PeriodSelector';
 import {
   ArrowLeft,
   UserCheck,
@@ -12,7 +14,6 @@ import {
   Minus,
   CheckCircle2,
   XCircle,
-  Calendar,
   Layers,
 } from 'lucide-react';
 
@@ -29,7 +30,10 @@ export const StudentPage: React.FC<StudentPageProps> = ({
   onBackToJournal,
   onEditStudent,
 }) => {
-  const [periodText, setPeriodText] = useState('вересень 2026');
+  const defaultPreset = getPeriodPresets()[0];
+  const [periodText, setPeriodText] = useState(defaultPreset.description);
+  const [periodStartDate, setPeriodStartDate] = useState<string | undefined>(defaultPreset.startDate);
+  const [periodEndDate, setPeriodEndDate] = useState<string | undefined>(defaultPreset.endDate);
 
   const student = useMemo(() => {
     return db.students.find((s) => s.id === studentId);
@@ -54,10 +58,16 @@ export const StudentPage: React.FC<StudentPageProps> = ({
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [db.lessons, student]);
 
+  // Уроки, що потрапляють у вибраний діапазон дат (якщо є співпадіння)
+  const periodLessons = useMemo(() => {
+    const matched = filterLessonsByDateRange(classLessons, periodStartDate, periodEndDate);
+    return matched.length > 0 ? matched : classLessons;
+  }, [classLessons, periodStartDate, periodEndDate]);
+
   const analytics = useMemo(() => {
     if (!student) return null;
-    return calculateStudentAnalytics(student, db, classLessons);
-  }, [student, db, classLessons]);
+    return calculateStudentAnalytics(student, db, periodLessons);
+  }, [student, db, periodLessons]);
 
   const trendData = useMemo(() => {
     if (!student) return null;
@@ -72,12 +82,12 @@ export const StudentPage: React.FC<StudentPageProps> = ({
   if (!student || !analytics || !trendData) {
     return (
       <div className="max-w-4xl mx-auto p-8 text-center space-y-4">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Учня не знайдено</h2>
+        <h2 className="text-xl font-bold text-slate-800">Учня не знайдено</h2>
         <p className="text-sm text-slate-500">Можливо, профіль було видалено або посилання застаріло.</p>
         <button
           type="button"
           onClick={onBackToJournal}
-          className="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
+          className="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
         >
           Повернутися до журналу
         </button>
@@ -97,7 +107,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
         <button
           type="button"
           onClick={onBackToJournal}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition"
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs transition"
         >
           <ArrowLeft className="w-4 h-4 text-slate-400" />
           <span>До журналу уроків</span>
@@ -107,32 +117,32 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           <Layers className="w-3.5 h-3.5" />
           <span>{parallelName}</span>
           <span>•</span>
-          <span className="font-semibold text-slate-600 dark:text-slate-300">
+          <span className="font-semibold text-slate-600">
             {studentClass?.name || 'Клас'}
           </span>
         </div>
       </div>
 
       {/* Student Profile Header Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-2xl shadow-xs shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-2xl shadow-xs shrink-0">
             {student.name.charAt(0)}
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">{student.name}</h1>
-              <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+              <h1 className="text-2xl font-black text-slate-900">{student.name}</h1>
+              <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-100 text-indigo-700">
                 {studentClass?.name}
               </span>
               {parallelName && (
-                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
                   {parallelName}
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Персональна сторінка успішності, мультидіаграми та ШІ-звіт для батьків
+            <p className="text-xs text-slate-500 mt-1">
+              Персональна картка учня, мультидіаграми та ШІ-звіт для батьків
             </p>
           </div>
         </div>
@@ -141,7 +151,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           <button
             type="button"
             onClick={() => onEditStudent(student)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition"
           >
             <UserCheck className="w-4 h-4 text-slate-500" />
             <span>Редагувати профіль / контекст</span>
@@ -151,11 +161,11 @@ export const StudentPage: React.FC<StudentPageProps> = ({
 
       {/* Confidential Notes Alert */}
       {student.notes && (
-        <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 flex items-start gap-3">
-          <div className="p-1 rounded bg-amber-200/60 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200 text-xs font-bold">
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3">
+          <div className="p-1 rounded bg-amber-200/60 text-amber-800 text-xs font-bold">
             Контекст учня
           </div>
-          <div className="flex-1 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+          <div className="flex-1 text-xs text-amber-900 leading-relaxed">
             <p className="font-semibold mb-0.5">Особливості сприйняття та рекомендації для вчителя:</p>
             <p>{student.notes}</p>
           </div>
@@ -164,10 +174,10 @@ export const StudentPage: React.FC<StudentPageProps> = ({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Середній бал</span>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Середній бал</span>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
+            <span className="text-2xl font-black text-slate-900">
               {trendData.overallAverage}
             </span>
             <span className="text-xs text-slate-400">/ 12</span>
@@ -175,21 +185,21 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           <span className="text-[11px] text-slate-400">за всі уроки</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Тренд успішності</span>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Тренд успішності</span>
           <div className="mt-1 flex items-center gap-1.5">
             {trendData.trendDirection === 'up' && (
               <>
-                <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                <TrendingUp className="w-5 h-5 text-emerald-600" />
+                <span className="text-xl font-black text-emerald-600">
                   +{trendData.difference}
                 </span>
               </>
             )}
             {trendData.trendDirection === 'down' && (
               <>
-                <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-                <span className="text-xl font-black text-rose-600 dark:text-rose-400">
+                <TrendingDown className="w-5 h-5 text-rose-600" />
+                <span className="text-xl font-black text-rose-600">
                   {trendData.difference}
                 </span>
               </>
@@ -197,7 +207,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
             {trendData.trendDirection === 'stable' && (
               <>
                 <Minus className="w-5 h-5 text-slate-400" />
-                <span className="text-xl font-bold text-slate-600 dark:text-slate-300">Стабільно</span>
+                <span className="text-xl font-bold text-slate-600">Стабільно</span>
               </>
             )}
           </div>
@@ -206,10 +216,10 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Відвідування</span>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Відвідування</span>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
+            <span className="text-2xl font-black text-slate-900">
               {attendanceRate}%
             </span>
           </div>
@@ -218,10 +228,10 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Пропуски</span>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Пропуски</span>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
+            <span className="text-2xl font-black text-slate-900">
               {trendData.absentCount}
             </span>
             <span className="text-xs text-slate-400">уроків</span>
@@ -236,32 +246,33 @@ export const StudentPage: React.FC<StudentPageProps> = ({
       <StudentChartSwitcher student={student} db={db} />
 
       {/* AI Report Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
+            <div className="p-2 rounded-xl bg-purple-100 text-purple-600">
               <Sparkles className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-base font-bold text-slate-900">
                 Промпт для ШІ (повідомлення для батьків)
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Готовий текст із поурочними спостереженнями та делікатним урахуванням контексту
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={periodText}
-              onChange={(e) => setPeriodText(e.target.value)}
-              placeholder="Період: вересень 2026"
-              className="px-3 py-1.5 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-            />
-          </div>
+        {/* Period Selector (Weekly, Monthly, Quarter, Semester, Custom) */}
+        <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+          <PeriodSelector
+            value={periodText}
+            onChange={(newText, start, end) => {
+              setPeriodText(newText);
+              setPeriodStartDate(start);
+              setPeriodEndDate(end);
+            }}
+          />
         </div>
 
         {/* AI Quick Actions */}
@@ -272,21 +283,21 @@ export const StudentPage: React.FC<StudentPageProps> = ({
             readOnly
             rows={10}
             value={aiPrompt}
-            className="w-full font-mono text-xs p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-950 dark:text-slate-200 focus:outline-none leading-relaxed select-all"
+            className="w-full font-mono text-xs p-4 rounded-xl border border-slate-200 bg-slate-50/80 text-slate-800 focus:outline-none leading-relaxed select-all"
           />
         </div>
       </div>
 
       {/* Full Lesson History */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+        <h3 className="text-sm font-bold text-slate-800">
           Хронологія відвідування та оцінювання ({trendData.points.length} уроків)
         </h3>
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
           {trendData.points.map((p) => (
             <div
               key={p.lessonId}
-              className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
+              className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition"
             >
               <div className="flex items-center gap-3">
                 {p.absent ? (
@@ -296,21 +307,21 @@ export const StudentPage: React.FC<StudentPageProps> = ({
                 )}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
+                    <span className="text-xs font-bold text-slate-900 font-mono">
                       {p.date}
                     </span>
                     <span className="text-xs text-slate-400">Урок №{p.lessonNumber}</span>
                     {p.absent && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-rose-100 text-rose-700">
                         Пропуск
                       </span>
                     )}
                   </div>
                   {p.topic && (
-                    <div className="text-xs text-slate-600 dark:text-slate-300">{p.topic}</div>
+                    <div className="text-xs text-slate-600">{p.topic}</div>
                   )}
                   {p.notes && (
-                    <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 italic">
+                    <div className="text-xs text-amber-700 mt-0.5 italic">
                       Нотатка: {p.notes}
                     </div>
                   )}
@@ -320,7 +331,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
               {!p.absent && (
                 <div className="flex items-center gap-2 sm:self-center self-end">
                   <span className="text-xs text-slate-400">Середній:</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
                     {p.averageScore !== undefined ? `${p.averageScore} / 12` : '—'}
                   </span>
                 </div>

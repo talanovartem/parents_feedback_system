@@ -148,18 +148,18 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-sm">
               <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-lg font-bold text-slate-900">
                 Центр звітів та аналітики для батьків
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Формуйте звіти по одному або пакетно одразу для всього класу чи паралелі
               </p>
             </div>
@@ -168,16 +168,16 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Filter and Selection Controls Bar */}
-        <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-3 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
               <Layers className="w-3.5 h-3.5" /> Вибірка:
             </span>
 
@@ -188,7 +188,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                 setSelectedFilterMode(e.target.value);
                 setSelectedStudentIds(new Set());
               }}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
               <option value="all">Усі класи школи (Всі паралелі)</option>
 
@@ -214,7 +214,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
             <button
               type="button"
               onClick={handleToggleSelectAll}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition"
             >
               {allFilteredSelected ? (
                 <>
@@ -244,7 +244,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
         </div>
 
         {/* Search */}
-        <div className="px-6 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+        <div className="px-6 py-2.5 border-b border-slate-100 bg-slate-50/50">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
@@ -252,7 +252,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Пошук учня за прізвищем чи ім'ям..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
         </div>
@@ -276,8 +276,8 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                   key={student.id}
                   className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                     isSelected
-                      ? 'bg-indigo-50/60 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-800'
-                      : 'bg-white dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-700/80'
+                      ? 'bg-indigo-50/60 border-indigo-300'
+                      : 'bg-white hover:bg-slate-50 border-slate-200/80'
                   }`}
                 >
                   {/* Left: Checkbox + Student details */}
@@ -286,34 +286,34 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleToggleStudent(student.id)}
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600 cursor-pointer"
+                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
                     />
 
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+                        <span className="font-semibold text-slate-800 text-sm">
                           {student.name}
                         </span>
 
                         {studentClass && (
-                          <span className="px-1.5 py-0.2 text-[10px] font-semibold rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="px-1.5 py-0.2 text-[10px] font-semibold rounded bg-slate-100 text-slate-600">
                             {studentClass.name}
                           </span>
                         )}
 
                         {analytics.absentLessonsCount > 0 ? (
-                          <span className="text-[10px] font-medium text-rose-600 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-300 px-1.5 py-0.2 rounded border border-rose-200 dark:border-rose-900">
+                          <span className="text-[10px] font-medium text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
                             {analytics.absentLessonsCount} пропуск.
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-900 flex items-center gap-1">
+                          <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 flex items-center gap-1">
                             <UserCheck className="w-2.5 h-2.5" /> 100%
                           </span>
                         )}
                       </div>
 
                       {student.notes ? (
-                        <p className="text-xs text-amber-700 dark:text-amber-300 line-clamp-1 italic">
+                        <p className="text-xs text-amber-700 line-clamp-1 italic">
                           Особливості: {student.notes}
                         </p>
                       ) : (
@@ -336,12 +336,12 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
                       <div className="flex items-center" title="Динаміка успішності">
                         {trend.trendDirection === 'up' && (
-                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
+                          <span className="text-xs font-bold text-emerald-600 flex items-center">
                             <TrendingUp className="w-3.5 h-3.5 mr-0.5" />+{trend.difference}
                           </span>
                         )}
                         {trend.trendDirection === 'down' && (
-                          <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center">
+                          <span className="text-xs font-bold text-rose-600 flex items-center">
                             <TrendingDown className="w-3.5 h-3.5 mr-0.5" />{trend.difference}
                           </span>
                         )}
@@ -360,7 +360,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         href={getStudentHash(student.id)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition"
+                        className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                         title="Відкрити сторінку учня в новій вкладці браузера"
                       >
                         <ExternalLink className="w-4 h-4" />
@@ -370,7 +370,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                       <button
                         type="button"
                         onClick={() => onOpenAnalytics(student)}
-                        className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition"
+                        className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                         title="Детальна динаміка та графіки успішності"
                       >
                         <BarChart2 className="w-4 h-4" />
@@ -380,7 +380,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                       <button
                         type="button"
                         onClick={() => onEditStudent(student)}
-                        className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition"
+                        className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                         title="Редагувати учня та особливості сприйняття"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -402,7 +402,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         type="button"
                         onClick={() => onDeleteStudent(student.id)}
                         title="Видалити учня"
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -415,11 +415,11 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+        <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
           <div>
             <span>У вибірці: <strong>{filteredStudents.length}</strong> учнів</span>
             {selectedStudentIds.size > 0 && (
-              <span className="ml-2 text-indigo-600 dark:text-indigo-400 font-semibold">
+              <span className="ml-2 text-indigo-600 font-semibold">
                 (Обрано для пакетного звіту: {selectedStudentIds.size})
               </span>
             )}
@@ -439,7 +439,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition"
+              className="px-4 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition"
             >
               Закрити
             </button>
