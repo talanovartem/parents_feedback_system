@@ -5,6 +5,7 @@ import { JournalTable } from './components/Journal/JournalTable';
 import { ManageClassesModal } from './components/Modals/ManageClassesModal';
 import { AddStudentModal } from './components/Modals/AddStudentModal';
 import { AddLessonModal } from './components/Modals/AddLessonModal';
+import { BulkAddLessonsModal } from './components/Modals/BulkAddLessonsModal';
 import { ManageCriteriaModal } from './components/Modals/ManageCriteriaModal';
 import { StudentReportModal } from './components/Report/StudentReportModal';
 import { ReportsOverviewModal } from './components/Report/ReportsOverviewModal';
@@ -33,6 +34,7 @@ export const App: React.FC = () => {
   const [isClassesModalOpen, setIsClassesModalOpen] = useState(false);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
+  const [isBulkAddLessonOpen, setIsBulkAddLessonOpen] = useState(false);
   const [isCriteriaOpen, setIsCriteriaOpen] = useState(false);
   const [isReportsOverviewOpen, setIsReportsOverviewOpen] = useState(false);
   const [reportStudent, setReportStudent] = useState<Student | null>(null);
@@ -212,6 +214,22 @@ export const App: React.FC = () => {
         lessons: [...prev.lessons, newLesson],
       };
     }, `Урок від ${lessonData.date} створено`);
+  };
+
+  // Масове додавання уроків
+  const handleBulkAddLessons = (lessonsData: Omit<import('./types/feedback').Lesson, 'id'>[]) => {
+    const timestamp = Date.now();
+    const newLessons: import('./types/feedback').Lesson[] = lessonsData.map((data, idx) => ({
+      ...data,
+      id: `les-${timestamp}-${idx}`,
+    }));
+
+    updateDbAndSave((prev) => {
+      return {
+        ...prev,
+        lessons: [...prev.lessons, ...newLessons],
+      };
+    }, `Успішно створено ${newLessons.length} нових уроків у класах!`);
   };
 
   // Видалення уроку
@@ -463,6 +481,7 @@ export const App: React.FC = () => {
             onUpdateStudentNotes={handleUpdateStudentNotes}
             onDeleteLesson={handleDeleteLesson}
             onOpenAddLesson={() => setIsAddLessonOpen(true)}
+            onOpenBulkAddLesson={() => setIsBulkAddLessonOpen(true)}
             onOpenAddStudent={() => setIsAddStudentOpen(true)}
             onOpenStudentReport={(student) => setReportStudent(student)}
             onOpenAddCriterion={() => setIsCriteriaOpen(true)}
@@ -494,6 +513,15 @@ export const App: React.FC = () => {
         classes={db.classes}
         defaultClassId={selectedClassId}
         onAddLesson={handleAddLesson}
+      />
+
+      <BulkAddLessonsModal
+        isOpen={isBulkAddLessonOpen}
+        onClose={() => setIsBulkAddLessonOpen(false)}
+        classes={db.classes}
+        defaultClassId={selectedClassId}
+        existingLessons={db.lessons}
+        onBulkAddLessons={handleBulkAddLessons}
       />
 
       <ManageCriteriaModal

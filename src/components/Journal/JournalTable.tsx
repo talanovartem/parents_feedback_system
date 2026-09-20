@@ -1,7 +1,7 @@
 import React from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { LessonTableCard } from './LessonTableCard';
-import { CalendarPlus, UserPlus, Plus } from 'lucide-react';
+import { CalendarPlus, UserPlus, Plus, Layers } from 'lucide-react';
 
 interface JournalTableProps {
   currentClassId: string;
@@ -12,6 +12,7 @@ interface JournalTableProps {
   onUpdateStudentNotes: (studentId: string, notes: string) => void;
   onDeleteLesson: (lessonId: string) => void;
   onOpenAddLesson: () => void;
+  onOpenBulkAddLesson: () => void;
   onOpenAddStudent: () => void;
   onOpenStudentReport: (student: Student) => void;
   onOpenAddCriterion: () => void;
@@ -27,6 +28,7 @@ export const JournalTable: React.FC<JournalTableProps> = ({
   onUpdateStudentNotes,
   onDeleteLesson,
   onOpenAddLesson,
+  onOpenBulkAddLesson,
   onOpenAddStudent,
   onOpenStudentReport,
   onOpenAddCriterion,
@@ -64,6 +66,13 @@ export const JournalTable: React.FC<JournalTableProps> = ({
             <CalendarPlus className="w-4 h-4" />
             Створити урок
           </button>
+          <button
+            onClick={onOpenBulkAddLesson}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center gap-2 transition-colors"
+          >
+            <Layers className="w-4 h-4 text-indigo-600" />
+            Масове додавання
+          </button>
         </div>
       </div>
     );
@@ -93,6 +102,14 @@ export const JournalTable: React.FC<JournalTableProps> = ({
           >
             <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
             Додати учня
+          </button>
+          <button
+            onClick={onOpenBulkAddLesson}
+            title="Масове створення уроків за описом або файлом"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-2xs flex items-center gap-1.5 transition-all"
+          >
+            <Layers className="w-3.5 h-3.5 text-indigo-600" />
+            Масове додавання
           </button>
           <button
             onClick={onOpenAddLesson}
