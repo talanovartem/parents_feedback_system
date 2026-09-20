@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DatabaseSchema, Student } from './types/feedback';
 import { fetchDatabase, saveDatabase, exportDatabaseToFile, logout } from './services/storage';
+import { migrateDatabase } from './services/migration';
 import { JournalTable } from './components/Journal/JournalTable';
 import { ManageClassesModal } from './components/Modals/ManageClassesModal';
 import { AddStudentModal } from './components/Modals/AddStudentModal';
@@ -328,10 +329,11 @@ export const App: React.FC = () => {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (parsed && Array.isArray(parsed.classes) && Array.isArray(parsed.students)) {
-          updateDbAndSave(() => parsed, 'Дані з JSON успішно імпортовано');
-          if (parsed.classes.length > 0) {
-            setSelectedClassId(parsed.classes[0].id);
+        if (parsed && typeof parsed === 'object') {
+          const migrated = migrateDatabase(parsed);
+          updateDbAndSave(() => migrated, 'Дані з JSON успішно імпортовано та оновлено');
+          if (migrated.classes.length > 0) {
+            setSelectedClassId(migrated.classes[0].id);
           }
         } else {
           toast.error('Некоректний формат файлу бази даних');

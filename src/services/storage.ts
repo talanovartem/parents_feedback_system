@@ -1,4 +1,5 @@
 import { DatabaseSchema } from '../types/feedback';
+import { migrateDatabase, createEmptyDatabase } from './migration';
 
 const STORAGE_KEY = 'parents_feedback_data_backup';
 
@@ -19,6 +20,8 @@ export function logout(): void {
 
 export async function fetchDatabase(): Promise<DatabaseSchema> {
   const url = getApiUrl();
+  let rawData: unknown = null;
+
   try {
     const res = await fetch(url);
     if (res.status === 401) {
@@ -26,46 +29,51 @@ export async function fetchDatabase(): Promise<DatabaseSchema> {
       throw new Error('Необхідна авторизація');
     }
     if (res.ok) {
-      const data = await res.json();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      return data;
+      rawData = await res.json();
     }
   } catch (err) {
     console.warn('Неможливо отримати дані з API, спроба з локального кешу:', err);
   }
 
-  // Fallback до LocalStorage
-  if (typeof window !== 'undefined') {
+  // Якщо з API не вдалося, шукаємо у LocalStorage
+  if (!rawData && typeof window !== 'undefined') {
     const cached = localStorage.getItem(STORAGE_KEY);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         const cachedStr = JSON.stringify(parsed);
         if (!cachedStr.includes('Ð') && !cachedStr.includes('Ñ')) {
-          return parsed;
+          rawData = parsed;
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
         }
-        localStorage.removeItem(STORAGE_KEY);
       } catch {
         // ігноруємо
       }
     }
   }
 
-  // Початкова дефолтна структура
-  return {
-    classes: [],
-    students: [],
-    criteria: [
-      { id: 'behavior', name: 'Поведінка' },
-      { id: 'condition', name: 'Стан дитини' },
-      { id: 'efficiency', name: 'Працездатність' },
-      { id: 'activity', name: 'Активність' },
-      { id: 'progress', name: 'Покращення' },
-      { id: 'grade', name: 'Оцінка за урок' }
-    ],
-    lessons: [],
-    records: {}
-  };
+  // Якщо даних немає взагалі — повертаємо нову порожню базу
+  if (!rawData) {
+    return createEmptyDatabase();
+  }
+
+  // Автоматична міграція структури до актуальної версії
+  const migrated = migrateDatabase(rawData);
+
+  // Оновлюємо кеш та, якщо відбулося оновлення версії, зберігаємо на сервері
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+  }
+
+  const prevVersion = (rawData as Record<string, any>)?.version;
+  if (prevVersion !== migrated.version) {
+    saveDatabase(migrated).catch((err) => {
+      console.warn('Не вдалося зберегти мігровану версію бази:', err);
+    });
+  }
+
+  return migrated;
 }
 
 export async function saveDatabase(data: DatabaseSchema): Promise<boolean> {

@@ -46,10 +46,23 @@ if (fs.existsSync(distDir)) {
   console.warn('⚠️ Папку dist/ не знайдено! Спочатку запустіть vite build.');
 }
 
-// 4. Копіюємо папку data (з базою даних та .htaccess)
-const dataDir = path.resolve(rootDir, 'data');
-if (fs.existsSync(dataDir)) {
-  fs.cpSync(dataDir, path.resolve(deployDir, 'data'), { recursive: true });
+// 4. Налаштовуємо папку data для безпечного деплою (без затирання живої бази)
+const deployDataDir = path.resolve(deployDir, 'data');
+fs.mkdirSync(deployDataDir, { recursive: true });
+fs.mkdirSync(path.resolve(deployDataDir, 'backups'), { recursive: true });
+
+// Захисний .htaccess для папки data/ та data/backups/
+const dataHtaccess = path.resolve(rootDir, 'data/.htaccess');
+if (fs.existsSync(dataHtaccess)) {
+  fs.copyFileSync(dataHtaccess, path.resolve(deployDataDir, '.htaccess'));
+}
+
+// Замість бойової database.json кладемо database.default.json
+// Якщо на хостингу ще немає бази, api.php автоматично створить database.json з цього файлу.
+// Якщо база на хостингу вже є, вона НІКОЛИ не перезапишеться цим файлом!
+const srcDb = path.resolve(rootDir, 'data/database.json');
+if (fs.existsSync(srcDb)) {
+  fs.copyFileSync(srcDb, path.resolve(deployDataDir, 'database.default.json'));
 }
 
 // 5. Створюємо кореневий .htaccess для захисту app.html
@@ -69,23 +82,33 @@ const htaccessContent = `DirectoryIndex index.php
 fs.writeFileSync(path.resolve(deployDir, '.htaccess'), htaccessContent, 'utf-8');
 
 // 6. Створюємо інструкцію README_DEPLOY.txt усередині deploy
-const readmeContent = `=== ІНСТРУКЦІЯ З РОЗГОРТАННЯ НА ХОСТИНГУ ===
+const readmeContent = `=== ІНСТРУКЦІЯ З РОЗГОРТАННЯ ТА ОНОВЛЕННЯ НА ХОСТИНГУ ===
 
-1. ЗАВАНТАЖЕННЯ:
+1. ПЕРШЕ РОЗГОРТАННЯ:
    Завантажте УВЕСЬ вміст цієї папки ("deploy") у кореневу папку вашого сайту на хостингу
    (зазвичай це папка "public_html", "www" або "httpdocs").
+   При першому запуску система автоматично створить файл "data/database.json"
+   з початкового шаблону "data/database.default.json".
 
-2. ЗМІНА ПАРОЛЯ:
+2. ОНОВЛЕННЯ КОДУ (БЕЗПЕЧНИЙ ДЕПЛОЙ):
+   Коли виходить нова версія програми, ви можете сміливо перезаписувати всі файли
+   із папки "deploy" на хостинг.
+   ВАЖЛИВО: Ваш живий файл "data/database.json" із внесеними уроками та оцінками
+   НІКОЛИ НЕ БУДЕ ПЕРЕЗАПИСАНО, оскільки в пакеті оновлення його навмисно немає!
+
+3. ЗМІНА ПАРОЛЯ:
    Відкрийте файл config.php на хостингу в будь-якому редакторі та замініть:
    define('TEACHER_PASSWORD', 'teacher2026');
    на ваш власний пароль.
 
-3. ПРАВА ДОСТУПУ (chmod):
-   Переконайтеся, що папка data/ та файл data/database.json мають права на запис
-   (chmod 775 або 777), щоб система могла зберігати оцінки та зміни на диску.
+4. ПРАВА ДОСТУПУ (chmod):
+   Переконайтеся, що папка data/ та її підпапка data/backups/ мають права на запис
+   (chmod 775 або 777), щоб система могла зберігати оцінки та автоматичні бекапи на диску.
 
-4. ВХІД:
-   Відкрийте адресу вашого сайту у браузері, введіть пароль та користуйтесь!
+5. АВТО-БЕКАПИ:
+   Перед кожним збереженням оцінок система автоматично створює:
+   - "data/database.json.bak" (останній попередній робочий стан)
+   - "data/backups/backup_РРРР-ММ-ДД.json" (щоденний архів)
 `;
 fs.writeFileSync(path.resolve(deployDir, 'README_DEPLOY.txt'), readmeContent, 'utf-8');
 

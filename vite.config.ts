@@ -4,7 +4,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 function localJsonApiPlugin(): Plugin {
-  const dbPath = path.resolve(__dirname, 'data/database.json');
+  const dataDir = path.resolve(__dirname, 'data');
+  const dbPath = path.resolve(dataDir, 'database.json');
+  const defaultDbPath = path.resolve(dataDir, 'database.default.json');
+  const backupsDir = path.resolve(dataDir, 'backups');
+
+  // Якщо database.json немає, але є дефолтний
+  if (!fs.existsSync(dbPath) && fs.existsSync(defaultDbPath)) {
+    try {
+      fs.copyFileSync(defaultDbPath, dbPath);
+    } catch {
+      // ігноруємо
+    }
+  }
 
   return {
     name: 'local-json-api',
@@ -39,7 +51,29 @@ function localJsonApiPlugin(): Plugin {
               try {
                 // Валідуємо валідність JSON перед записом
                 const parsed = JSON.parse(body);
-                fs.writeFileSync(dbPath, JSON.stringify(parsed, null, 2), 'utf-8');
+
+                // Створюємо бекапи перед збереженням
+                if (!fs.existsSync(backupsDir)) {
+                  fs.mkdirSync(backupsDir, { recursive: true });
+                }
+
+                if (fs.existsSync(dbPath) && fs.statSync(dbPath).size > 0) {
+                  // .bak копія
+                  fs.copyFileSync(dbPath, dbPath + '.bak');
+                  // щоденний архів
+                  const dateStr = new Date().toISOString().slice(0, 10);
+                  const todayBackup = path.resolve(backupsDir, `backup_${dateStr}.json`);
+                  if (!fs.existsSync(todayBackup)) {
+                    fs.copyFileSync(dbPath, todayBackup);
+                  }
+                }
+
+                // Атомарний запис
+                const formatted = JSON.stringify(parsed, null, 2);
+                const tempPath = `${dbPath}.tmp.${Date.now()}`;
+                fs.writeFileSync(tempPath, formatted, 'utf-8');
+                fs.renameSync(tempPath, dbPath);
+
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 res.end(JSON.stringify({ success: true, timestamp: new Date().toISOString() }));
               } catch (err: any) {

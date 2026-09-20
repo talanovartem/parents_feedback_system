@@ -32,6 +32,7 @@ export interface LessonStudentEntry {
 }
 
 export interface DatabaseSchema {
+  version?: number; // Версія структури даних (для автоматичної міграції)
   classes: ClassItem[];
   students: Student[];
   criteria: Criterion[];
