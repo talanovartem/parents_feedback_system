@@ -1,0 +1,134 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+const dbPath = path.resolve('data/database.json');
+
+const fullData = {
+  classes: [
+    { id: 'cls-6a', name: '6-А' },
+    { id: 'cls-6v', name: '6-В' },
+    { id: 'cls-7a', name: '7-А' },
+    { id: 'cls-7v', name: '7-В' },
+    { id: 'cls-8a', name: '8-А' },
+    { id: 'cls-8v', name: '8-В' },
+    { id: 'cls-9a', name: '9-А' },
+    { id: 'cls-9v', name: '9-В' },
+    { id: 'cls-10a', name: '10-А' },
+    { id: 'cls-10v', name: '10-В' }
+  ],
+  students: [
+    // 6-А
+    { id: 'std-6a-1', classId: 'cls-6a', name: 'Гузика Василіса', notes: '' },
+    { id: 'std-6a-2', classId: 'cls-6a', name: 'Єрьоменко Артем', notes: '' },
+    { id: 'std-6a-3', classId: 'cls-6a', name: 'Журавльова Поліна', notes: '' },
+    { id: 'std-6a-4', classId: 'cls-6a', name: 'Погоріляк Станіслав', notes: '' },
+    { id: 'std-6a-5', classId: 'cls-6a', name: 'Фоменко Поліна', notes: '' },
+
+    // 6-В
+    { id: 'std-6v-1', classId: 'cls-6v', name: 'Василишина Уляна', notes: '' },
+    { id: 'std-6v-2', classId: 'cls-6v', name: 'Кисільова Анна', notes: '' },
+    { id: 'std-6v-3', classId: 'cls-6v', name: 'Кошелькова Кіра', notes: '' },
+    { id: 'std-6v-4', classId: 'cls-6v', name: 'Маринович Софія', notes: '' },
+    { id: 'std-6v-5', classId: 'cls-6v', name: 'Поярков Єгор', notes: '' },
+    { id: 'std-6v-6', classId: 'cls-6v', name: 'Савран Софія', notes: '' },
+    { id: 'std-6v-7', classId: 'cls-6v', name: 'Ульєв Остап', notes: '' },
+
+    // 7-А
+    { id: 'std-7a-1', classId: 'cls-7a', name: 'Безсонний Рінат', notes: '' },
+    { id: 'std-7a-2', classId: 'cls-7a', name: 'Дяченко Міре', notes: '' },
+    { id: 'std-7a-3', classId: 'cls-7a', name: 'Коваленко Злата', notes: '' },
+    { id: 'std-7a-4', classId: 'cls-7a', name: 'Колодій Діана', notes: '' },
+    { id: 'std-7a-5', classId: 'cls-7a', name: 'Мицик Анастасія', notes: '' },
+    { id: 'std-7a-6', classId: 'cls-7a', name: 'Нефьодова Дар\'я', notes: '' },
+    { id: 'std-7a-7', classId: 'cls-7a', name: 'Пйоса Артем', notes: '' },
+    { id: 'std-7a-8', classId: 'cls-7a', name: 'Салогуб Платон', notes: '' },
+
+    // 7-В
+    { id: 'std-7v-1', classId: 'cls-7v', name: 'Баглай Катерина', notes: '' },
+    { id: 'std-7v-2', classId: 'cls-7v', name: 'Безсонний Рінат', notes: '' },
+    { id: 'std-7v-3', classId: 'cls-7v', name: 'Васютинський Вадим', notes: '' },
+    { id: 'std-7v-4', classId: 'cls-7v', name: 'Крапивин Іван', notes: '' },
+    { id: 'std-7v-5', classId: 'cls-7v', name: 'Нефедов Дмитро', notes: '' },
+    { id: 'std-7v-6', classId: 'cls-7v', name: 'Перегон Єгор', notes: '' },
+    { id: 'std-7v-7', classId: 'cls-7v', name: 'Петрощук Матфій', notes: '' },
+    { id: 'std-7v-8', classId: 'cls-7v', name: 'Плаксій Денис', notes: '' },
+
+    // 8-А
+    { id: 'std-8a-1', classId: 'cls-8a', name: 'Воронич Аліна', notes: '' },
+    { id: 'std-8a-2', classId: 'cls-8a', name: 'Джеголія Марек', notes: '' },
+    { id: 'std-8a-3', classId: 'cls-8a', name: 'Дроздовська Орися', notes: '' },
+    { id: 'std-8a-4', classId: 'cls-8a', name: 'Ковдря Арсеній', notes: '' },
+    { id: 'std-8a-5', classId: 'cls-8a', name: 'Кость Анастасія', notes: '' },
+    { id: 'std-8a-6', classId: 'cls-8a', name: 'Кучинський Мирослав', notes: '' },
+    { id: 'std-8a-7', classId: 'cls-8a', name: 'Мамчур Владислав', notes: '' },
+    { id: 'std-8a-8', classId: 'cls-8a', name: 'Попов Федір', notes: '' },
+    { id: 'std-8a-9', classId: 'cls-8a', name: 'Рябінін Давид', notes: '' },
+
+    // 8-В
+    { id: 'std-8v-1', classId: 'cls-8v', name: 'Коваленко Марія', notes: '' },
+    { id: 'std-8v-2', classId: 'cls-8v', name: 'Компанієць Надія', notes: '' },
+    { id: 'std-8v-3', classId: 'cls-8v', name: 'Кухар Софія', notes: '' },
+    { id: 'std-8v-4', classId: 'cls-8v', name: 'Поярков Назар', notes: '' },
+    { id: 'std-8v-5', classId: 'cls-8v', name: 'Савран Поліна', notes: '' },
+    { id: 'std-8v-6', classId: 'cls-8v', name: 'Соколовський Марк', notes: '' },
+    { id: 'std-8v-7', classId: 'cls-8v', name: 'Тарасюк Роман', notes: '' },
+
+    // 9-А
+    { id: 'std-9a-1', classId: 'cls-9a', name: 'Віртанен Олег', notes: '' },
+    { id: 'std-9a-2', classId: 'cls-9a', name: 'Келеш Марія', notes: '' },
+    { id: 'std-9a-3', classId: 'cls-9a', name: 'Клименко Єлизавета', notes: '' },
+    { id: 'std-9a-4', classId: 'cls-9a', name: 'Некрасова Лілія', notes: '' },
+    { id: 'std-9a-5', classId: 'cls-9a', name: 'Харламов Тимофій', notes: '' },
+    { id: 'std-9a-6', classId: 'cls-9a', name: 'Шередько Єва', notes: '' },
+
+    // 9-В
+    { id: 'std-9v-1', classId: 'cls-9v', name: 'Вельбик Михайло', notes: '' },
+    { id: 'std-9v-2', classId: 'cls-9v', name: 'Зарицький Олександр', notes: '' },
+    { id: 'std-9v-3', classId: 'cls-9v', name: 'Копаєва Дар\'я', notes: '' },
+    { id: 'std-9v-4', classId: 'cls-9v', name: 'Косінов Давид', notes: '' },
+    { id: 'std-9v-5', classId: 'cls-9v', name: 'Лосєва Кіра', notes: '' },
+    { id: 'std-9v-6', classId: 'cls-9v', name: 'Мандрикова Єва', notes: '' },
+
+    // 10-А
+    { id: 'std-10a-1', classId: 'cls-10a', name: 'Заболотний Ілля', notes: '' },
+    { id: 'std-10a-2', classId: 'cls-10a', name: 'Коваленко Віолетта', notes: '' },
+    { id: 'std-10a-3', classId: 'cls-10a', name: 'Почепа Роман', notes: '' },
+    { id: 'std-10a-4', classId: 'cls-10a', name: 'Рєзнікова Анна', notes: '' },
+    { id: 'std-10a-5', classId: 'cls-10a', name: 'Шаврін Ярослав', notes: '' },
+
+    // 10-В
+    { id: 'std-10v-1', classId: 'cls-10v', name: 'Левицький Владислав', notes: '' },
+    { id: 'std-10v-2', classId: 'cls-10v', name: 'Лозова Еліф', notes: '' },
+    { id: 'std-10v-3', classId: 'cls-10v', name: 'Семенець Андрій', notes: '' },
+    { id: 'std-10v-4', classId: 'cls-10v', name: 'Фоменко Дар\'я', notes: '' }
+  ],
+  criteria: [
+    { id: 'behavior', name: 'Поведінка', description: 'Дисципліна, фокус на уроці, повага' },
+    { id: 'condition', name: 'Стан дитини', description: 'Емоційний настрій, зосередженість, бадьорість' },
+    { id: 'efficiency', name: 'Працездатність', description: 'Темп роботи та включеність у завдання' },
+    { id: 'activity', name: 'Активність', description: 'Ініціатива, підняття руки, відповіді' },
+    { id: 'progress', name: 'Покращення', description: 'Динаміка щодо минулих уроків' },
+    { id: 'grade', name: 'Оцінка за урок', description: 'Підсумковий академічний бал (0-12)' }
+  ],
+  lessons: [
+    { id: 'les-6a-1', classId: 'cls-6a', date: '2026-09-04', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-6a-2', classId: 'cls-6a', date: '2026-09-24', lessonNumber: 2, topic: 'Поточна робота' },
+    { id: 'les-6a-3', classId: 'cls-6a', date: '2026-09-25', lessonNumber: 3, topic: 'Поточна робота' },
+    { id: 'les-6v-1', classId: 'cls-6v', date: '2026-09-04', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-6v-2', classId: 'cls-6v', date: '2026-09-24', lessonNumber: 2, topic: 'Поточна робота' },
+    { id: 'les-7a-1', classId: 'cls-7a', date: '2026-09-03', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-7a-2', classId: 'cls-7a', date: '2026-09-23', lessonNumber: 2, topic: 'Поточна робота' },
+    { id: 'les-7v-1', classId: 'cls-7v', date: '2026-09-03', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-7v-2', classId: 'cls-7v', date: '2026-09-24', lessonNumber: 2, topic: 'Поточна робота' },
+    { id: 'les-8a-1', classId: 'cls-8a', date: '2026-09-01', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-8v-1', classId: 'cls-8v', date: '2026-09-01', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-9a-1', classId: 'cls-9a', date: '2026-09-03', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-9v-1', classId: 'cls-9v', date: '2026-09-03', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-10a-1', classId: 'cls-10a', date: '2026-09-04', lessonNumber: 1, topic: 'Вступний урок' },
+    { id: 'les-10v-1', classId: 'cls-10v', date: '2026-09-04', lessonNumber: 1, topic: 'Вступний урок' }
+  ],
+  records: {}
+};
+
+fs.writeFileSync(dbPath, JSON.stringify(fullData, null, 2), { encoding: 'utf-8' });
+console.log('Database encoded successfully in pure UTF-8! Total students:', fullData.students.length);

@@ -19,7 +19,13 @@ export async function fetchDatabase(): Promise<DatabaseSchema> {
   const cached = localStorage.getItem(STORAGE_KEY);
   if (cached) {
     try {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      // Якщо в кеші немає кракозябр (символів подвійного кодування UTF-8)
+      const cachedStr = JSON.stringify(parsed);
+      if (!cachedStr.includes('Ð') && !cachedStr.includes('Ñ')) {
+        return parsed;
+      }
+      localStorage.removeItem(STORAGE_KEY);
     } catch {
       // ігноруємо
     }

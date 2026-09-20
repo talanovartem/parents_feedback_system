@@ -1,572 +1,576 @@
-﻿{
-    "classes":  [
-                    {
-                        "id":  "cls-6a",
-                        "name":  "6-Ð"
-                    },
-                    {
-                        "id":  "cls-6v",
-                        "name":  "6-Ð’"
-                    },
-                    {
-                        "id":  "cls-7a",
-                        "name":  "7-Ð"
-                    },
-                    {
-                        "id":  "cls-7v",
-                        "name":  "7-Ð’"
-                    },
-                    {
-                        "id":  "cls-8a",
-                        "name":  "8-А"
-                    },
-                    {
-                        "id":  "cls-8v",
-                        "name":  "8-В"
-                    },
-                    {
-                        "id":  "cls-9a",
-                        "name":  "9-А"
-                    },
-                    {
-                        "id":  "cls-9v",
-                        "name":  "9-В"
-                    },
-                    {
-                        "id":  "cls-10a",
-                        "name":  "10-А"
-                    },
-                    {
-                        "id":  "cls-10v",
-                        "name":  "10-В"
-                    }
-                ],
-    "students":  [
-                     {
-                         "id":  "std-6a-1",
-                         "classId":  "cls-6a",
-                         "name":  "Ð“ÑƒÐ·Ð¸ÐºÐ° Ð’Ð°ÑÐ¸Ð»Ñ–ÑÐ°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6a-2",
-                         "classId":  "cls-6a",
-                         "name":  "Ð„Ñ€ÑŒÐ¾Ð¼ÐµÐ½ÐºÐ¾ ÐÑ€Ñ‚ÐµÐ¼",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6a-3",
-                         "classId":  "cls-6a",
-                         "name":  "Ð–ÑƒÑ€Ð°Ð²Ð»ÑŒÐ¾Ð²Ð° ÐŸÐ¾Ð»Ñ–Ð½Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6a-4",
-                         "classId":  "cls-6a",
-                         "name":  "ÐŸÐ¾Ð³Ð¾Ñ€Ñ–Ð»ÑÐº Ð¡Ñ‚Ð°Ð½Ñ–ÑÐ»Ð°Ð²",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6a-5",
-                         "classId":  "cls-6a",
-                         "name":  "Ð¤Ð¾Ð¼ÐµÐ½ÐºÐ¾ ÐŸÐ¾Ð»Ñ–Ð½Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-1",
-                         "classId":  "cls-6v",
-                         "name":  "Ð’Ð°ÑÐ¸Ð»Ð¸ÑˆÐ¸Ð½Ð° Ð£Ð»ÑÐ½Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-2",
-                         "classId":  "cls-6v",
-                         "name":  "ÐšÐ¸ÑÑ–Ð»ÑŒÐ¾Ð²Ð° ÐÐ½Ð½Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-3",
-                         "classId":  "cls-6v",
-                         "name":  "ÐšÐ¾ÑˆÐµÐ»ÑŒÐºÐ¾Ð²Ð° ÐšÑ–Ñ€Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-4",
-                         "classId":  "cls-6v",
-                         "name":  "ÐœÐ°Ñ€Ð¸Ð½Ð¾Ð²Ð¸Ñ‡ Ð¡Ð¾Ñ„Ñ–Ñ",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-5",
-                         "classId":  "cls-6v",
-                         "name":  "ÐŸÐ¾ÑÑ€ÐºÐ¾Ð² Ð„Ð³Ð¾Ñ€",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-6",
-                         "classId":  "cls-6v",
-                         "name":  "Ð¡Ð°Ð²Ñ€Ð°Ð½ Ð¡Ð¾Ñ„Ñ–Ñ",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-6v-7",
-                         "classId":  "cls-6v",
-                         "name":  "Ð£Ð»ÑŒÑ”Ð² ÐžÑÑ‚Ð°Ð¿",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-1",
-                         "classId":  "cls-7a",
-                         "name":  "Ð‘ÐµÐ·ÑÐ¾Ð½Ð½Ð¸Ð¹ Ð Ñ–Ð½Ð°Ñ‚",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-2",
-                         "classId":  "cls-7a",
-                         "name":  "Ð”ÑÑ‡ÐµÐ½ÐºÐ¾ ÐœÑ–Ñ€Ðµ",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-3",
-                         "classId":  "cls-7a",
-                         "name":  "ÐšÐ¾Ð²Ð°Ð»ÐµÐ½ÐºÐ¾ Ð—Ð»Ð°Ñ‚Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-4",
-                         "classId":  "cls-7a",
-                         "name":  "ÐšÐ¾Ð»Ð¾Ð´Ñ–Ð¹ Ð”Ñ–Ð°Ð½Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-5",
-                         "classId":  "cls-7a",
-                         "name":  "ÐœÐ¸Ñ†Ð¸Ðº ÐÐ½Ð°ÑÑ‚Ð°ÑÑ–Ñ",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-6",
-                         "classId":  "cls-7a",
-                         "name":  "ÐÐµÑ„ÑŒÐ¾Ð´Ð¾Ð²Ð° Ð”Ð°Ñ€\u0027Ñ",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-7",
-                         "classId":  "cls-7a",
-                         "name":  "ÐŸÐ¹Ð¾ÑÐ° ÐÑ€Ñ‚ÐµÐ¼",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7a-8",
-                         "classId":  "cls-7a",
-                         "name":  "Ð¡Ð°Ð»Ð¾Ð³ÑƒÐ± ÐŸÐ»Ð°Ñ‚Ð¾Ð½",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-1",
-                         "classId":  "cls-7v",
-                         "name":  "Ð‘Ð°Ð³Ð»Ð°Ð¹ ÐšÐ°Ñ‚ÐµÑ€Ð¸Ð½Ð°",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-2",
-                         "classId":  "cls-7v",
-                         "name":  "Ð‘ÐµÐ·ÑÐ¾Ð½Ð½Ð¸Ð¹ Ð Ñ–Ð½Ð°Ñ‚",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-3",
-                         "classId":  "cls-7v",
-                         "name":  "Ð’Ð°ÑÑŽÑ‚Ð¸Ð½ÑÑŒÐºÐ¸Ð¹ Ð’Ð°Ð´Ð¸Ð¼",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-4",
-                         "classId":  "cls-7v",
-                         "name":  "ÐšÑ€Ð°Ð¿Ð¸Ð²Ð¸Ð½ Ð†Ð²Ð°Ð½",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-5",
-                         "classId":  "cls-7v",
-                         "name":  "ÐÐµÑ„ÐµÐ´Ð¾Ð² Ð”Ð¼Ð¸Ñ‚Ñ€Ð¾",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-6",
-                         "classId":  "cls-7v",
-                         "name":  "ÐŸÐµÑ€ÐµÐ³Ð¾Ð½ Ð„Ð³Ð¾Ñ€",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-7",
-                         "classId":  "cls-7v",
-                         "name":  "ÐŸÐµÑ‚Ñ€Ð¾Ñ‰ÑƒÐº ÐœÐ°Ñ‚Ñ„Ñ–Ð¹",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-7v-8",
-                         "classId":  "cls-7v",
-                         "name":  "ÐŸÐ»Ð°ÐºÑÑ–Ð¹ Ð”ÐµÐ½Ð¸Ñ",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-1",
-                         "classId":  "cls-8a",
-                         "name":  "Воронич Аліна",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-2",
-                         "classId":  "cls-8a",
-                         "name":  "Джеголія Марек",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-3",
-                         "classId":  "cls-8a",
-                         "name":  "Дроздовська Орися",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-4",
-                         "classId":  "cls-8a",
-                         "name":  "Ковдря Арсеній",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-5",
-                         "classId":  "cls-8a",
-                         "name":  "Кость Анастасія",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-6",
-                         "classId":  "cls-8a",
-                         "name":  "Кучинський Мирослав",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-7",
-                         "classId":  "cls-8a",
-                         "name":  "Мамчур Владислав",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-8",
-                         "classId":  "cls-8a",
-                         "name":  "Попов Федір",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8a-9",
-                         "classId":  "cls-8a",
-                         "name":  "Рябінін Давид",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-1",
-                         "classId":  "cls-8v",
-                         "name":  "Коваленко Марія",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-2",
-                         "classId":  "cls-8v",
-                         "name":  "Компанієць Надія",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-3",
-                         "classId":  "cls-8v",
-                         "name":  "Кухар Софія",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-4",
-                         "classId":  "cls-8v",
-                         "name":  "Поярков Назар",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-5",
-                         "classId":  "cls-8v",
-                         "name":  "Савран Поліна",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-6",
-                         "classId":  "cls-8v",
-                         "name":  "Соколовський Марк",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-8v-7",
-                         "classId":  "cls-8v",
-                         "name":  "Тарасюк Роман",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9a-1",
-                         "classId":  "cls-9a",
-                         "name":  "Віртанен Олег",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9a-2",
-                         "classId":  "cls-9a",
-                         "name":  "Келеш Марія",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9a-3",
-                         "classId":  "cls-9a",
-                         "name":  "Клименко Єлизавета",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9a-4",
-                         "classId":  "cls-9a",
-                         "name":  "Некрасова Лілія",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9a-5",
-                         "classId":  "cls-9a",
-                         "name":  "Харламов Тимофій",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9a-6",
-                         "classId":  "cls-9a",
-                         "name":  "Шередько Єва",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9v-1",
-                         "classId":  "cls-9v",
-                         "name":  "Вельбик Михайло",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9v-2",
-                         "classId":  "cls-9v",
-                         "name":  "Зарицький Олександр",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9v-3",
-                         "classId":  "cls-9v",
-                         "name":  "Копаєва Дар\u0027я",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9v-4",
-                         "classId":  "cls-9v",
-                         "name":  "Косінов Давид",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9v-5",
-                         "classId":  "cls-9v",
-                         "name":  "Лосєва Кіра",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-9v-6",
-                         "classId":  "cls-9v",
-                         "name":  "Мандрикова Єва",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10a-1",
-                         "classId":  "cls-10a",
-                         "name":  "Заболотний Ілля",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10a-2",
-                         "classId":  "cls-10a",
-                         "name":  "Коваленко Віолетта",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10a-3",
-                         "classId":  "cls-10a",
-                         "name":  "Почепа Роман",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10a-4",
-                         "classId":  "cls-10a",
-                         "name":  "Рєзнікова Анна",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10a-5",
-                         "classId":  "cls-10a",
-                         "name":  "Шаврін Ярослав",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10v-1",
-                         "classId":  "cls-10v",
-                         "name":  "Левицький Владислав",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10v-2",
-                         "classId":  "cls-10v",
-                         "name":  "Лозова Еліф",
-                         "notes":  ""
-                     },
-                     {
-                         "id":  "std-10v-3",
-                         "classId":  "cls-10v",
-                         "name":  "Фоменко Дар\u0027я",
-                         "notes":  ""
-                     }
-                 ],
-    "criteria":  [
-                     {
-                         "id":  "behavior",
-                         "name":  "ÐŸÐ¾Ð²ÐµÐ´Ñ–Ð½ÐºÐ°",
-                         "description":  "Ð”Ð¸ÑÑ†Ð¸Ð¿Ð»Ñ–Ð½Ð°, Ñ„Ð¾ÐºÑƒÑ Ð½Ð° ÑƒÑ€Ð¾Ñ†Ñ–, Ð¿Ð¾Ð²Ð°Ð³Ð°"
-                     },
-                     {
-                         "id":  "condition",
-                         "name":  "Ð¡Ñ‚Ð°Ð½ Ð´Ð¸Ñ‚Ð¸Ð½Ð¸",
-                         "description":  "Ð•Ð¼Ð¾Ñ†Ñ–Ð¹Ð½Ð¸Ð¹ Ð½Ð°ÑÑ‚Ñ€Ñ–Ð¹, Ð·Ð¾ÑÐµÑ€ÐµÐ´Ð¶ÐµÐ½Ñ–ÑÑ‚ÑŒ, Ð±Ð°Ð´ÑŒÐ¾Ñ€Ñ–ÑÑ‚ÑŒ"
-                     },
-                     {
-                         "id":  "efficiency",
-                         "name":  "ÐŸÑ€Ð°Ñ†ÐµÐ·Ð´Ð°Ñ‚Ð½Ñ–ÑÑ‚ÑŒ",
-                         "description":  "Ð¢ÐµÐ¼Ð¿ Ñ€Ð¾Ð±Ð¾Ñ‚Ð¸ Ñ‚Ð° Ð²ÐºÐ»ÑŽÑ‡ÐµÐ½Ñ–ÑÑ‚ÑŒ Ñƒ Ð·Ð°Ð²Ð´Ð°Ð½Ð½Ñ"
-                     },
-                     {
-                         "id":  "activity",
-                         "name":  "ÐÐºÑ‚Ð¸Ð²Ð½Ñ–ÑÑ‚ÑŒ",
-                         "description":  "Ð†Ð½Ñ–Ñ†Ñ–Ð°Ñ‚Ð¸Ð²Ð°, Ð¿Ñ–Ð´Ð½ÑÑ‚Ñ‚Ñ Ñ€ÑƒÐºÐ¸, Ð²Ñ–Ð´Ð¿Ð¾Ð²Ñ–Ð´Ñ–"
-                     },
-                     {
-                         "id":  "progress",
-                         "name":  "ÐŸÐ¾ÐºÑ€Ð°Ñ‰ÐµÐ½Ð½Ñ",
-                         "description":  "Ð”Ð¸Ð½Ð°Ð¼Ñ–ÐºÐ° Ñ‰Ð¾Ð´Ð¾ Ð¼Ð¸Ð½ÑƒÐ»Ð¸Ñ… ÑƒÑ€Ð¾ÐºÑ–Ð²"
-                     },
-                     {
-                         "id":  "grade",
-                         "name":  "ÐžÑ†Ñ–Ð½ÐºÐ° Ð·Ð° ÑƒÑ€Ð¾Ðº",
-                         "description":  "ÐŸÑ–Ð´ÑÑƒÐ¼ÐºÐ¾Ð²Ð¸Ð¹ Ð°ÐºÐ°Ð´ÐµÐ¼Ñ–Ñ‡Ð½Ð¸Ð¹ Ð±Ð°Ð» (0-12)"
-                     }
-                 ],
-    "lessons":  [
-                    {
-                        "id":  "les-6a-1",
-                        "classId":  "cls-6a",
-                        "date":  "2026-09-04",
-                        "lessonNumber":  1,
-                        "topic":  "Ð’ÑÑ‚ÑƒÐ¿Ð½Ð¸Ð¹ ÑƒÑ€Ð¾Ðº"
-                    },
-                    {
-                        "id":  "les-6a-2",
-                        "classId":  "cls-6a",
-                        "date":  "2026-09-24",
-                        "lessonNumber":  2,
-                        "topic":  "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð° Ñ€Ð¾Ð±Ð¾Ñ‚Ð°"
-                    },
-                    {
-                        "id":  "les-6a-3",
-                        "classId":  "cls-6a",
-                        "date":  "2026-09-25",
-                        "lessonNumber":  3,
-                        "topic":  "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð° Ñ€Ð¾Ð±Ð¾Ñ‚Ð°"
-                    },
-                    {
-                        "id":  "les-6v-1",
-                        "classId":  "cls-6v",
-                        "date":  "2026-09-04",
-                        "lessonNumber":  1,
-                        "topic":  "Ð’ÑÑ‚ÑƒÐ¿Ð½Ð¸Ð¹ ÑƒÑ€Ð¾Ðº"
-                    },
-                    {
-                        "id":  "les-6v-2",
-                        "classId":  "cls-6v",
-                        "date":  "2026-09-24",
-                        "lessonNumber":  2,
-                        "topic":  "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð° Ñ€Ð¾Ð±Ð¾Ñ‚Ð°"
-                    },
-                    {
-                        "id":  "les-7a-1",
-                        "classId":  "cls-7a",
-                        "date":  "2026-09-03",
-                        "lessonNumber":  1,
-                        "topic":  "Ð’ÑÑ‚ÑƒÐ¿Ð½Ð¸Ð¹ ÑƒÑ€Ð¾Ðº"
-                    },
-                    {
-                        "id":  "les-7a-2",
-                        "classId":  "cls-7a",
-                        "date":  "2026-09-23",
-                        "lessonNumber":  2,
-                        "topic":  "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð° Ñ€Ð¾Ð±Ð¾Ñ‚Ð°"
-                    },
-                    {
-                        "id":  "les-7v-1",
-                        "classId":  "cls-7v",
-                        "date":  "2026-09-03",
-                        "lessonNumber":  1,
-                        "topic":  "Ð’ÑÑ‚ÑƒÐ¿Ð½Ð¸Ð¹ ÑƒÑ€Ð¾Ðº"
-                    },
-                    {
-                        "id":  "les-7v-2",
-                        "classId":  "cls-7v",
-                        "date":  "2026-09-24",
-                        "lessonNumber":  2,
-                        "topic":  "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð° Ñ€Ð¾Ð±Ð¾Ñ‚Ð°"
-                    },
-                    {
-                        "id":  "les-8a-1",
-                        "classId":  "cls-8a",
-                        "date":  "2026-09-01",
-                        "lessonNumber":  1,
-                        "topic":  "Вступний урок"
-                    },
-                    {
-                        "id":  "les-8v-1",
-                        "classId":  "cls-8v",
-                        "date":  "2026-09-01",
-                        "lessonNumber":  1,
-                        "topic":  "Вступний урок"
-                    },
-                    {
-                        "id":  "les-9a-1",
-                        "classId":  "cls-9a",
-                        "date":  "2026-09-03",
-                        "lessonNumber":  1,
-                        "topic":  "Вступний урок"
-                    },
-                    {
-                        "id":  "les-9v-1",
-                        "classId":  "cls-9v",
-                        "date":  "2026-09-03",
-                        "lessonNumber":  1,
-                        "topic":  "Вступний урок"
-                    },
-                    {
-                        "id":  "les-10a-1",
-                        "classId":  "cls-10a",
-                        "date":  "2026-09-04",
-                        "lessonNumber":  1,
-                        "topic":  "Вступний урок"
-                    },
-                    {
-                        "id":  "les-10v-1",
-                        "classId":  "cls-10v",
-                        "date":  "2026-09-04",
-                        "lessonNumber":  1,
-                        "topic":  "Вступний урок"
-                    }
-                ],
-    "records":  {
-
-                }
+{
+  "classes": [
+    {
+      "id": "cls-6a",
+      "name": "6-А"
+    },
+    {
+      "id": "cls-6v",
+      "name": "6-В"
+    },
+    {
+      "id": "cls-7a",
+      "name": "7-А"
+    },
+    {
+      "id": "cls-7v",
+      "name": "7-В"
+    },
+    {
+      "id": "cls-8a",
+      "name": "8-А"
+    },
+    {
+      "id": "cls-8v",
+      "name": "8-В"
+    },
+    {
+      "id": "cls-9a",
+      "name": "9-А"
+    },
+    {
+      "id": "cls-9v",
+      "name": "9-В"
+    },
+    {
+      "id": "cls-10a",
+      "name": "10-А"
+    },
+    {
+      "id": "cls-10v",
+      "name": "10-В"
+    }
+  ],
+  "students": [
+    {
+      "id": "std-6a-1",
+      "classId": "cls-6a",
+      "name": "Гузика Василіса",
+      "notes": ""
+    },
+    {
+      "id": "std-6a-2",
+      "classId": "cls-6a",
+      "name": "Єрьоменко Артем",
+      "notes": ""
+    },
+    {
+      "id": "std-6a-3",
+      "classId": "cls-6a",
+      "name": "Журавльова Поліна",
+      "notes": ""
+    },
+    {
+      "id": "std-6a-4",
+      "classId": "cls-6a",
+      "name": "Погоріляк Станіслав",
+      "notes": ""
+    },
+    {
+      "id": "std-6a-5",
+      "classId": "cls-6a",
+      "name": "Фоменко Поліна",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-1",
+      "classId": "cls-6v",
+      "name": "Василишина Уляна",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-2",
+      "classId": "cls-6v",
+      "name": "Кисільова Анна",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-3",
+      "classId": "cls-6v",
+      "name": "Кошелькова Кіра",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-4",
+      "classId": "cls-6v",
+      "name": "Маринович Софія",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-5",
+      "classId": "cls-6v",
+      "name": "Поярков Єгор",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-6",
+      "classId": "cls-6v",
+      "name": "Савран Софія",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-7",
+      "classId": "cls-6v",
+      "name": "Ульєв Остап",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-1",
+      "classId": "cls-7a",
+      "name": "Безсонний Рінат",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-2",
+      "classId": "cls-7a",
+      "name": "Дяченко Міре",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-3",
+      "classId": "cls-7a",
+      "name": "Коваленко Злата",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-4",
+      "classId": "cls-7a",
+      "name": "Колодій Діана",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-5",
+      "classId": "cls-7a",
+      "name": "Мицик Анастасія",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-6",
+      "classId": "cls-7a",
+      "name": "Нефьодова Дар'я",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-7",
+      "classId": "cls-7a",
+      "name": "Пйоса Артем",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-8",
+      "classId": "cls-7a",
+      "name": "Салогуб Платон",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-1",
+      "classId": "cls-7v",
+      "name": "Баглай Катерина",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-2",
+      "classId": "cls-7v",
+      "name": "Безсонний Рінат",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-3",
+      "classId": "cls-7v",
+      "name": "Васютинський Вадим",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-4",
+      "classId": "cls-7v",
+      "name": "Крапивин Іван",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-5",
+      "classId": "cls-7v",
+      "name": "Нефедов Дмитро",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-6",
+      "classId": "cls-7v",
+      "name": "Перегон Єгор",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-7",
+      "classId": "cls-7v",
+      "name": "Петрощук Матфій",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-8",
+      "classId": "cls-7v",
+      "name": "Плаксій Денис",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-1",
+      "classId": "cls-8a",
+      "name": "Воронич Аліна",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-2",
+      "classId": "cls-8a",
+      "name": "Джеголія Марек",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-3",
+      "classId": "cls-8a",
+      "name": "Дроздовська Орися",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-4",
+      "classId": "cls-8a",
+      "name": "Ковдря Арсеній",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-5",
+      "classId": "cls-8a",
+      "name": "Кость Анастасія",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-6",
+      "classId": "cls-8a",
+      "name": "Кучинський Мирослав",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-7",
+      "classId": "cls-8a",
+      "name": "Мамчур Владислав",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-8",
+      "classId": "cls-8a",
+      "name": "Попов Федір",
+      "notes": ""
+    },
+    {
+      "id": "std-8a-9",
+      "classId": "cls-8a",
+      "name": "Рябінін Давид",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-1",
+      "classId": "cls-8v",
+      "name": "Коваленко Марія",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-2",
+      "classId": "cls-8v",
+      "name": "Компанієць Надія",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-3",
+      "classId": "cls-8v",
+      "name": "Кухар Софія",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-4",
+      "classId": "cls-8v",
+      "name": "Поярков Назар",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-5",
+      "classId": "cls-8v",
+      "name": "Савран Поліна",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-6",
+      "classId": "cls-8v",
+      "name": "Соколовський Марк",
+      "notes": ""
+    },
+    {
+      "id": "std-8v-7",
+      "classId": "cls-8v",
+      "name": "Тарасюк Роман",
+      "notes": ""
+    },
+    {
+      "id": "std-9a-1",
+      "classId": "cls-9a",
+      "name": "Віртанен Олег",
+      "notes": ""
+    },
+    {
+      "id": "std-9a-2",
+      "classId": "cls-9a",
+      "name": "Келеш Марія",
+      "notes": ""
+    },
+    {
+      "id": "std-9a-3",
+      "classId": "cls-9a",
+      "name": "Клименко Єлизавета",
+      "notes": ""
+    },
+    {
+      "id": "std-9a-4",
+      "classId": "cls-9a",
+      "name": "Некрасова Лілія",
+      "notes": ""
+    },
+    {
+      "id": "std-9a-5",
+      "classId": "cls-9a",
+      "name": "Харламов Тимофій",
+      "notes": ""
+    },
+    {
+      "id": "std-9a-6",
+      "classId": "cls-9a",
+      "name": "Шередько Єва",
+      "notes": ""
+    },
+    {
+      "id": "std-9v-1",
+      "classId": "cls-9v",
+      "name": "Вельбик Михайло",
+      "notes": ""
+    },
+    {
+      "id": "std-9v-2",
+      "classId": "cls-9v",
+      "name": "Зарицький Олександр",
+      "notes": ""
+    },
+    {
+      "id": "std-9v-3",
+      "classId": "cls-9v",
+      "name": "Копаєва Дар'я",
+      "notes": ""
+    },
+    {
+      "id": "std-9v-4",
+      "classId": "cls-9v",
+      "name": "Косінов Давид",
+      "notes": ""
+    },
+    {
+      "id": "std-9v-5",
+      "classId": "cls-9v",
+      "name": "Лосєва Кіра",
+      "notes": ""
+    },
+    {
+      "id": "std-9v-6",
+      "classId": "cls-9v",
+      "name": "Мандрикова Єва",
+      "notes": ""
+    },
+    {
+      "id": "std-10a-1",
+      "classId": "cls-10a",
+      "name": "Заболотний Ілля",
+      "notes": ""
+    },
+    {
+      "id": "std-10a-2",
+      "classId": "cls-10a",
+      "name": "Коваленко Віолетта",
+      "notes": ""
+    },
+    {
+      "id": "std-10a-3",
+      "classId": "cls-10a",
+      "name": "Почепа Роман",
+      "notes": ""
+    },
+    {
+      "id": "std-10a-4",
+      "classId": "cls-10a",
+      "name": "Рєзнікова Анна",
+      "notes": ""
+    },
+    {
+      "id": "std-10a-5",
+      "classId": "cls-10a",
+      "name": "Шаврін Ярослав",
+      "notes": ""
+    },
+    {
+      "id": "std-10v-1",
+      "classId": "cls-10v",
+      "name": "Левицький Владислав",
+      "notes": ""
+    },
+    {
+      "id": "std-10v-2",
+      "classId": "cls-10v",
+      "name": "Лозова Еліф",
+      "notes": ""
+    },
+    {
+      "id": "std-10v-3",
+      "classId": "cls-10v",
+      "name": "Семенець Андрій",
+      "notes": ""
+    },
+    {
+      "id": "std-10v-4",
+      "classId": "cls-10v",
+      "name": "Фоменко Дар'я",
+      "notes": ""
+    }
+  ],
+  "criteria": [
+    {
+      "id": "behavior",
+      "name": "Поведінка",
+      "description": "Дисципліна, фокус на уроці, повага"
+    },
+    {
+      "id": "condition",
+      "name": "Стан дитини",
+      "description": "Емоційний настрій, зосередженість, бадьорість"
+    },
+    {
+      "id": "efficiency",
+      "name": "Працездатність",
+      "description": "Темп роботи та включеність у завдання"
+    },
+    {
+      "id": "activity",
+      "name": "Активність",
+      "description": "Ініціатива, підняття руки, відповіді"
+    },
+    {
+      "id": "progress",
+      "name": "Покращення",
+      "description": "Динаміка щодо минулих уроків"
+    },
+    {
+      "id": "grade",
+      "name": "Оцінка за урок",
+      "description": "Підсумковий академічний бал (0-12)"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "les-6a-1",
+      "classId": "cls-6a",
+      "date": "2026-09-04",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-6a-2",
+      "classId": "cls-6a",
+      "date": "2026-09-24",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-6a-3",
+      "classId": "cls-6a",
+      "date": "2026-09-25",
+      "lessonNumber": 3,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-6v-1",
+      "classId": "cls-6v",
+      "date": "2026-09-04",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-6v-2",
+      "classId": "cls-6v",
+      "date": "2026-09-24",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-7a-1",
+      "classId": "cls-7a",
+      "date": "2026-09-03",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-7a-2",
+      "classId": "cls-7a",
+      "date": "2026-09-23",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-7v-1",
+      "classId": "cls-7v",
+      "date": "2026-09-03",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-7v-2",
+      "classId": "cls-7v",
+      "date": "2026-09-24",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-8a-1",
+      "classId": "cls-8a",
+      "date": "2026-09-01",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-8v-1",
+      "classId": "cls-8v",
+      "date": "2026-09-01",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-9a-1",
+      "classId": "cls-9a",
+      "date": "2026-09-03",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-9v-1",
+      "classId": "cls-9v",
+      "date": "2026-09-03",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-10a-1",
+      "classId": "cls-10a",
+      "date": "2026-09-04",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-10v-1",
+      "classId": "cls-10v",
+      "date": "2026-09-04",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    }
+  ],
+  "records": {}
 }
