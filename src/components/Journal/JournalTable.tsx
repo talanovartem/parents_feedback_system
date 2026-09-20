@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { LessonTableCard } from './LessonTableCard';
-import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink, ArrowUpDown, ChevronDown, ChevronUp, Table, LayoutGrid } from 'lucide-react';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
 import { findNearestLessonId } from '../../utils/lessonTime';
 
@@ -56,6 +56,22 @@ export const JournalTable: React.FC<JournalTableProps> = ({
   );
 
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>(() => {
+    try {
+      return (localStorage.getItem('pfs_journal_view_mode') as 'table' | 'cards') || 'table';
+    } catch {
+      return 'table';
+    }
+  });
+
+  const handleSetViewMode = (mode: 'table' | 'cards') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('pfs_journal_view_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
 
   const sortedLessons = useMemo(() => {
     return [...classLessons].sort((a, b) => {
@@ -178,6 +194,36 @@ export const JournalTable: React.FC<JournalTableProps> = ({
                 <ArrowUpDown className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">{sortOrder === 'desc' ? 'Свіжі зверху' : 'Хронологічно'}</span>
               </button>
+
+              {/* Перемикач Таблиця / Картки */}
+              <div className="flex items-center bg-slate-200/70 p-0.5 rounded-lg ml-1">
+                <button
+                  type="button"
+                  onClick={() => handleSetViewMode('table')}
+                  className={`px-2 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1 ${
+                    viewMode === 'table'
+                      ? 'bg-white text-indigo-700 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Класичний табличний вигляд"
+                >
+                  <Table className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Таблиця</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetViewMode('cards')}
+                  className={`px-2 py-1 text-xs font-semibold rounded-md transition flex items-center gap-1 ${
+                    viewMode === 'cards'
+                      ? 'bg-white text-indigo-700 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Мобільний вигляд картками учнів (без горизонтального скролу)"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Картки</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -256,6 +302,8 @@ export const JournalTable: React.FC<JournalTableProps> = ({
               isNearest={lesson.id === nearestLessonId}
               isExpanded={expandedLessonIds.has(lesson.id)}
               onToggleExpand={() => handleToggleExpand(lesson.id)}
+              viewMode={viewMode}
+              onChangeViewMode={handleSetViewMode}
               students={students}
               criteria={db.criteria}
               db={db}
