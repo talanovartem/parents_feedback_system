@@ -20,6 +20,7 @@ export const AddLessonModal: React.FC<AddLessonModalProps> = ({
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [classId, setClassId] = useState(defaultClassId);
   const [lessonNumber, setLessonNumber] = useState<number>(1);
+  const [time, setTime] = useState('');
   const [topic, setTopic] = useState('');
 
   if (!isOpen) return null;
@@ -32,9 +33,11 @@ export const AddLessonModal: React.FC<AddLessonModalProps> = ({
       classId,
       date,
       lessonNumber: Number(lessonNumber) || 1,
+      time: time.trim() || undefined,
       topic: topic.trim() || undefined,
     });
 
+    setTime('');
     setTopic('');
     onClose();
   };
@@ -88,18 +91,33 @@ export const AddLessonModal: React.FC<AddLessonModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-              Номер уроку за тиждень / день (1..4)
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={lessonNumber}
-              onChange={(e) => setLessonNumber(Number(e.target.value))}
-              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                Номер уроку (1..10)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={lessonNumber}
+                onChange={(e) => setLessonNumber(Number(e.target.value))}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                Час (необов'язково)
+              </label>
+              <input
+                type="text"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                placeholder="14:20 - 14:55"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-xs"
+              />
+            </div>
           </div>
 
           <div>

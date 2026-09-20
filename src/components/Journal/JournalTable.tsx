@@ -1,7 +1,8 @@
 import React from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { LessonTableCard } from './LessonTableCard';
-import { CalendarPlus, UserPlus, Plus, Layers } from 'lucide-react';
+import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink } from 'lucide-react';
+import { getSchoolTodayUrl } from '../../utils/lessonParser';
 
 interface JournalTableProps {
   currentClassId: string;
@@ -103,6 +104,16 @@ export const JournalTable: React.FC<JournalTableProps> = ({
             <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
             Додати учня
           </button>
+          <a
+            href={getSchoolTodayUrl(0).url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Відкрити розклад уроків у системі School Today"
+            className="px-3 py-1.5 text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200 rounded-lg shadow-2xs flex items-center gap-1.5 transition-all"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+            School Today
+          </a>
           <button
             onClick={onOpenBulkAddLesson}
             title="Масове створення уроків за описом або файлом"

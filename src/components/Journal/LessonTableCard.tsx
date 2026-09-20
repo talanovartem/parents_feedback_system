@@ -9,6 +9,7 @@ import {
   Sparkles,
   Edit3,
   Plus,
+  Clock,
 } from 'lucide-react';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
@@ -87,6 +88,12 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
             <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-100 text-indigo-700">
               Урок №{lesson.lessonNumber}
             </span>
+            {lesson.time && (
+              <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 flex items-center gap-1 border border-slate-200">
+                <Clock className="w-3 h-3 text-slate-500" />
+                {lesson.time}
+              </span>
+            )}
             {isLatest && (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
                 Останній

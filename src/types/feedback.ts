@@ -21,6 +21,7 @@ export interface Lesson {
   classId: string;
   date: string; // YYYY-MM-DD
   lessonNumber: number; // номер уроку в розкладі або номер уроку за тиждень (1..4)
+  time?: string; // наприклад, "14:20 - 14:55"
   topic?: string;
 }
 
