@@ -5,47 +5,193 @@
       "name": "6-А"
     },
     {
-      "id": "cls-6b",
-      "name": "6-Б"
+      "id": "cls-6v",
+      "name": "6-В"
+    },
+    {
+      "id": "cls-7a",
+      "name": "7-А"
+    },
+    {
+      "id": "cls-7v",
+      "name": "7-В"
     }
   ],
   "students": [
     {
-      "id": "std-1",
+      "id": "std-6a-1",
       "classId": "cls-6a",
-      "name": "Олександр Шевченко",
+      "name": "Гузика Василіса",
       "notes": ""
     },
     {
-      "id": "std-2",
+      "id": "std-6a-2",
       "classId": "cls-6a",
-      "name": "Софія Мельник",
-      "notes": "Старанна, відмінна підготовка домашніх завдань"
+      "name": "Єрьоменко Артем",
+      "notes": ""
     },
     {
-      "id": "std-3",
+      "id": "std-6a-3",
       "classId": "cls-6a",
-      "name": "Максим Бондаренко",
-      "notes": "Потребує додаткової практики з лексики"
+      "name": "Журавльова Поліна",
+      "notes": ""
     },
     {
-      "id": "std-4",
-      "classId": "cls-6b",
-      "name": "Дмитро Коваленко",
-      "notes": "Має високий потенціал, варто частіше викликати до відповідей"
+      "id": "std-6a-4",
+      "classId": "cls-6a",
+      "name": "Погоріляк Станіслав",
+      "notes": ""
     },
     {
-      "id": "std-5",
-      "classId": "cls-6b",
-      "name": "Анна Ткаченко",
-      "notes": "Чудова вимова, ініціативна в парній роботі"
+      "id": "std-6a-5",
+      "classId": "cls-6a",
+      "name": "Фоменко Поліна",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-1",
+      "classId": "cls-6v",
+      "name": "Василишина Уляна",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-2",
+      "classId": "cls-6v",
+      "name": "Кисільова Анна",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-3",
+      "classId": "cls-6v",
+      "name": "Кошелькова Кіра",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-4",
+      "classId": "cls-6v",
+      "name": "Маринович Софія",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-5",
+      "classId": "cls-6v",
+      "name": "Поярков Єгор",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-6",
+      "classId": "cls-6v",
+      "name": "Савран Софія",
+      "notes": ""
+    },
+    {
+      "id": "std-6v-7",
+      "classId": "cls-6v",
+      "name": "Ульєв Остап",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-1",
+      "classId": "cls-7a",
+      "name": "Безсонний Рінат",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-2",
+      "classId": "cls-7a",
+      "name": "Дяченко Міре",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-3",
+      "classId": "cls-7a",
+      "name": "Коваленко Злата",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-4",
+      "classId": "cls-7a",
+      "name": "Колодій Діана",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-5",
+      "classId": "cls-7a",
+      "name": "Мицик Анастасія",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-6",
+      "classId": "cls-7a",
+      "name": "Нефьодова Дар'я",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-7",
+      "classId": "cls-7a",
+      "name": "Пйоса Артем",
+      "notes": ""
+    },
+    {
+      "id": "std-7a-8",
+      "classId": "cls-7a",
+      "name": "Салогуб Платон",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-1",
+      "classId": "cls-7v",
+      "name": "Баглай Катерина",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-2",
+      "classId": "cls-7v",
+      "name": "Безсонний Рінат",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-3",
+      "classId": "cls-7v",
+      "name": "Васютинський Вадим",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-4",
+      "classId": "cls-7v",
+      "name": "Крапивин Іван",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-5",
+      "classId": "cls-7v",
+      "name": "Нефедов Дмитро",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-6",
+      "classId": "cls-7v",
+      "name": "Перегон Єгор",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-7",
+      "classId": "cls-7v",
+      "name": "Петрощук Матфій",
+      "notes": ""
+    },
+    {
+      "id": "std-7v-8",
+      "classId": "cls-7v",
+      "name": "Плаксій Денис",
+      "notes": ""
     }
   ],
   "criteria": [
     {
       "id": "behavior",
       "name": "Поведінка",
-      "description": "Дисципліна, повага до однокласників і вчителя"
+      "description": "Дисципліна, фокус на уроці, повага"
     },
     {
       "id": "condition",
@@ -55,85 +201,88 @@
     {
       "id": "efficiency",
       "name": "Працездатність",
-      "description": "Темп виконання завдань та включеність"
+      "description": "Темп роботи та включеність у завдання"
     },
     {
       "id": "activity",
       "name": "Активність",
-      "description": "Кількість відповідей, підняття руки, робота в групі"
+      "description": "Ініціатива, підняття руки, відповіді"
     },
     {
       "id": "progress",
       "name": "Покращення",
-      "description": "Динаміка та старання порівняно з минулими уроками"
+      "description": "Динаміка щодо минулих уроків"
     },
     {
       "id": "grade",
       "name": "Оцінка за урок",
-      "description": "Підсумковий академічний бал за роботу"
+      "description": "Підсумковий академічний бал (0-12)"
     }
   ],
   "lessons": [
     {
-      "id": "les-1",
+      "id": "les-6a-1",
       "classId": "cls-6a",
-      "date": "2026-09-15",
+      "date": "2026-09-04",
       "lessonNumber": 1,
-      "topic": "Unit 1: Present Simple vs Continuous"
+      "topic": "Вступний урок"
     },
     {
-      "id": "les-2",
+      "id": "les-6a-2",
       "classId": "cls-6a",
-      "date": "2026-09-17",
+      "date": "2026-09-24",
       "lessonNumber": 2,
-      "topic": "Unit 1: Vocabulary & Speaking Practice"
+      "topic": "Поточна робота"
     },
     {
-      "id": "les-3",
-      "classId": "cls-6b",
-      "date": "2026-09-16",
+      "id": "les-6a-3",
+      "classId": "cls-6a",
+      "date": "2026-09-25",
+      "lessonNumber": 3,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-6v-1",
+      "classId": "cls-6v",
+      "date": "2026-09-04",
       "lessonNumber": 1,
-      "topic": "Unit 1: Introduction & Diagnostic Test"
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-6v-2",
+      "classId": "cls-6v",
+      "date": "2026-09-24",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-7a-1",
+      "classId": "cls-7a",
+      "date": "2026-09-03",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-7a-2",
+      "classId": "cls-7a",
+      "date": "2026-09-23",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
+    },
+    {
+      "id": "les-7v-1",
+      "classId": "cls-7v",
+      "date": "2026-09-03",
+      "lessonNumber": 1,
+      "topic": "Вступний урок"
+    },
+    {
+      "id": "les-7v-2",
+      "classId": "cls-7v",
+      "date": "2026-09-24",
+      "lessonNumber": 2,
+      "topic": "Поточна робота"
     }
   ],
-  "records": {
-    "std-1": {
-      "les-1": {
-        "scores": {
-          "behavior": 0,
-          "condition": 0,
-          "efficiency": 0,
-          "activity": 0,
-          "progress": 0,
-          "grade": 0
-        },
-        "notes": "",
-        "absent": true
-      },
-      "les-2": {
-        "scores": {
-          "behavior": 0,
-          "condition": 0,
-          "efficiency": 0,
-          "activity": 0,
-          "progress": 0,
-          "grade": 0
-        },
-        "notes": ""
-      }
-    },
-    "std-2": {
-      "les-1": {
-        "scores": {
-          "behavior": 12,
-          "condition": 11,
-          "efficiency": 11,
-          "activity": 10,
-          "progress": 11,
-          "grade": 11
-        },
-        "notes": "Бездоганно виконані вправи"
-      }
-    }
-  }
+  "records": {}
 }
