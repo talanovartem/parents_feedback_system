@@ -1,0 +1,193 @@
+import React, { useState } from 'react';
+import { DatabaseSchema, Student } from '../../types/feedback';
+import { calculateStudentAnalytics, generateAiPromptForParents } from '../../utils/analytics';
+import { getScoreBadgeClass } from '../../utils/scoreColors';
+import { X, Copy, Check, Sparkles, FileText, Calendar } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface StudentReportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  student: Student;
+  className: string;
+  db: DatabaseSchema;
+}
+
+export const StudentReportModal: React.FC<StudentReportModalProps> = ({
+  isOpen,
+  onClose,
+  student,
+  className,
+  db,
+}) => {
+  const [copied, setCopied] = useState(false);
+  const [periodText, setPeriodText] = useState('за останні уроки');
+
+  if (!isOpen) return null;
+
+  // Фільтруємо уроки саме цього класу
+  const classLessons = db.lessons
+    .filter((l) => l.classId === student.classId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const analytics = calculateStudentAnalytics(student, db, classLessons);
+  const aiPrompt = generateAiPromptForParents(analytics, db.criteria, className, periodText);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(aiPrompt);
+      setCopied(true);
+      toast.success('Промпт для ШІ успішно скопійовано в буфер обміну!');
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error('Не вдалося скопіювати текст');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-slate-800">{student.name}</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                {className}
+              </span>
+            </div>
+            {student.notes && (
+              <p className="text-xs text-slate-500 mt-0.5">Особливості: {student.notes}</p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+          {/* Середні оцінки */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <FileText className="w-4 h-4 text-indigo-600" />
+              Середні показники за {classLessons.length} уроків
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {db.criteria.map((c) => {
+                const avg = analytics.averageScores[c.id];
+                const badge = getScoreBadgeClass(avg);
+                return (
+                  <div
+                    key={c.id}
+                    className="p-3 bg-white border border-slate-200/80 rounded-xl shadow-xs flex items-center justify-between"
+                  >
+                    <span className="text-xs font-medium text-slate-700">{c.name}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs border ${badge}`}>
+                      {avg !== undefined ? avg : '-'} / 12
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl flex items-center justify-between sm:col-span-3">
+                <span className="text-xs font-semibold text-indigo-900">Загальний середній бал:</span>
+                <span className="text-sm font-bold text-indigo-700 bg-white px-3 py-0.5 rounded-lg border border-indigo-200">
+                  {analytics.totalAverage} / 12
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Поурочні спостереження */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-indigo-600" />
+              Поурочні примітки та спостереження
+            </h3>
+            {analytics.lessonNotes.length === 0 ? (
+              <p className="text-sm text-slate-400 italic bg-slate-50 p-3 rounded-lg border border-dashed border-slate-200">
+                Записів чи зауважень до уроків поки немає
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {analytics.lessonNotes.map((n, i) => (
+                  <div key={i} className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-xs space-y-1">
+                    <div className="flex items-center justify-between text-slate-500 font-medium">
+                      <span>
+                        {n.lesson.date} (Урок №{n.lesson.lessonNumber})
+                      </span>
+                      {n.lesson.topic && <span className="text-slate-400">{n.lesson.topic}</span>}
+                    </div>
+                    <p className="text-slate-800 text-sm font-normal">"{n.notes}"</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Промпт для ШІ */}
+          <div className="border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <h3 className="text-sm font-bold text-slate-800">
+                  Промпт для ШІ для повідомлення батькам
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={periodText}
+                  onChange={(e) => setPeriodText(e.target.value)}
+                  placeholder="Період: наприклад, за вересень"
+                  className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none w-44"
+                />
+              </div>
+            </div>
+
+            <div className="relative">
+              <pre className="p-4 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto border border-slate-800 shadow-inner">
+                {aiPrompt}
+              </pre>
+              <button
+                onClick={handleCopy}
+                className="absolute top-3 right-3 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+              >
+                {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Скопійовано!' : 'Скопіювати промпт'}
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2">
+              Скопіюйте цей текст та надішліть у ChatGPT, Claude або Gemini, щоб отримати готове персоналізоване повідомлення для батьків дитини.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs text-slate-500">
+            Оцінки від 0 до 12 підраховуються автоматично
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition-colors"
+            >
+              Закрити
+            </button>
+            <button
+              onClick={handleCopy}
+              className="px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Скопіювати промпт
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

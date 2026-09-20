@@ -1,0 +1,20 @@
+# Kasetto - Declarative AI Agent Environment Manager
+scope: project
+agent:
+  - opencode
+  - cline
+  - claude-code
+  - cursor
+
+skills:
+  - source: .
+    sub-dir: .agents/skills
+    skills: "*"
+
+instructions:
+  - source: .
+    instructions:
+      - name: AGENTS
+        path: .
+      - name: constitution
+        path: .spec
