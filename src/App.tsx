@@ -9,6 +9,9 @@ import { BulkAddLessonsModal } from './components/Modals/BulkAddLessonsModal';
 import { ManageCriteriaModal } from './components/Modals/ManageCriteriaModal';
 import { StudentReportModal } from './components/Report/StudentReportModal';
 import { ReportsOverviewModal } from './components/Report/ReportsOverviewModal';
+import { EditStudentModal } from './components/Modals/EditStudentModal';
+import { StudentAnalyticsModal } from './components/Report/StudentAnalyticsModal';
+import { BatchReportModal } from './components/Report/BatchReportModal';
 import { Toaster, toast } from 'sonner';
 import {
   GraduationCap,
@@ -38,6 +41,9 @@ export const App: React.FC = () => {
   const [isCriteriaOpen, setIsCriteriaOpen] = useState(false);
   const [isReportsOverviewOpen, setIsReportsOverviewOpen] = useState(false);
   const [reportStudent, setReportStudent] = useState<Student | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [analyticsStudent, setAnalyticsStudent] = useState<Student | null>(null);
+  const [batchReportData, setBatchReportData] = useState<{ students: Student[]; groupName: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,6 +192,14 @@ export const App: React.FC = () => {
         students: [...prev.students, newStudent],
       };
     }, `Учня "${studentData.name}" додано`);
+  };
+
+  // Редагування учня
+  const handleSaveStudent = (updatedStudent: Student) => {
+    updateDbAndSave((prev) => {
+      const students = prev.students.map((s) => (s.id === updatedStudent.id ? updatedStudent : s));
+      return { ...prev, students };
+    }, `Дані учня "${updatedStudent.name}" оновлено`);
   };
 
   // Видалення учня
@@ -540,19 +554,64 @@ export const App: React.FC = () => {
           className={currentClass.name}
           db={db}
           onSelectStudentForReport={(student) => {
-            setIsReportsOverviewOpen(false);
             setReportStudent(student);
+          }}
+          onOpenAnalytics={(student) => {
+            setAnalyticsStudent(student);
+          }}
+          onEditStudent={(student) => {
+            setEditingStudent(student);
+          }}
+          onOpenBatchReport={(students, groupName) => {
+            setBatchReportData({ students, groupName });
           }}
           onDeleteStudent={handleDeleteStudent}
         />
       )}
 
-      {reportStudent && currentClass && (
+      {reportStudent && (
         <StudentReportModal
           isOpen={!!reportStudent}
           onClose={() => setReportStudent(null)}
           student={reportStudent}
-          className={currentClass.name}
+          className={
+            db.classes.find((c) => c.id === reportStudent.classId)?.name ||
+            currentClass?.name ||
+            'Клас'
+          }
+          db={db}
+        />
+      )}
+
+      <EditStudentModal
+        isOpen={!!editingStudent}
+        onClose={() => setEditingStudent(null)}
+        student={editingStudent}
+        classes={db.classes}
+        onSaveStudent={handleSaveStudent}
+      />
+
+      <StudentAnalyticsModal
+        isOpen={!!analyticsStudent}
+        onClose={() => setAnalyticsStudent(null)}
+        student={analyticsStudent}
+        db={db}
+        onOpenReport={(student) => {
+          setAnalyticsStudent(null);
+          setReportStudent(student);
+        }}
+        onEditStudent={(student) => {
+          setAnalyticsStudent(null);
+          setEditingStudent(student);
+        }}
+      />
+
+      {batchReportData && (
+        <BatchReportModal
+          isOpen={!!batchReportData}
+          onClose={() => setBatchReportData(null)}
+          students={batchReportData.students}
+          groupName={batchReportData.groupName}
           db={db}
         />
       )}

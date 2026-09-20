@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, generateAiPromptForParents } from '../../utils/analytics';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
-import { X, Copy, Check, Sparkles, FileText, Calendar } from 'lucide-react';
-import { toast } from 'sonner';
+import { AiQuickActions } from './AiQuickActions';
+import { X, Sparkles, FileText, Calendar } from 'lucide-react';
 
 interface StudentReportModalProps {
   isOpen: boolean;
@@ -20,7 +20,6 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   className,
   db,
 }) => {
-  const [copied, setCopied] = useState(false);
   const [periodText, setPeriodText] = useState('за останні уроки');
 
   if (!isOpen) return null;
@@ -32,17 +31,6 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
 
   const analytics = calculateStudentAnalytics(student, db, classLessons);
   const aiPrompt = generateAiPromptForParents(analytics, db.criteria, className, periodText);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(aiPrompt);
-      setCopied(true);
-      toast.success('Промпт для ШІ успішно скопійовано в буфер обміну!');
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast.error('Не вдалося скопіювати текст');
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -135,8 +123,8 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
           </div>
 
           {/* Промпт для ШІ */}
-          <div className="border-t border-slate-100 pt-4">
-            <div className="flex items-center justify-between mb-3">
+          <div className="border-t border-slate-100 pt-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-500" />
                 <h3 className="text-sm font-bold text-slate-800">
@@ -154,20 +142,15 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
               </div>
             </div>
 
+            <AiQuickActions prompt={aiPrompt} />
+
             <div className="relative">
               <pre className="p-4 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto border border-slate-800 shadow-inner">
                 {aiPrompt}
               </pre>
-              <button
-                onClick={handleCopy}
-                className="absolute top-3 right-3 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-md transition-all active:scale-95"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'Скопійовано!' : 'Скопіювати промпт'}
-              </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">
-              Скопіюйте цей текст та надішліть у ChatGPT, Claude або Gemini, щоб отримати готове персоналізоване повідомлення для батьків дитини.
+            <p className="text-[11px] text-slate-400">
+              Скористайтесь кнопками вище, щоб скопіювати промпт та одразу перейти до обраного ШІ (ChatGPT, Gemini або Claude).
             </p>
           </div>
         </div>
@@ -177,19 +160,13 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
           <span className="text-xs text-slate-500">
             Оцінки від 0 до 12 підраховуються автоматично
           </span>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            <AiQuickActions compact prompt={aiPrompt} />
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition-colors"
+              className="px-4 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition-colors"
             >
               Закрити
-            </button>
-            <button
-              onClick={handleCopy}
-              className="px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
-            >
-              <Copy className="w-3.5 h-3.5" />
-              Скопіювати промпт
             </button>
           </div>
         </div>
