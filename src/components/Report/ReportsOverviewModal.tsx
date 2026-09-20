@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
+import { toast } from 'sonner';
 import { calculateStudentAnalytics, calculateStudentTrend, getAllParallels } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
@@ -22,6 +23,7 @@ import {
   ExternalLink,
   CheckCircle2,
   Clock,
+  Copy,
 } from 'lucide-react';
 
 interface ReportsOverviewModalProps {
@@ -318,7 +320,8 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               const analytics = calculateStudentAnalytics(student, db);
               const trend = calculateStudentTrend(student, db);
               const badgeClass = getScoreBadgeClass(analytics.totalAverage);
-              const isSent = !!db.sentReports?.[`${student.id}:${periodText}`];
+              const isSent = !!(db.sentReports?.[`${student.id}:${periodText}`] || db.savedReports?.[`${student.id}:${periodText}`]?.sentAt);
+              const savedReport = db.savedReports?.[`${student.id}:${periodText}`];
 
               return (
                 <div
@@ -365,6 +368,11 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         {isSent && (
                           <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded flex items-center gap-0.5">
                             <CheckCircle2 className="w-2.5 h-2.5" /> Надіслано
+                          </span>
+                        )}
+                        {savedReport && !isSent && (
+                          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded flex items-center gap-0.5 border border-indigo-200">
+                            <Clock className="w-2.5 h-2.5" /> Звіт збережено
                           </span>
                         )}
                       </div>
@@ -426,6 +434,25 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         >
                           {isSent ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Clock className="w-3.5 h-3.5 text-slate-400" />}
                           <span className="hidden sm:inline">{isSent ? 'Надіслано' : 'Не надіслано'}</span>
+                        </button>
+                      )}
+
+                      {/* Скопіювати збережений звіт */}
+                      {savedReport && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(savedReport.content);
+                              toast.success(`Звіт для ${student.name} скопійовано 📋`);
+                            } catch {
+                              toast.error('Не вдалося скопіювати');
+                            }
+                          }}
+                          className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition"
+                          title={`Скопіювати збережений звіт для ${student.name}`}
+                        >
+                          <Copy className="w-4 h-4" />
                         </button>
                       )}
 

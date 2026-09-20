@@ -1,6 +1,6 @@
-import { Criterion, DatabaseSchema } from '../types/feedback';
+import { Criterion, DatabaseSchema, Student } from '../types/feedback';
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'behavior', name: 'Поведінка' },
@@ -10,6 +10,21 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'progress', name: 'Покращення' },
   { id: 'grade', name: 'Оцінка за урок' },
 ];
+
+/**
+ * Автоматичне визначення статі учня за закінченням імені (українські традиції).
+ * Повертає 'female' для жіночих закінчень, 'male' для решти.
+ */
+export function guessGender(name: string): 'male' | 'female' {
+  const firstName = name.trim().split(/\s+/)[1] || name.trim().split(/\s+/)[0] || '';
+  const lc = firstName.toLowerCase();
+  // Жіночі закінчення в українських іменах
+  const femaleEndings = ['а', 'я', 'ія', 'на', 'іна', 'ина', 'ка', 'ля', 'ра', 'са'];
+  for (const ending of femaleEndings) {
+    if (lc.endsWith(ending)) return 'female';
+  }
+  return 'male';
+}
 
 /**
  * Створює нову порожню базу даних актуальної версії.
@@ -23,6 +38,7 @@ export function createEmptyDatabase(): DatabaseSchema {
     lessons: [],
     records: {},
     sentReports: {},
+    savedReports: {},
   };
 }
 
@@ -60,11 +76,23 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     version = 1;
   }
 
-  // Сюди додаються наступні міграції при еволюції структури:
-  // if (version < 2) {
-  //   upgradeFromV1ToV2(obj);
-  //   version = 2;
-  // }
+  // Міграція v1 -> v2 (savedReports + автовизначення статі для наявних учнів)
+  if (version < 2) {
+    obj.savedReports = (obj.savedReports && typeof obj.savedReports === 'object')
+      ? obj.savedReports
+      : {};
+
+    // Автоматичне визначення статі для існуючих учнів без поля gender
+    if (Array.isArray(obj.students)) {
+      obj.students = obj.students.map((s: Student) => ({
+        ...s,
+        gender: s.gender ?? guessGender(s.name),
+      }));
+    }
+
+    obj.version = 2;
+    version = 2;
+  }
 
   return {
     version: CURRENT_SCHEMA_VERSION,
@@ -74,5 +102,6 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     lessons: obj.lessons,
     records: obj.records,
     sentReports: (obj.sentReports && typeof obj.sentReports === 'object') ? obj.sentReports : {},
+    savedReports: (obj.savedReports && typeof obj.savedReports === 'object') ? obj.savedReports : {},
   };
 }

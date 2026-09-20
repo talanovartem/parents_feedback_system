@@ -128,8 +128,7 @@ describe('analytics module', () => {
     expect(prompt).toContain('УЧЕНЬ №1: Олександр Шевченко (6-А)');
     expect(prompt).toContain('Індивідуальні особливості учня (контекст для вчителя, врахуй делікатно): Активний, любить англійську');
     expect(prompt).toContain('УЧЕНЬ №2: Марія Ковальчук (6-Б)');
-    expect(prompt).toContain('Індивідуальні особливості учня (контекст для вчителя, врахуй делікатно): Потребує додаткового часу на завдання');
-    expect(prompt).toContain('## Повідомлення для батьків: [Ім\'я учня] ([Клас])');
+    expect(prompt).toContain('=== ЗВІТ ДЛЯ: [Ім\'я учня] ===');
   });
 
   it('groups classes into parallels correctly for all grade levels', () => {

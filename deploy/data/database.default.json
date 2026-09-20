@@ -503,6 +503,14 @@
       "topic": "Поточна робота"
     }
   ],
-  "records": {},
+  "records": {
+    "std-7v-1": {
+      "les-7v-2": {
+        "scores": {},
+        "notes": "",
+        "absent": false
+      }
+    }
+  },
   "sentReports": {}
 }

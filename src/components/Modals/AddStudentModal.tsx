@@ -21,6 +21,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
   const [name, setName] = useState('');
   const [classId, setClassId] = useState(defaultClassId);
   const [notes, setNotes] = useState('');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
 
   useEffect(() => {
     setClassId(defaultClassId);
@@ -36,10 +37,12 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
       name: name.trim(),
       classId,
       notes: notes.trim() || undefined,
+      gender,
     });
 
     setName('');
     setNotes('');
+    setGender('male');
     onClose();
   };
 
@@ -89,6 +92,36 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Стать
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setGender('male')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg border transition ${
+                  gender === 'male'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                }`}
+              >
+                👦 Хлопець
+              </button>
+              <button
+                type="button"
+                onClick={() => setGender('female')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg border transition ${
+                  gender === 'female'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                }`}
+              >
+                👧 Дівчина
+              </button>
+            </div>
           </div>
 
           <div>

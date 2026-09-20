@@ -27,7 +27,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
   onSelectClass,
   onOpenReportsForGroup,
 }) => {
-  const [chartViewMode, setChartViewMode] = useState<'parallels' | 'classes'>('parallels');
+  const [chartViewMode, setChartViewMode] = useState<'parallels' | 'classes' | 'gender' | 'ranking'>('parallels');
 
   const parallels = useMemo(() => getAllParallels(db.classes), [db.classes]);
 
@@ -120,6 +120,48 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     });
   }, [parallels, studentsAnalytics]);
 
+  // Гендерна аналітика
+  const genderStats = useMemo(() => {
+    const groups = { male: { sum: 0, count: 0 }, female: { sum: 0, count: 0 } };
+    for (const s of studentsAnalytics) {
+      const g = s.student.gender ?? 'male';
+      if (s.analytics.totalAverage > 0) {
+        groups[g].sum += s.analytics.totalAverage;
+        groups[g].count += 1;
+      }
+    }
+    return [
+      {
+        id: 'male',
+        name: '👦 Хлопці',
+        studentsCount: db.students.filter((s) => (s.gender ?? 'male') === 'male').length,
+        averageScore: groups.male.count > 0 ? Number((groups.male.sum / groups.male.count).toFixed(1)) : 0,
+      },
+      {
+        id: 'female',
+        name: '👧 Дівчата',
+        studentsCount: db.students.filter((s) => s.gender === 'female').length,
+        averageScore: groups.female.count > 0 ? Number((groups.female.sum / groups.female.count).toFixed(1)) : 0,
+      },
+    ];
+  }, [db.students, studentsAnalytics]);
+
+  // Рейтинг учнів (топ за середнім балом)
+  const rankingStats = useMemo(() => {
+    return studentsAnalytics
+      .filter((s) => s.analytics.totalAverage > 0)
+      .sort((a, b) => b.analytics.totalAverage - a.analytics.totalAverage)
+      .slice(0, 20)
+      .map((s, idx) => ({
+        id: s.student.id,
+        name: s.student.name,
+        className: s.className,
+        averageScore: s.analytics.totalAverage,
+        rank: idx + 1,
+      }));
+  }, [studentsAnalytics]);
+
+
   // Розподіл рівнів успішності по всій школі
   const levelDistribution = useMemo(() => {
     let high = 0; // 10-12
@@ -169,7 +211,10 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
   }, [studentsAnalytics]);
 
   // Дані для активного SVG графіку
-  const activeChartData = chartViewMode === 'parallels' ? parallelsStats : classesStats;
+  const activeChartData = chartViewMode === 'parallels' ? parallelsStats
+    : chartViewMode === 'classes' ? classesStats
+    : chartViewMode === 'gender' ? genderStats
+    : classesStats; // 'ranking' uses its own rendering below
   const chartWidth = 700;
   const chartHeight = 180;
   const paddingX = 40;
@@ -278,7 +323,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
           </div>
 
           {/* Toggle Button */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl">
             <button
               type="button"
               onClick={() => setChartViewMode('parallels')}
@@ -299,7 +344,29 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              За окремими класами ({classesStats.length})
+              За класами ({classesStats.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartViewMode('gender')}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+                chartViewMode === 'gender'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Гендерний аналіз
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartViewMode('ranking')}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+                chartViewMode === 'ranking'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Рейтинг учнів
             </button>
           </div>
         </div>
@@ -399,6 +466,26 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
             })}
           </svg>
         </div>
+
+        {/* Ranking list (replaces SVG visualization in ranking mode) */}
+        {chartViewMode === 'ranking' && rankingStats.length > 0 && (
+          <div className="mt-4 space-y-1 max-h-64 overflow-y-auto pr-1">
+            {rankingStats.map((r) => (
+              <div key={r.id} className="flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`w-6 text-center text-xs font-black shrink-0 ${r.rank <= 3 ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`}
+                  </span>
+                  <span className="text-sm font-medium text-slate-800 truncate">{r.name}</span>
+                  <span className="text-[10px] text-slate-400 shrink-0">{r.className}</span>
+                </div>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded border ${r.averageScore >= 10 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : r.averageScore >= 7 ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-amber-100 text-amber-800 border-amber-300'}`}>
+                  {r.averageScore} / 12
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Levels Distribution Bar */}

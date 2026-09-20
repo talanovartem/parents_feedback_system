@@ -351,15 +351,58 @@ export const App: React.FC = () => {
   const handleToggleReportSent = (studentId: string, periodString: string) => {
     updateDbAndSave((prev) => {
       const sentReports = { ...(prev.sentReports || {}) };
+      const savedReports = { ...(prev.savedReports || {}) };
       const key = `${studentId}:${periodString}`;
-      if (sentReports[key]) {
+      if (sentReports[key] || savedReports[key]?.sentAt) {
         delete sentReports[key];
+        if (savedReports[key]) {
+          savedReports[key] = { ...savedReports[key], sentAt: undefined };
+        }
       } else {
         sentReports[key] = new Date().toISOString();
+        if (savedReports[key]) {
+          savedReports[key] = { ...savedReports[key], sentAt: new Date().toISOString() };
+        }
       }
-      return { ...prev, sentReports };
+      return { ...prev, sentReports, savedReports };
     });
   };
+
+  // Збереження звіту ШІ для одного учня
+  const handleSaveSingleReport = (report: import('./types/feedback').SavedReport) => {
+    updateDbAndSave((prev) => {
+      const savedReports = { ...(prev.savedReports || {}) };
+      savedReports[report.id] = report;
+      return { ...prev, savedReports };
+    });
+  };
+
+  // Оновлення тексту збереженого звіту
+  const handleSaveSingleReportContent = (studentId: string, period: string, content: string) => {
+    const key = `${studentId}:${period}`;
+    updateDbAndSave((prev) => {
+      const savedReports = { ...(prev.savedReports || {}) };
+      const existing = savedReports[key];
+      savedReports[key] = {
+        ...(existing || { id: key, studentId, period, sentAt: undefined }),
+        content,
+        updatedAt: new Date().toISOString(),
+      };
+      return { ...prev, savedReports };
+    });
+  };
+
+  // Збереження пакетних звітів ШІ
+  const handleSaveBatchReports = (reports: import('./types/feedback').SavedReport[]) => {
+    updateDbAndSave((prev) => {
+      const savedReports = { ...(prev.savedReports || {}) };
+      for (const r of reports) {
+        savedReports[r.id] = r;
+      }
+      return { ...prev, savedReports };
+    });
+  };
+
 
   // Додавання критерію
   const handleAddCriterion = (name: string, description?: string) => {
@@ -785,6 +828,8 @@ export const App: React.FC = () => {
           }
           db={db}
           onToggleReportSent={handleToggleReportSent}
+          onSaveSingleReport={handleSaveSingleReport}
+          onSaveSingleReportContent={handleSaveSingleReportContent}
         />
       )}
 
@@ -819,6 +864,7 @@ export const App: React.FC = () => {
           groupName={batchReportData.groupName}
           db={db}
           onToggleReportSent={handleToggleReportSent}
+          onSaveBatchReports={handleSaveBatchReports}
         />
       )}
     </div>

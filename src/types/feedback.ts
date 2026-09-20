@@ -8,6 +8,16 @@ export interface Student {
   classId: string;
   name: string;
   notes?: string; // загальна примітка про учня/особливості
+  gender?: 'male' | 'female'; // стать учня (для аналітики дашборду)
+}
+
+export interface SavedReport {
+  id: string; // "${studentId}:${period}"
+  studentId: string;
+  period: string; // назва періоду, наприклад "Тиждень (15.09 - 21.09)"
+  content: string; // текст збереженого/відредагованого звіту
+  updatedAt: string; // ISO дата останнього оновлення
+  sentAt?: string; // ISO дата відправки батькам (якщо надіслано)
 }
 
 export interface Criterion {
@@ -39,6 +49,7 @@ export interface DatabaseSchema {
   lessons: Lesson[];
   records: Record<string, Record<string, LessonStudentEntry>>; // studentId -> lessonId -> LessonStudentEntry
   sentReports?: Record<string, string>; // "${studentId}:${period}" -> дата/час ISO відправки звіту батькам
+  savedReports?: Record<string, SavedReport>; // "${studentId}:${period}" -> збережений звіт
 }
 
 export interface StudentAnalytics {
