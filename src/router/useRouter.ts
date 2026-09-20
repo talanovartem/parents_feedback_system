@@ -5,7 +5,8 @@ export type AppRoute =
   | { name: 'journal'; classId?: string }
   | { name: 'dashboard' }
   | { name: 'reports'; classOrParallelId?: string }
-  | { name: 'student'; studentId: string };
+  | { name: 'student'; studentId: string }
+  | { name: 'feedback'; lessonId: string };
 
 export function parseHash(hash: string): AppRoute {
   const clean = hash.replace(/^#\/?/, '').trim();
@@ -31,6 +32,10 @@ export function parseHash(hash: string): AppRoute {
     return { name: 'student', studentId: parts[1] };
   }
 
+  if ((parts[0] === 'feedback' || parts[0] === 'lesson-feedback') && parts[1]) {
+    return { name: 'feedback', lessonId: parts[1] };
+  }
+
   if (parts[0] === 'class' && parts[1]) {
     return { name: 'journal', classId: parts[1] };
   }
@@ -44,6 +49,10 @@ export function getScheduleHash(): string {
 
 export function getStudentHash(studentId: string): string {
   return `#/student/${studentId}`;
+}
+
+export function getLessonFeedbackHash(lessonId: string): string {
+  return `#/feedback/${lessonId}`;
 }
 
 export function getClassHash(classId: string): string {

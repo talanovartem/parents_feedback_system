@@ -9,6 +9,23 @@ export interface Student {
   name: string;
   notes?: string; // загальна примітка про учня/особливості
   gender?: 'male' | 'female'; // стать учня (для аналітики дашборду)
+  pinCode?: string; // 4-значний PIN-код для входу учня у форму фідбеку
+  karpatyPoints?: number; // накопичувальні бонуси «карпатики» 🏔️
+}
+
+export type FeedbackMood = 'tired' | 'bored' | 'normal' | 'interesting' | 'excited';
+
+export interface StudentLessonFeedback {
+  id: string; // "${studentId}:${lessonId}"
+  studentId: string;
+  lessonId: string;
+  mood: FeedbackMood;
+  selfGrade: number; // 1..4 (НУШ: потребую допомоги, майже все зрозумів, впевнено, можу навчити)
+  insight: string; // головне відкриття / чому навчився
+  difficulty?: string; // труднощі (опціонально)
+  bonusGranted: boolean; // чи зараховано бонус за якість відповіді
+  karpatyPointsEarned?: number; // кількість нарахованих «карпатиків» 🏔️
+  createdAt: string; // ISO дата створення
 }
 
 export interface SavedReport {
@@ -50,6 +67,7 @@ export interface DatabaseSchema {
   records: Record<string, Record<string, LessonStudentEntry>>; // studentId -> lessonId -> LessonStudentEntry
   sentReports?: Record<string, string>; // "${studentId}:${period}" -> дата/час ISO відправки звіту батькам
   savedReports?: Record<string, SavedReport>; // "${studentId}:${period}" -> збережений звіт
+  lessonFeedback?: Record<string, StudentLessonFeedback>; // "${studentId}:${lessonId}" -> фідбек учня
 }
 
 export interface StudentAnalytics {

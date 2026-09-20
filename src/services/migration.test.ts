@@ -5,19 +5,21 @@ import {
   CURRENT_SCHEMA_VERSION,
   DEFAULT_CRITERIA,
   guessGender,
+  generateStudentPin,
 } from './migration';
 
 describe('migration service', () => {
-  it('creates an empty database with CURRENT_SCHEMA_VERSION, savedReports and default criteria', () => {
+  it('creates an empty database with CURRENT_SCHEMA_VERSION, savedReports, lessonFeedback and default criteria', () => {
     const db = createEmptyDatabase();
     expect(db.version).toBe(CURRENT_SCHEMA_VERSION);
-    expect(db.version).toBe(2);
+    expect(db.version).toBe(3);
     expect(db.classes).toEqual([]);
     expect(db.students).toEqual([]);
     expect(db.lessons).toEqual([]);
     expect(db.records).toEqual({});
     expect(db.sentReports).toEqual({});
     expect(db.savedReports).toEqual({});
+    expect(db.lessonFeedback).toEqual({});
     expect(db.criteria).toEqual(DEFAULT_CRITERIA);
   });
 
@@ -30,6 +32,15 @@ describe('migration service', () => {
     expect(guessGender('Олександр')).toBe('male');
   });
 
+  it('generates consistent 4-digit student PINs', () => {
+    const pin1 = generateStudentPin('std-1');
+    const pin2 = generateStudentPin('std-1');
+    expect(pin1).toBe(pin2);
+    expect(pin1.length).toBe(4);
+    expect(Number(pin1)).toBeGreaterThanOrEqual(1000);
+    expect(Number(pin1)).toBeLessThanOrEqual(9999);
+  });
+
   it('handles null, undefined or non-object inputs safely', () => {
     expect(migrateDatabase(null)).toEqual(createEmptyDatabase());
     expect(migrateDatabase(undefined)).toEqual(createEmptyDatabase());
@@ -37,7 +48,7 @@ describe('migration service', () => {
     expect(migrateDatabase(123)).toEqual(createEmptyDatabase());
   });
 
-  it('migrates legacy v0 schema to v2 preserving all data and guessing gender', () => {
+  it('migrates legacy v0 schema to v3 preserving all data and generating pinCode', () => {
     const legacyData = {
       classes: [{ id: 'cls-6a', name: '6-А' }],
       students: [{ id: 'std-1', classId: 'cls-6a', name: 'Артем' }],
@@ -54,12 +65,16 @@ describe('migration service', () => {
 
     const migrated = migrateDatabase(legacyData);
 
-    expect(migrated.version).toBe(2);
+    expect(migrated.version).toBe(3);
     expect(migrated.classes).toEqual(legacyData.classes);
-    expect(migrated.students).toEqual([{ id: 'std-1', classId: 'cls-6a', name: 'Артем', gender: 'male' }]);
+    expect(migrated.students[0].name).toBe('Артем');
+    expect(migrated.students[0].gender).toBe('male');
+    expect(migrated.students[0].pinCode).toBeDefined();
+    expect(migrated.students[0].pinCode?.length).toBe(4);
     expect(migrated.lessons).toEqual(legacyData.lessons);
     expect(migrated.records).toEqual(legacyData.records);
     expect(migrated.savedReports).toEqual({});
+    expect(migrated.lessonFeedback).toEqual({});
     expect(migrated.criteria).toEqual(DEFAULT_CRITERIA);
   });
 
@@ -77,26 +92,27 @@ describe('migration service', () => {
 
     const migrated = migrateDatabase(dataWithCustomCriteria);
     expect(migrated.criteria).toEqual(customCriteria);
-    expect(migrated.version).toBe(2);
+    expect(migrated.version).toBe(3);
   });
 
-  it('migrates v1 schema to v2 adding savedReports and student gender', () => {
-    const v1Data = {
-      version: 1,
+  it('migrates v2 schema to v3 adding lessonFeedback and pinCode', () => {
+    const v2Data = {
+      version: 2,
       classes: [{ id: 'cls-7a', name: '7-А' }],
       students: [
-        { id: 'std-2', classId: 'cls-7a', name: 'Олена' },
-        { id: 'std-3', classId: 'cls-7a', name: 'Тарас', gender: 'male' as const },
+        { id: 'std-2', classId: 'cls-7a', name: 'Олена', gender: 'female' as const },
+        { id: 'std-3', classId: 'cls-7a', name: 'Тарас', gender: 'male' as const, pinCode: '5555' },
       ],
       criteria: DEFAULT_CRITERIA,
       lessons: [],
       records: {},
+      savedReports: {},
     };
 
-    const result = migrateDatabase(v1Data);
-    expect(result.version).toBe(2);
-    expect(result.students[0].gender).toBe('female');
-    expect(result.students[1].gender).toBe('male');
-    expect(result.savedReports).toEqual({});
+    const result = migrateDatabase(v2Data);
+    expect(result.version).toBe(3);
+    expect(result.students[0].pinCode?.length).toBe(4);
+    expect(result.students[1].pinCode).toBe('5555');
+    expect(result.lessonFeedback).toEqual({});
   });
 });

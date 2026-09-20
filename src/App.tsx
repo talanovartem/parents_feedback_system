@@ -16,6 +16,8 @@ import { BatchReportModal } from './components/Report/BatchReportModal';
 import { StudentPage } from './components/Student/StudentPage';
 import { GlobalDashboard } from './components/Dashboard/GlobalDashboard';
 import { TeacherSchedulePage } from './components/Schedule/TeacherSchedulePage';
+import { StudentFeedbackPage } from './components/StudentFeedback/StudentFeedbackPage';
+import { StudentPinsModal } from './components/Modals/StudentPinsModal';
 import { useRouter, getClassHash } from './router/useRouter';
 import { Toaster, toast } from 'sonner';
 import {
@@ -35,6 +37,7 @@ import {
   Calendar,
   Cloud,
   CloudOff,
+  KeyRound,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -55,6 +58,7 @@ export const App: React.FC = () => {
   const [analyticsStudent, setAnalyticsStudent] = useState<Student | null>(null);
   const [batchReportData, setBatchReportData] = useState<{ students: Student[]; groupName: string } | null>(null);
   const [reportsInitialFilter, setReportsInitialFilter] = useState<string | undefined>(undefined);
+  const [isPinsModalOpen, setIsPinsModalOpen] = useState(false);
 
   const { route, navigate } = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -403,6 +407,38 @@ export const App: React.FC = () => {
     });
   };
 
+  // Збереження учнівського фідбеку до уроку та нарахування карпатиків
+  const handleSubmitFeedback = (feedback: import('./types/feedback').StudentLessonFeedback) => {
+    updateDbAndSave((prev) => {
+      const lessonFeedback = { ...(prev.lessonFeedback || {}) };
+      lessonFeedback[feedback.id] = feedback;
+
+      // Нараховуємо накопичувальні бали "карпатики" 🏔️
+      const points = feedback.karpatyPointsEarned || 0;
+      const students = prev.students.map((s) => {
+        if (s.id === feedback.studentId) {
+          return {
+            ...s,
+            karpatyPoints: (s.karpatyPoints || 0) + points,
+          };
+        }
+        return s;
+      });
+
+      return { ...prev, lessonFeedback, students };
+    }, 'Відгук збережено! Карпатики нараховано 🏔️');
+  };
+
+  // Оновлення PIN-коду учня
+  const handleUpdateStudentPin = (studentId: string, newPin: string) => {
+    updateDbAndSave((prev) => {
+      const students = prev.students.map((s) => (s.id === studentId ? { ...s, pinCode: newPin } : s));
+      return { ...prev, students };
+    });
+  };
+
+
+
 
   // Додавання критерію
   const handleAddCriterion = (name: string, description?: string) => {
@@ -466,6 +502,19 @@ export const App: React.FC = () => {
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
         <p className="text-sm font-medium text-slate-600">Завантаження журналу оцінювання...</p>
       </div>
+    );
+  }
+
+  if (route.name === 'feedback') {
+    return (
+      <>
+        <Toaster position="top-right" richColors />
+        <StudentFeedbackPage
+          lessonId={route.lessonId}
+          db={db}
+          onSubmitFeedback={handleSubmitFeedback}
+        />
+      </>
     );
   }
 
@@ -584,6 +633,16 @@ export const App: React.FC = () => {
               <Sliders className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span className="hidden sm:inline">Критерії (0-12)</span>
               <span className="sm:hidden">Критерії</span>
+            </button>
+
+            <button
+              onClick={() => setIsPinsModalOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              title="Переглянути та роздати PIN-коди учнів для фідбеку"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="hidden sm:inline">PIN-коди учнів</span>
+              <span className="sm:hidden">PIN</span>
             </button>
 
             <button
@@ -867,6 +926,14 @@ export const App: React.FC = () => {
           onSaveBatchReports={handleSaveBatchReports}
         />
       )}
+
+      <StudentPinsModal
+        isOpen={isPinsModalOpen}
+        onClose={() => setIsPinsModalOpen(false)}
+        db={db}
+        currentClassId={selectedClassId}
+        onUpdateStudentPin={handleUpdateStudentPin}
+      />
     </div>
   );
 };

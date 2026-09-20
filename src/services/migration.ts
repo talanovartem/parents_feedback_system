@@ -1,6 +1,6 @@
 import { Criterion, DatabaseSchema, Student } from '../types/feedback';
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'behavior', name: 'Поведінка' },
@@ -27,6 +27,18 @@ export function guessGender(name: string): 'male' | 'female' {
 }
 
 /**
+ * Генерує детермінований 4-значний PIN-код для учня на основі його ID.
+ */
+export function generateStudentPin(studentId: string): string {
+  let hash = 0;
+  for (let i = 0; i < studentId.length; i++) {
+    hash = ((hash << 5) - hash + studentId.charCodeAt(i)) | 0;
+  }
+  const code = (1000 + (Math.abs(hash) % 9000)).toString();
+  return code;
+}
+
+/**
  * Створює нову порожню базу даних актуальної версії.
  */
 export function createEmptyDatabase(): DatabaseSchema {
@@ -39,6 +51,7 @@ export function createEmptyDatabase(): DatabaseSchema {
     records: {},
     sentReports: {},
     savedReports: {},
+    lessonFeedback: {},
   };
 }
 
@@ -94,6 +107,23 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     version = 2;
   }
 
+  // Міграція v2 -> v3 (lessonFeedback + автоматичні 4-значні PIN-коди для учнів)
+  if (version < 3) {
+    obj.lessonFeedback = (obj.lessonFeedback && typeof obj.lessonFeedback === 'object')
+      ? obj.lessonFeedback
+      : {};
+
+    if (Array.isArray(obj.students)) {
+      obj.students = obj.students.map((s: Student) => ({
+        ...s,
+        pinCode: s.pinCode || generateStudentPin(s.id),
+      }));
+    }
+
+    obj.version = 3;
+    version = 3;
+  }
+
   return {
     version: CURRENT_SCHEMA_VERSION,
     classes: obj.classes,
@@ -103,5 +133,6 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     records: obj.records,
     sentReports: (obj.sentReports && typeof obj.sentReports === 'object') ? obj.sentReports : {},
     savedReports: (obj.savedReports && typeof obj.savedReports === 'object') ? obj.savedReports : {},
+    lessonFeedback: (obj.lessonFeedback && typeof obj.lessonFeedback === 'object') ? obj.lessonFeedback : {},
   };
 }

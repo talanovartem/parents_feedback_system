@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Criterion, DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { ScoreCell } from './ScoreCell';
 import { ScoreInput } from '../ScoreInput';
 import { EditLessonModal } from '../Modals/EditLessonModal';
 import { VoiceInputButton } from '../Common/VoiceInputButton';
+import { toast } from 'sonner';
 import {
   Calendar,
   Trash2,
@@ -18,6 +19,7 @@ import {
   CheckCircle2,
   Table,
   LayoutGrid,
+  MessageSquareText,
 } from 'lucide-react';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
@@ -129,6 +131,15 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
       presentCount += 1;
     }
   }
+
+  // Підрахунок надісланих учнівських фідбеків до цього уроку
+  const feedbackList = useMemo(() => {
+    if (!db.lessonFeedback) return [];
+    return students
+      .map((s) => db.lessonFeedback?.[`${s.id}:${lesson.id}`])
+      .filter((f): f is import('../../types/feedback').StudentLessonFeedback => !!f);
+  }, [db.lessonFeedback, students, lesson.id]);
+
 
   return (
     <div
@@ -272,6 +283,30 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
               </button>
             </div>
 
+            {/* Кнопка посилання на фідбек учнів */}
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}${window.location.pathname}#/feedback/${lesson.id}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                  toast.success('Посилання на форму фідбеку учнів скопійовано! 📋 Роздайте його класу.');
+                } catch {
+                  window.prompt('Скопіюйте посилання на форму фідбеку для учнів:', url);
+                }
+              }}
+              title="Скопіювати посилання на форму фідбеку до цього уроку для учнів"
+              className="px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+            >
+              <MessageSquareText className="w-3.5 h-3.5 text-purple-600" />
+              <span className="hidden sm:inline">Фідбек учнів</span>
+              {feedbackList.length > 0 && (
+                <span className="px-1.5 py-0.2 bg-purple-200 text-purple-900 rounded-full text-[10px] font-bold">
+                  {feedbackList.length}/{students.length}
+                </span>
+              )}
+            </button>
+
             <button
               onClick={onOpenAddCriterion}
               title="Додати колонку-критерій"
@@ -405,6 +440,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                   const isAbsent = !!record?.absent;
                   const scores = record?.scores || {};
                   const lessonNotes = record?.notes || '';
+                  const studentFeedback = db.lessonFeedback?.[`${student.id}:${lesson.id}`];
 
                   return (
                     <tr
@@ -420,8 +456,18 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="font-semibold text-slate-800 text-xs">
-                            {student.name}
+                          <div className="font-semibold text-slate-800 text-xs flex items-center gap-1.5 flex-wrap">
+                            <span>{student.name}</span>
+                            {studentFeedback && (
+                              <span
+                                className="px-1.5 py-0.2 bg-purple-100 text-purple-800 border border-purple-200 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-help"
+                                title={`Фідбек учня: ${studentFeedback.mood === 'excited' ? '🚀 Захопливо' : studentFeedback.mood === 'interesting' ? '💡 Цікаво' : studentFeedback.mood === 'normal' ? '🙂 Нормально' : studentFeedback.mood === 'bored' ? '🥱 Нудно' : '😫 Втомився'}, самооцінка: ${studentFeedback.selfGrade}/4. «${studentFeedback.insight}»`}
+                              >
+                                <span>{studentFeedback.mood === 'excited' ? '🚀' : studentFeedback.mood === 'interesting' ? '💡' : studentFeedback.mood === 'normal' ? '🙂' : studentFeedback.mood === 'bored' ? '🥱' : '😫'}</span>
+                                <span>{studentFeedback.selfGrade}/4</span>
+                                {studentFeedback.bonusGranted && <Sparkles className="w-2.5 h-2.5 text-amber-500" />}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span
@@ -640,6 +686,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                 const isAbsent = !!record?.absent;
                 const scores = record?.scores || {};
                 const lessonNotes = record?.notes || '';
+                const studentFeedback = db.lessonFeedback?.[`${student.id}:${lesson.id}`];
                 const isCardExpanded = expandedStudentIds.has(student.id);
 
                 // Кількість заповнених критеріїв
@@ -718,6 +765,16 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                             {lessonNotes && (
                               <span className="text-amber-700 truncate max-w-[140px] font-medium" title={lessonNotes}>
                                 • 📝 {lessonNotes}
+                              </span>
+                            )}
+                            {studentFeedback && (
+                              <span
+                                className="text-purple-700 font-semibold truncate max-w-[150px] flex items-center gap-1 text-[11px]"
+                                title={`Фідбек учня: ${studentFeedback.mood === 'excited' ? '🚀 Захопливо' : studentFeedback.mood === 'interesting' ? '💡 Цікаво' : studentFeedback.mood === 'normal' ? '🙂 Нормально' : studentFeedback.mood === 'bored' ? '🥱 Нудно' : '😫 Втомився'}, самооцінка: ${studentFeedback.selfGrade}/4. «${studentFeedback.insight}»`}
+                              >
+                                • <span>{studentFeedback.mood === 'excited' ? '🚀' : studentFeedback.mood === 'interesting' ? '💡' : studentFeedback.mood === 'normal' ? '🙂' : studentFeedback.mood === 'bored' ? '🥱' : '😫'}</span>
+                                <span>{studentFeedback.selfGrade}/4</span>
+                                {studentFeedback.bonusGranted && <Sparkles className="w-2.5 h-2.5 text-amber-500" />}
                               </span>
                             )}
                           </div>
