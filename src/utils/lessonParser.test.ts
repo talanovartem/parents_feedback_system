@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseLessonsInput, getSchoolTodayUrl } from './lessonParser';
+import { parseLessonsInput, getSchoolTodayUrl, getSchoolTodayRangeUrl } from './lessonParser';
 import { ClassItem, Lesson } from '../types/feedback';
 
 describe('lessonParser', () => {
@@ -137,5 +137,12 @@ School Today
     expect(res.url).toContain('StartDate=');
     expect(res.url).toContain('EndDate=');
     expect(res.startDateStr).toMatch(/\d{2}\.\d{2}/);
+
+    const nextWeek = getSchoolTodayUrl(1);
+    expect(nextWeek.url).toContain('StartDate=');
+
+    const twoWeeks = getSchoolTodayRangeUrl(0, 1);
+    expect(twoWeeks.url).toContain('StartDate=');
+    expect(twoWeeks.url).toContain('EndDate=');
   });
 });

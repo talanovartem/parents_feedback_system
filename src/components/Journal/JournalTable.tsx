@@ -104,16 +104,32 @@ export const JournalTable: React.FC<JournalTableProps> = ({
             <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
             Додати учня
           </button>
-          <a
-            href={getSchoolTodayUrl(0).url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Відкрити розклад уроків у системі School Today"
-            className="px-3 py-1.5 text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200 rounded-lg shadow-2xs flex items-center gap-1.5 transition-all"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
-            School Today
-          </a>
+          {/* Кнопки переходу до School Today */}
+          <div className="flex items-center rounded-lg border border-blue-200 bg-blue-50/70 p-0.5 shadow-2xs">
+            <span className="px-2 py-0.5 text-[11px] font-bold text-blue-800 flex items-center gap-1">
+              <ExternalLink className="w-3 h-3 text-blue-600" />
+              School Today:
+            </span>
+            <a
+              href={getSchoolTodayUrl(0).url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Поточний тиждень (${getSchoolTodayUrl(0).startDateStr} – ${getSchoolTodayUrl(0).endDateStr})`}
+              className="px-2 py-0.5 text-xs font-semibold text-blue-700 hover:text-blue-950 hover:bg-blue-100 rounded transition-colors"
+            >
+              Цей тиждень
+            </a>
+            <span className="text-blue-300">|</span>
+            <a
+              href={getSchoolTodayUrl(1).url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Наступний тиждень (${getSchoolTodayUrl(1).startDateStr} – ${getSchoolTodayUrl(1).endDateStr})`}
+              className="px-2 py-0.5 text-xs font-bold text-blue-800 hover:text-blue-950 hover:bg-blue-100 rounded transition-colors"
+            >
+              Наступний тиждень
+            </a>
+          </div>
           <button
             onClick={onOpenBulkAddLesson}
             title="Масове створення уроків за описом або файлом"

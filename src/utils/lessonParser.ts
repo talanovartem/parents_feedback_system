@@ -60,6 +60,56 @@ export function getSchoolTodayUrl(offsetWeeks = 0): {
 }
 
 /**
+ * Генерує посилання на розклад School Today для діапазону тижнів (наприклад, 2 тижні: поточний + наступний)
+ */
+export function getSchoolTodayRangeUrl(startOffsetWeeks = 0, endOffsetWeeks = 1): {
+  url: string;
+  startDateStr: string;
+  endDateStr: string;
+  startDateIso: string;
+  endDateIso: string;
+} {
+  const now = new Date();
+  const startCurrent = new Date(now.getFullYear(), now.getMonth(), now.getDate() + startOffsetWeeks * 7);
+  const endCurrent = new Date(now.getFullYear(), now.getMonth(), now.getDate() + endOffsetWeeks * 7);
+
+  const startDay = startCurrent.getDay();
+  const diffToStartMonday = startCurrent.getDate() - startDay + (startDay === 0 ? -6 : 1);
+  const monday = new Date(startCurrent.getFullYear(), startCurrent.getMonth(), diffToStartMonday);
+
+  const endDay = endCurrent.getDay();
+  const diffToEndMonday = endCurrent.getDate() - endDay + (endDay === 0 ? -6 : 1);
+  const endMonday = new Date(endCurrent.getFullYear(), endCurrent.getMonth(), diffToEndMonday);
+  const sunday = new Date(endMonday.getFullYear(), endMonday.getMonth(), endMonday.getDate() + 6);
+
+  const formatIso = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dayStr}`;
+  };
+
+  const formatHuman = (d: Date) => {
+    const dayStr = String(d.getDate()).padStart(2, '0');
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dayStr}.${m}`;
+  };
+
+  const startDateIso = formatIso(monday);
+  const endDateIso = formatIso(sunday);
+
+  const url = `https://school-today.com/ClassDetail/TeacherTimetableInfo?TeacherID=1005&DisciplineID=d2037&StartDate=${startDateIso}&__Invariant=StartDate&EndDate=${endDateIso}&__Invariant=EndDate`;
+
+  return {
+    url,
+    startDateStr: formatHuman(monday),
+    endDateStr: formatHuman(sunday),
+    startDateIso,
+    endDateIso,
+  };
+}
+
+/**
  * Знаходження класу в рядку тексту (підтримка 8A -> 8-А, 8B -> 8-В тощо)
  */
 function detectClass(
