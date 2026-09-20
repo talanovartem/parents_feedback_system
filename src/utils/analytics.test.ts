@@ -19,7 +19,8 @@ describe('analytics module', () => {
     ],
     lessons: [
       { id: 'les-1', classId: 'cls-6a', date: '2026-09-15', lessonNumber: 1 },
-      { id: 'les-2', classId: 'cls-6a', date: '2026-09-17', lessonNumber: 2 }
+      { id: 'les-2', classId: 'cls-6a', date: '2026-09-17', lessonNumber: 2 },
+      { id: 'les-3', classId: 'cls-6a', date: '2026-09-18', lessonNumber: 3 }
     ],
     records: {
       'std-1': {
@@ -30,19 +31,28 @@ describe('analytics module', () => {
         'les-2': {
           scores: { behavior: 8, activity: 10 },
           notes: ''
+        },
+        'les-3': {
+          absent: true,
+          scores: { behavior: 2, activity: 2 }, // Ці оцінки не повинні враховуватись через відсутність!
+          notes: 'Хворів'
         }
       }
     }
   };
 
-  it('calculates average scores correctly', () => {
+  it('calculates average scores correctly and ignores absent lessons', () => {
     const analytics = calculateStudentAnalytics(mockStudent, mockDb);
 
-    expect(analytics.averageScores.behavior).toBe(9); // (10 + 8) / 2
-    expect(analytics.averageScores.activity).toBe(11); // (12 + 10) / 2
+    expect(analytics.averageScores.behavior).toBe(9); // (10 + 8) / 2 = 9 (les-3 ігнорується!)
+    expect(analytics.averageScores.activity).toBe(11); // (12 + 10) / 2 = 11
     expect(analytics.totalAverage).toBe(10); // (10+12+8+10)/4 = 10
-    expect(analytics.lessonNotes.length).toBe(1);
+    expect(analytics.totalLessons).toBe(3);
+    expect(analytics.absentLessonsCount).toBe(1);
+    expect(analytics.attendedLessonsCount).toBe(2);
+    expect(analytics.lessonNotes.length).toBe(2);
     expect(analytics.lessonNotes[0].notes).toBe('Гарна відповідь біля дошки');
+    expect(analytics.lessonNotes[1].notes).toBe('[Відсутній] Хворів');
   });
 
   it('generates prompt with expected format and student info', () => {

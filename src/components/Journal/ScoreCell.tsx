@@ -6,6 +6,7 @@ interface ScoreCellProps {
   onChange: (score: number | null) => void;
   criterionName: string;
   studentName: string;
+  disabled?: boolean;
 }
 
 export const ScoreCell: React.FC<ScoreCellProps> = ({
@@ -13,12 +14,14 @@ export const ScoreCell: React.FC<ScoreCellProps> = ({
   onChange,
   criterionName,
   studentName,
+  disabled,
 }) => {
   return (
     <td className="px-1.5 py-2 text-center border-r border-slate-100 last:border-r-0">
       <ScoreInput
         value={score}
         onChange={onChange}
+        disabled={disabled}
         ariaLabel={`${studentName} - ${criterionName}`}
       />
     </td>

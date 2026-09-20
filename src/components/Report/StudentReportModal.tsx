@@ -92,10 +92,16 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
                   </div>
                 );
               })}
-              <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl flex items-center justify-between sm:col-span-3">
+              <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl flex items-center justify-between sm:col-span-2">
                 <span className="text-xs font-semibold text-indigo-900">Загальний середній бал:</span>
                 <span className="text-sm font-bold text-indigo-700 bg-white px-3 py-0.5 rounded-lg border border-indigo-200">
                   {analytics.totalAverage} / 12
+                </span>
+              </div>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700">Відвідування:</span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded ${analytics.absentLessonsCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {analytics.attendedLessonsCount}/{analytics.totalLessons} уроків
                 </span>
               </div>
             </div>

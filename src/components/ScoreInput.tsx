@@ -5,12 +5,16 @@ interface ScoreInputProps {
   value?: number;
   onChange: (val: number | null) => void;
   ariaLabel?: string;
+  disabled?: boolean;
 }
 
-export const ScoreInput: React.FC<ScoreInputProps> = ({ value, onChange, ariaLabel }) => {
-  const badgeClass = getScoreBadgeClass(value);
+export const ScoreInput: React.FC<ScoreInputProps> = ({ value, onChange, ariaLabel, disabled }) => {
+  const badgeClass = disabled
+    ? 'bg-slate-100 text-slate-300 border-dashed border-slate-300 cursor-not-allowed opacity-60'
+    : getScoreBadgeClass(value);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const raw = e.target.value;
     if (raw === '') {
       onChange(null);
@@ -31,10 +35,11 @@ export const ScoreInput: React.FC<ScoreInputProps> = ({ value, onChange, ariaLab
         min={0}
         max={12}
         step={1}
-        value={value !== undefined && value !== null ? value : ''}
+        disabled={disabled}
+        value={disabled ? '' : (value !== undefined && value !== null ? value : '')}
         onChange={handleChange}
         onFocus={handleFocus}
-        placeholder="-"
+        placeholder={disabled ? '—' : '-'}
         aria-label={ariaLabel}
         className={`w-9 h-8 text-center text-xs border rounded-md transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none ${badgeClass}`}
       />

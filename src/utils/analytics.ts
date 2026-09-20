@@ -12,20 +12,43 @@ export function calculateStudentAnalytics(
   const studentRecords = db.records[student.id] || {};
 
   const scoreTotals: Record<string, { sum: number; count: number }> = {};
-  const lessonNotes: Array<{ lesson: Lesson; notes: string; scores: Record<string, number> }> = [];
+  const lessonNotes: StudentAnalytics['lessonNotes'] = [];
 
   let overallSum = 0;
   let overallCount = 0;
+  let absentCount = 0;
 
   for (const lesson of lessons) {
     const entry = studentRecords[lesson.id];
     if (!entry) continue;
 
+    if (entry.absent) {
+      absentCount += 1;
+      if (entry.notes && entry.notes.trim()) {
+        lessonNotes.push({
+          lesson,
+          notes: `[Відсутній] ${entry.notes.trim()}`,
+          scores: {},
+          absent: true,
+        });
+      } else {
+        lessonNotes.push({
+          lesson,
+          notes: `[Відсутній] Пропуск уроку`,
+          scores: {},
+          absent: true,
+        });
+      }
+      // Не додаємо бали відсутнього учня
+      continue;
+    }
+
     if (entry.notes && entry.notes.trim()) {
       lessonNotes.push({
         lesson,
         notes: entry.notes.trim(),
-        scores: entry.scores || {}
+        scores: entry.scores || {},
+        absent: false,
       });
     }
 
@@ -55,9 +78,11 @@ export function calculateStudentAnalytics(
   return {
     student,
     totalLessons: lessons.length,
+    attendedLessonsCount: lessons.length - absentCount,
+    absentLessonsCount: absentCount,
     averageScores,
     totalAverage,
-    lessonNotes
+    lessonNotes,
   };
 }
 
@@ -70,10 +95,10 @@ export function generateAiPromptForParents(
   className: string,
   periodDescription: string
 ): string {
-  const { student, averageScores, totalAverage, lessonNotes } = analytics;
+  const { student, averageScores, totalAverage, lessonNotes, totalLessons, absentLessonsCount } = analytics;
 
   const criteriaLines = criteria
-    .map(c => {
+    .map((c) => {
       const avg = averageScores[c.id];
       if (avg !== undefined) {
         return `  - ${c.name}: ${avg} / 12 (бал)`;
@@ -83,13 +108,23 @@ export function generateAiPromptForParents(
     .filter(Boolean)
     .join('\n');
 
-  const notesLines = lessonNotes.length > 0
-    ? lessonNotes
-        .map(n => `  - Урок ${n.lesson.date} (№${n.lesson.lessonNumber}${n.lesson.topic ? ', ' + n.lesson.topic : ''}): "${n.notes}"`)
-        .join('\n')
-    : '  - Особливих зауважень немає, робота в межах норми.';
+  const notesLines =
+    lessonNotes.length > 0
+      ? lessonNotes
+          .map(
+            (n) =>
+              `  - Урок ${n.lesson.date} (№${n.lesson.lessonNumber}${
+                n.lesson.topic ? ', ' + n.lesson.topic : ''
+              }): ${n.notes}`
+          )
+          .join('\n')
+      : '  - Особливих зауважень немає, робота в межах норми.';
 
   const generalNote = student.notes ? `Загальні індивідуальні особливості: ${student.notes}\n` : '';
+  const attendanceNote =
+    absentLessonsCount > 0
+      ? `- Відвідування: пропущено ${absentLessonsCount} з ${totalLessons} уроків\n`
+      : `- Відвідування: 100% присутність на всіх ${totalLessons} уроках\n`;
 
   return `Дій як доброзичливий, підтримуючий та професійний шкільний вчитель. 
 Склади стисле, тепле і конструктивне повідомлення для батьків учня/учениці щодо успіхів за період (${periodDescription}).
@@ -97,18 +132,18 @@ export function generateAiPromptForParents(
 Інформація про учня:
 - Ім'я: ${student.name}
 - Клас: ${className}
-${generalNote}
-Показники активності та діяльності за уроки (шкала 0-12):
+${generalNote}${attendanceNote}
+Показники активності та діяльності за відвідані уроки (шкала 0-12):
 ${criteriaLines}
 - Загальний середній бал: ${totalAverage} / 12
 
-Поурочні спостереження та примітки вчителя:
+Поурочні спостереження, відвідування та примітки вчителя:
 ${notesLines}
 
 Вимоги до повідомлення для батьків:
 1. Тон: доброзичливий, партнерський, тактовний та мотивуючий.
 2. Спершу відзнач сильні сторони, старання та успіхи дитини на уроках.
-3. М'яко та конструктивно вкажи на зони розвитку або моменти, де дитині потрібна підтримка (якщо середні бали нижче 8 або в коментарях є зауваження).
+3. М'яко та конструктивно вкажи на зони розвитку або моменти, де дитині потрібна підтримка (якщо середні бали нижче 8 або є пропуски уроків чи зауваження).
 4. Запропонуй прості рекомендації чи слова підтримки для вдома.
 5. Обсяг: 2-3 компактні абзаци, зручні для читання в месенджері (Viber/Telegram). Без надмірної формальності.`;
 }

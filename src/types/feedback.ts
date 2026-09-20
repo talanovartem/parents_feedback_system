@@ -25,8 +25,9 @@ export interface Lesson {
 }
 
 export interface LessonStudentEntry {
+  absent?: boolean; // учень відсутній ("Н")
   scores: Record<string, number>; // criterionId -> бал (0-12)
-  notes?: string; // примітки саме до цього уроку ("забув зошит", "чудова відповідь")
+  notes?: string; // примітки саме до цього уроку ("забув зошит", "хворіє")
 }
 
 export interface DatabaseSchema {
@@ -40,7 +41,9 @@ export interface DatabaseSchema {
 export interface StudentAnalytics {
   student: Student;
   totalLessons: number;
+  attendedLessonsCount: number;
+  absentLessonsCount: number;
   averageScores: Record<string, number>;
   totalAverage: number;
-  lessonNotes: Array<{ lesson: Lesson; notes: string; scores: Record<string, number> }>;
+  lessonNotes: Array<{ lesson: Lesson; notes: string; scores: Record<string, number>; absent?: boolean }>;
 }

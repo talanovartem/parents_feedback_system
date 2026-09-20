@@ -96,6 +96,24 @@ export const App: React.FC = () => {
     });
   };
 
+  // Перемикання присутності / відсутності ("Н")
+  const handleToggleAbsent = (studentId: string, lessonId: string) => {
+    let becameAbsent = false;
+    updateDbAndSave((prev) => {
+      const records = { ...prev.records };
+      const studentRec = { ...(records[studentId] || {}) };
+      const lessonEntry = { ...(studentRec[lessonId] || { scores: {}, notes: '' }) };
+
+      becameAbsent = !lessonEntry.absent;
+      lessonEntry.absent = becameAbsent;
+
+      studentRec[lessonId] = lessonEntry;
+      records[studentId] = studentRec;
+
+      return { ...prev, records };
+    }, becameAbsent ? 'Поставлено "Н". Оцінки за цей урок заблоковано.' : 'Учня відмічено присутнім.');
+  };
+
   // Дії з поурочними примітками
   const handleUpdateLessonNotes = (studentId: string, lessonId: string, notes: string) => {
     updateDbAndSave((prev) => {
@@ -417,6 +435,7 @@ export const App: React.FC = () => {
             currentClassId={selectedClassId}
             db={db}
             onUpdateScore={handleUpdateScore}
+            onToggleAbsent={handleToggleAbsent}
             onUpdateLessonNotes={handleUpdateLessonNotes}
             onUpdateStudentNotes={handleUpdateStudentNotes}
             onDeleteStudent={handleDeleteStudent}
@@ -424,6 +443,8 @@ export const App: React.FC = () => {
             onOpenAddLesson={() => setIsAddLessonOpen(true)}
             onOpenAddStudent={() => setIsAddStudentOpen(true)}
             onOpenStudentReport={(student) => setReportStudent(student)}
+            onOpenAddCriterion={() => setIsCriteriaOpen(true)}
+            onDeleteCriterion={handleDeleteCriterion}
           />
         )}
       </main>

@@ -4,6 +4,9 @@ import tsparser from '@typescript-eslint/parser';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
+  {
+    ignores: ['dist/**', 'node_modules/**', '.codegraph/**', 'coverage/**'],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],
