@@ -58,6 +58,7 @@ function localJsonApiPlugin(): Plugin {
 }
 
 export default defineConfig({
+  base: './',
   plugins: [react(), localJsonApiPlugin()],
   server: {
     port: 5173,
