@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { LessonTableCard } from './LessonTableCard';
-import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink } from 'lucide-react';
+import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
+import { findNearestLessonId } from '../../utils/lessonTime';
 
 interface JournalTableProps {
   currentClassId: string;
@@ -43,10 +44,61 @@ export const JournalTable: React.FC<JournalTableProps> = ({
 }) => {
   const students = db.students.filter((s) => s.classId === currentClassId);
 
-  // Сортуємо уроки у спадному порядку: НАЙСВІЖІШИЙ ЗВЕРХУ!
-  const sortedLessons = db.lessons
-    .filter((l) => l.classId === currentClassId)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.lessonNumber - a.lessonNumber);
+  const classLessons = useMemo(
+    () => db.lessons.filter((l) => l.classId === currentClassId),
+    [db.lessons, currentClassId]
+  );
+
+  // Знаходимо найближчий за датою та часом урок
+  const nearestLessonId = useMemo(
+    () => findNearestLessonId(classLessons),
+    [classLessons]
+  );
+
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const sortedLessons = useMemo(() => {
+    return [...classLessons].sort((a, b) => {
+      if (sortOrder === 'desc') {
+        return b.date.localeCompare(a.date) || (b.lessonNumber || 0) - (a.lessonNumber || 0);
+      }
+      return a.date.localeCompare(b.date) || (a.lessonNumber || 0) - (b.lessonNumber || 0);
+    });
+  }, [classLessons, sortOrder]);
+
+  // Стан розгорнутих карток
+  const [expandedLessonIds, setExpandedLessonIds] = useState<Set<string>>(new Set());
+
+  // Автоматично тримаємо активним (розгорнутим) найближчий за датою та часом урок
+  useEffect(() => {
+    if (nearestLessonId) {
+      setExpandedLessonIds((prev) => {
+        const next = new Set(prev);
+        next.add(nearestLessonId);
+        return next;
+      });
+    }
+  }, [currentClassId, nearestLessonId]);
+
+  const handleToggleExpand = (lessonId: string) => {
+    setExpandedLessonIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(lessonId)) {
+        next.delete(lessonId);
+      } else {
+        next.add(lessonId);
+      }
+      return next;
+    });
+  };
+
+  const handleExpandAll = () => {
+    setExpandedLessonIds(new Set(classLessons.map((l) => l.id)));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedLessonIds(new Set());
+  };
 
   if (students.length === 0 && sortedLessons.length === 0) {
     return (
@@ -89,10 +141,45 @@ export const JournalTable: React.FC<JournalTableProps> = ({
     <div className="space-y-4">
       {/* Верхня панель швидких дій над списком уроків */}
       <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4 text-xs text-slate-500">
-          <span>Уроків у класі: <strong className="text-slate-800 font-semibold">{sortedLessons.length}</strong></span>
-          <span>Учнів: <strong className="text-slate-800 font-semibold">{students.length}</strong></span>
-          <span className="hidden sm:inline">Колонок оцінювання: <strong className="text-slate-800 font-semibold">{db.criteria.length}</strong></span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 text-xs text-slate-500">
+            <span>Уроків у класі: <strong className="text-slate-800 font-semibold">{sortedLessons.length}</strong></span>
+            <span>Учнів: <strong className="text-slate-800 font-semibold">{students.length}</strong></span>
+            <span className="hidden sm:inline">Колонок: <strong className="text-slate-800 font-semibold">{db.criteria.length}</strong></span>
+          </div>
+
+          {sortedLessons.length > 0 && (
+            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+              <button
+                type="button"
+                onClick={expandedLessonIds.size === sortedLessons.length ? handleCollapseAll : handleExpandAll}
+                className="px-2 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition-colors flex items-center gap-1"
+                title={expandedLessonIds.size === sortedLessons.length ? 'Згорнути всі картки уроків' : 'Розгорнути всі картки уроків'}
+              >
+                {expandedLessonIds.size === sortedLessons.length ? (
+                  <>
+                    <ChevronUp className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline">Згорнути всі</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline">Розгорнути всі</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
+                className="px-2 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition-colors flex items-center gap-1"
+                title="Змінити напрямок сортування уроків за датою"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">{sortOrder === 'desc' ? 'Свіжі зверху' : 'Хронологічно'}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -166,6 +253,9 @@ export const JournalTable: React.FC<JournalTableProps> = ({
               key={lesson.id}
               lesson={lesson}
               isLatest={idx === 0}
+              isNearest={lesson.id === nearestLessonId}
+              isExpanded={expandedLessonIds.has(lesson.id)}
+              onToggleExpand={() => handleToggleExpand(lesson.id)}
               students={students}
               criteria={db.criteria}
               db={db}

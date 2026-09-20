@@ -17,10 +17,14 @@ import {
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
+import { getLessonBadgeInfo } from '../../utils/lessonTime';
 
 interface LessonTableCardProps {
   lesson: Lesson;
   isLatest: boolean;
+  isNearest?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
   students: Student[];
   criteria: Criterion[];
   db: DatabaseSchema;
@@ -40,6 +44,9 @@ interface LessonTableCardProps {
 export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   lesson,
   isLatest,
+  isNearest,
+  isExpanded,
+  onToggleExpand,
   students,
   criteria,
   db,
@@ -55,10 +62,15 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   onOpenAddCriterion,
   onDeleteCriterion,
 }) => {
-  // Найсвіжіший урок за замовчуванням завжди розгорнутий
-  const [isExpanded, setIsExpanded] = useState(isLatest);
+  // Якщо стан розгортання передано ззовні — використовуємо його, інакше внутрішній
+  const [internalExpanded, setInternalExpanded] = useState(isLatest || !!isNearest);
+  const actualExpanded = typeof isExpanded === 'boolean' ? isExpanded : internalExpanded;
+  const toggleExpand = onToggleExpand || (() => setInternalExpanded(!internalExpanded));
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStudentNotesId, setEditingStudentNotesId] = useState<string | null>(null);
+
+  const badgeInfo = getLessonBadgeInfo(lesson, !!isNearest);
 
   // Підрахунок відвідування на уроці
   let presentCount = 0;
@@ -73,22 +85,33 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   }
 
   return (
-    <div className={`bg-white rounded-2xl border transition-shadow overflow-hidden shadow-xs ${
-      isLatest ? 'border-indigo-300 ring-2 ring-indigo-50/70' : 'border-slate-200'
-    }`}>
+    <div
+      id={`lesson-card-${lesson.id}`}
+      className={`bg-white rounded-2xl border transition-all overflow-hidden shadow-xs ${
+        isNearest
+          ? 'border-indigo-400 ring-2 ring-indigo-200/70 shadow-sm'
+          : isLatest
+          ? 'border-indigo-300 ring-2 ring-indigo-50/70'
+          : 'border-slate-200'
+      }`}
+    >
       {/* Шапка картки уроку */}
       <div
         className={`px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none ${
-          isLatest ? 'bg-indigo-50/40 border-b border-indigo-100' : 'bg-slate-50/60 border-b border-slate-100'
+          isNearest
+            ? 'bg-indigo-50/60 border-b border-indigo-100'
+            : isLatest
+            ? 'bg-indigo-50/40 border-b border-indigo-100'
+            : 'bg-slate-50/60 border-b border-slate-100'
         }`}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={toggleExpand}
       >
         <div className="flex items-center gap-3">
           <button
             type="button"
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/80 transition-colors"
           >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {actualExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
           <div className="flex items-center gap-2">
@@ -105,8 +128,13 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                 {lesson.time}
               </span>
             )}
-            {isLatest && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
+            {badgeInfo && (
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-2xs ${badgeInfo.badgeClass}`}>
+                {badgeInfo.text}
+              </span>
+            )}
+            {!isNearest && isLatest && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
                 Останній
               </span>
             )}
@@ -177,7 +205,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
       </div>
 
       {/* Вміст уроку (Таблиця оцінювання) */}
-      {isExpanded && (
+      {actualExpanded && (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-xs">
             <thead>

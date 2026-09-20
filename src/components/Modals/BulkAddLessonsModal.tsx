@@ -480,7 +480,10 @@ export const BulkAddLessonsModal: React.FC<BulkAddLessonsModalProps> = ({
                         </td>
                         <td className="py-2 px-3 text-center">
                           {row.isDuplicate ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                            <span
+                              title={row.duplicateReason || 'Урок з такими параметрами вже є в журналі'}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 cursor-help"
+                            >
                               <AlertTriangle className="w-3 h-3 text-amber-600" /> Дублікат
                             </span>
                           ) : (

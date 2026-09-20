@@ -9,6 +9,7 @@ export interface ParsedLessonItem {
   time?: string; // наприклад, "14:20 - 14:55"
   topic: string;
   isDuplicate: boolean;
+  duplicateReason?: string;
   originalLine: string;
 }
 
@@ -363,13 +364,21 @@ export function parseLessonsInput(
     classLessonDateCounts[detectedClassId][detectedDateIso] = Math.max(currentCount + 1, detectedNumber);
 
     // Перевірка на дублікат у наявних уроках
-    const isDuplicate = existingLessons.some((ex) => {
+    let duplicateReason: string | undefined = undefined;
+    const existingDuplicate = existingLessons.find((ex) => {
       if (ex.classId !== detectedClassId || ex.date !== detectedDateIso) return false;
       if (ex.time && detectedTimeStr) {
         return ex.time === detectedTimeStr;
       }
       return ex.lessonNumber === detectedNumber;
     });
+
+    if (existingDuplicate) {
+      const topicPart = existingDuplicate.topic ? ` («${existingDuplicate.topic}»)` : '';
+      duplicateReason = `Вже є в журналі: урок №${existingDuplicate.lessonNumber} від ${existingDuplicate.date}${topicPart}`;
+    }
+
+    const isDuplicate = !!existingDuplicate;
 
     results.push({
       id: `temp-${index}-${Date.now()}`,
@@ -380,6 +389,7 @@ export function parseLessonsInput(
       time: detectedTimeStr,
       topic: topic || 'Урок',
       isDuplicate,
+      duplicateReason,
       originalLine: line,
     });
   });
