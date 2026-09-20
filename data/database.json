@@ -107,7 +107,8 @@
           "progress": 0,
           "grade": 0
         },
-        "notes": ""
+        "notes": "",
+        "absent": true
       },
       "les-2": {
         "scores": {

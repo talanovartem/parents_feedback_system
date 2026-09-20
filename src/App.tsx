@@ -7,6 +7,7 @@ import { AddStudentModal } from './components/Modals/AddStudentModal';
 import { AddLessonModal } from './components/Modals/AddLessonModal';
 import { ManageCriteriaModal } from './components/Modals/ManageCriteriaModal';
 import { StudentReportModal } from './components/Report/StudentReportModal';
+import { ReportsOverviewModal } from './components/Report/ReportsOverviewModal';
 import { Toaster, toast } from 'sonner';
 import {
   GraduationCap,
@@ -17,7 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  FolderOpen
+  FolderOpen,
+  Sparkles,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -31,6 +33,7 @@ export const App: React.FC = () => {
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
   const [isCriteriaOpen, setIsCriteriaOpen] = useState(false);
+  const [isReportsOverviewOpen, setIsReportsOverviewOpen] = useState(false);
   const [reportStudent, setReportStudent] = useState<Student | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -341,6 +344,14 @@ export const App: React.FC = () => {
           {/* Панель інструментів */}
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsReportsOverviewOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              Звіти для батьків
+            </button>
+
+            <button
               onClick={() => setIsCriteriaOpen(true)}
               className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
             >
@@ -438,7 +449,6 @@ export const App: React.FC = () => {
             onToggleAbsent={handleToggleAbsent}
             onUpdateLessonNotes={handleUpdateLessonNotes}
             onUpdateStudentNotes={handleUpdateStudentNotes}
-            onDeleteStudent={handleDeleteStudent}
             onDeleteLesson={handleDeleteLesson}
             onOpenAddLesson={() => setIsAddLessonOpen(true)}
             onOpenAddStudent={() => setIsAddStudentOpen(true)}
@@ -481,6 +491,21 @@ export const App: React.FC = () => {
         onAddCriterion={handleAddCriterion}
         onDeleteCriterion={handleDeleteCriterion}
       />
+
+      {currentClass && (
+        <ReportsOverviewModal
+          isOpen={isReportsOverviewOpen}
+          onClose={() => setIsReportsOverviewOpen(false)}
+          currentClassId={selectedClassId}
+          className={currentClass.name}
+          db={db}
+          onSelectStudentForReport={(student) => {
+            setIsReportsOverviewOpen(false);
+            setReportStudent(student);
+          }}
+          onDeleteStudent={handleDeleteStudent}
+        />
+      )}
 
       {reportStudent && currentClass && (
         <StudentReportModal
