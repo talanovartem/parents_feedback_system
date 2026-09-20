@@ -468,13 +468,6 @@
   ],
   "lessons": [
     {
-      "id": "les-6a-1",
-      "classId": "cls-6a",
-      "date": "2026-09-04",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
       "id": "les-6a-2",
       "classId": "cls-6a",
       "date": "2026-09-24",
@@ -489,25 +482,11 @@
       "topic": "Поточна робота"
     },
     {
-      "id": "les-6v-1",
-      "classId": "cls-6v",
-      "date": "2026-09-04",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
       "id": "les-6v-2",
       "classId": "cls-6v",
       "date": "2026-09-24",
       "lessonNumber": 2,
       "topic": "Поточна робота"
-    },
-    {
-      "id": "les-7a-1",
-      "classId": "cls-7a",
-      "date": "2026-09-03",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
     },
     {
       "id": "les-7a-2",
@@ -517,61 +496,13 @@
       "topic": "Поточна робота"
     },
     {
-      "id": "les-7v-1",
-      "classId": "cls-7v",
-      "date": "2026-09-03",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
       "id": "les-7v-2",
       "classId": "cls-7v",
       "date": "2026-09-24",
       "lessonNumber": 2,
       "topic": "Поточна робота"
-    },
-    {
-      "id": "les-8a-1",
-      "classId": "cls-8a",
-      "date": "2026-09-01",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
-      "id": "les-8v-1",
-      "classId": "cls-8v",
-      "date": "2026-09-01",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
-      "id": "les-9a-1",
-      "classId": "cls-9a",
-      "date": "2026-09-03",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
-      "id": "les-9v-1",
-      "classId": "cls-9v",
-      "date": "2026-09-03",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
-      "id": "les-10a-1",
-      "classId": "cls-10a",
-      "date": "2026-09-04",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
-    },
-    {
-      "id": "les-10v-1",
-      "classId": "cls-10v",
-      "date": "2026-09-04",
-      "lessonNumber": 1,
-      "topic": "Вступний урок"
     }
   ],
-  "records": {}
+  "records": {},
+  "sentReports": {}
 }

@@ -481,79 +481,83 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('#/schedule')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 route.name === 'schedule'
                   ? 'bg-white text-indigo-600 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Calendar className="w-3.5 h-3.5" />
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
               <span>Розклад</span>
             </button>
 
             <button
               type="button"
               onClick={() => navigate('#/journal')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 route.name === 'journal'
                   ? 'bg-white text-indigo-600 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Журнал класів</span>
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Журнал класів</span>
+              <span className="sm:hidden">Журнал</span>
             </button>
 
             <button
               type="button"
               onClick={() => navigate('#/dashboard')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 route.name === 'dashboard'
                   ? 'bg-white text-indigo-600 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <BarChart2 className="w-3.5 h-3.5" />
-              <span>Дашборд школи</span>
+              <BarChart2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Дашборд школи</span>
+              <span className="sm:hidden">Дашборд</span>
             </button>
           </div>
 
           {/* Панель інструментів */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <button
               onClick={() => {
                 setReportsInitialFilter(undefined);
                 setIsReportsOverviewOpen(true);
               }}
-              className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+              className="px-2.5 sm:px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              Звіти для батьків
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+              <span className="hidden sm:inline">Звіти для батьків</span>
+              <span className="sm:hidden">Звіти</span>
             </button>
 
             <button
               onClick={() => setIsCriteriaOpen(true)}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
             >
-              <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-              Критерії (0-12)
+              <Sliders className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="hidden sm:inline">Критерії (0-12)</span>
+              <span className="sm:hidden">Критерії</span>
             </button>
 
             <button
               onClick={handleExportJson}
               title="Експортувати базу даних у файл .json"
-              className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              className="p-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
             >
-              <Download className="w-3.5 h-3.5" />
-              Експорт
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden md:inline">Експорт</span>
             </button>
 
             <label
               title="Імпортувати дані з файлу .json"
-              className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer transition-all"
+              className="p-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer transition-all"
             >
-              <Upload className="w-3.5 h-3.5" />
-              Імпорт
+              <Upload className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden md:inline">Імпорт</span>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -563,15 +567,15 @@ export const App: React.FC = () => {
               />
             </label>
 
-            <div className="h-4 w-px bg-slate-200 my-auto mx-1" />
+            <div className="h-4 w-px bg-slate-200 my-auto mx-0.5 sm:mx-1" />
 
             <button
               onClick={() => logout()}
               title="Вийти з системи"
-              className="px-3 py-1.5 text-xs font-semibold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              className="p-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
             >
-              <LogOut className="w-3.5 h-3.5 text-rose-600" />
-              Вийти
+              <LogOut className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+              <span className="hidden md:inline">Вийти</span>
             </button>
           </div>
         </div>

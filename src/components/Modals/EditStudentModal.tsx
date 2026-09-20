@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ClassItem, Student } from '../../types/feedback';
 import { X, UserCheck } from 'lucide-react';
+import { VoiceInputButton } from '../Common/VoiceInputButton';
 
 interface EditStudentModalProps {
   isOpen: boolean;
@@ -99,7 +100,14 @@ export const EditStudentModal: React.FC<EditStudentModalProps> = ({
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
                 Особливості сприйняття / Контекст для ШІ
               </label>
-              <span className="text-[11px] text-slate-400">Конфіденційно</span>
+              <div className="flex items-center gap-2">
+                <VoiceInputButton
+                  onTranscript={(transcript) => {
+                    setNotes((prev) => (prev ? `${prev} ${transcript}` : transcript));
+                  }}
+                />
+                <span className="text-[11px] text-slate-400">Конфіденційно</span>
+              </div>
             </div>
             <textarea
               rows={4}

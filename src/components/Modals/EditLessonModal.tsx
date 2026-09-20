@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lesson } from '../../types/feedback';
 import { X, Edit3 } from 'lucide-react';
+import { VoiceInputButton } from '../Common/VoiceInputButton';
 
 interface EditLessonModalProps {
   isOpen: boolean;
@@ -107,9 +108,16 @@ export const EditLessonModal: React.FC<EditLessonModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-              Тема уроку
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                Тема уроку
+              </label>
+              <VoiceInputButton
+                onTranscript={(transcript) => {
+                  setTopic((prev) => (prev ? `${prev} ${transcript}` : transcript));
+                }}
+              />
+            </div>
             <textarea
               rows={3}
               value={topic}

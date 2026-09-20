@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Criterion, DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { ScoreCell } from './ScoreCell';
 import { EditLessonModal } from '../Modals/EditLessonModal';
+import { VoiceInputButton } from '../Common/VoiceInputButton';
 import {
   Calendar,
   Trash2,
@@ -236,7 +237,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
           <table className="w-full border-collapse text-left text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold select-none">
-                <th className="px-4 py-2.5 min-w-[200px] border-r border-slate-200">
+                <th className="px-4 py-2.5 min-w-[180px] sm:min-w-[200px] border-r border-slate-200 sticky left-0 bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
                   ПІБ Учня
                 </th>
                 <th className="px-3 py-2.5 min-w-[160px] border-r border-slate-200">
@@ -343,7 +344,11 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                       }`}
                     >
                       {/* Колонка учня */}
-                      <td className="px-4 py-2 border-r border-slate-200">
+                      <td
+                        className={`px-4 py-2 border-r border-slate-200 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] ${
+                          isAbsent ? 'bg-rose-50' : 'bg-white group-hover:bg-slate-50'
+                        }`}
+                      >
                         <div className="flex items-center justify-between gap-2">
                           <div className="font-semibold text-slate-800 text-xs">
                             {student.name}
@@ -378,22 +383,35 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                       {/* Загальні примітки про особливості дитини */}
                       <td className="px-3 py-2 border-r border-slate-200">
                         {editingStudentNotesId === student.id ? (
-                          <input
-                            type="text"
-                            autoFocus
-                            defaultValue={student.notes || ''}
-                            onBlur={(e) => {
-                              onUpdateStudentNotes(student.id, e.target.value.trim());
-                              setEditingStudentNotesId(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                onUpdateStudentNotes(student.id, (e.target as HTMLInputElement).value.trim());
+                          <div className="flex items-center gap-1">
+                            <input
+                              id={`student-notes-${student.id}`}
+                              type="text"
+                              autoFocus
+                              defaultValue={student.notes || ''}
+                              onBlur={(e) => {
+                                onUpdateStudentNotes(student.id, e.target.value.trim());
                                 setEditingStudentNotesId(null);
-                              }
-                            }}
-                            className="w-full text-xs px-2 py-1 border border-indigo-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                          />
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  onUpdateStudentNotes(student.id, (e.target as HTMLInputElement).value.trim());
+                                  setEditingStudentNotesId(null);
+                                }
+                              }}
+                              className="w-full text-xs px-2 py-1 border border-indigo-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <VoiceInputButton
+                              onTranscript={(transcript) => {
+                                const input = document.getElementById(`student-notes-${student.id}`) as HTMLInputElement | null;
+                                if (input) {
+                                  const nextVal = input.value ? `${input.value} ${transcript}` : transcript;
+                                  input.value = nextVal;
+                                  onUpdateStudentNotes(student.id, nextVal.trim());
+                                }
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div
                             onClick={() => setEditingStudentNotesId(student.id)}
@@ -448,19 +466,34 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
 
                       {/* Примітки до цього конкретного уроку */}
                       <td className={`px-2 py-1.5 ${isAbsent ? 'bg-rose-50/20' : ''}`}>
-                        <input
-                          type="text"
-                          defaultValue={lessonNotes}
-                          onBlur={(e) =>
-                            onUpdateLessonNotes(student.id, lesson.id, e.target.value.trim())
-                          }
-                          placeholder={isAbsent ? 'Причина пропуску...' : 'Зауваження до уроку...'}
-                          className={`w-full text-[11px] px-2 py-1 border rounded focus:bg-white focus:outline-none transition-colors ${
-                            isAbsent
-                              ? 'border-rose-200 bg-rose-50/40 text-rose-800 placeholder-rose-300 focus:border-rose-400'
-                              : 'border-transparent hover:border-slate-300 focus:border-indigo-400 text-slate-700'
-                          }`}
-                        />
+                        <div className="flex items-center gap-1">
+                          <input
+                            id={`lesson-notes-${student.id}-${lesson.id}`}
+                            type="text"
+                            defaultValue={lessonNotes}
+                            onBlur={(e) =>
+                              onUpdateLessonNotes(student.id, lesson.id, e.target.value.trim())
+                            }
+                            placeholder={isAbsent ? 'Причина пропуску...' : 'Зауваження до уроку...'}
+                            className={`w-full text-[11px] px-2 py-1 border rounded focus:bg-white focus:outline-none transition-colors ${
+                              isAbsent
+                                ? 'border-rose-200 bg-rose-50/40 text-rose-800 placeholder-rose-300 focus:border-rose-400'
+                                : 'border-transparent hover:border-slate-300 focus:border-indigo-400 text-slate-700'
+                            }`}
+                          />
+                          <VoiceInputButton
+                            onTranscript={(transcript) => {
+                              const input = document.getElementById(
+                                `lesson-notes-${student.id}-${lesson.id}`
+                              ) as HTMLInputElement | null;
+                              if (input) {
+                                const nextVal = input.value ? `${input.value} ${transcript}` : transcript;
+                                input.value = nextVal;
+                                onUpdateLessonNotes(student.id, lesson.id, nextVal.trim());
+                              }
+                            }}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );

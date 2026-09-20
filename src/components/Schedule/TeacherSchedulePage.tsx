@@ -231,8 +231,8 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
             {/* Швидкий перехід у School Today */}
             <div className="flex items-center rounded-xl border border-blue-200 bg-blue-50/70 p-1 shadow-2xs">
               <span className="px-2 py-0.5 text-xs font-bold text-blue-800 flex items-center gap-1">
-                <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
-                School Today:
+                <ExternalLink className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="hidden sm:inline">School Today:</span>
               </span>
               <a
                 href={getSchoolTodayUrl(0).url}
@@ -251,7 +251,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
                 title={`Наступний тиждень (${getSchoolTodayUrl(1).startDateStr} – ${getSchoolTodayUrl(1).endDateStr})`}
                 className="px-2.5 py-1 text-xs font-bold text-blue-800 hover:text-blue-950 hover:bg-blue-100 rounded-lg transition-colors"
               >
-                Наступний тиждень
+                Наступний
               </a>
             </div>
 
@@ -259,16 +259,17 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
               onClick={onOpenBulkAddLesson}
               className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-300 rounded-xl shadow-2xs flex items-center gap-1.5 transition-all"
             >
-              <Layers className="w-3.5 h-3.5 text-indigo-600" />
-              Масове додавання
+              <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="hidden sm:inline">Масове додавання</span>
+              <span className="sm:hidden">Масово</span>
             </button>
 
             <button
               onClick={onOpenAddLesson}
               className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs flex items-center gap-1.5 transition-all"
             >
-              <CalendarPlus className="w-3.5 h-3.5" />
-              + Новий урок
+              <CalendarPlus className="w-3.5 h-3.5 shrink-0" />
+              <span>+ Новий урок</span>
             </button>
           </div>
         </div>
@@ -277,17 +278,17 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <div className="flex flex-wrap items-center gap-2">
             {/* Вибір періоду (тижня) */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full">
               <button
                 type="button"
                 onClick={() => setSelectedPeriodId('current-week')}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all shrink-0 ${
                   selectedPeriodId === 'current-week'
                     ? 'bg-white text-indigo-700 shadow-2xs font-bold'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Поточний тиждень ({currentWeekPreset.description})
+                Поточний тиждень<span className="hidden md:inline"> ({currentWeekPreset.description})</span>
               </button>
 
               <button
