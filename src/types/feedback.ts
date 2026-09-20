@@ -38,6 +38,7 @@ export interface DatabaseSchema {
   criteria: Criterion[];
   lessons: Lesson[];
   records: Record<string, Record<string, LessonStudentEntry>>; // studentId -> lessonId -> LessonStudentEntry
+  sentReports?: Record<string, string>; // "${studentId}:${period}" -> дата/час ISO відправки звіту батькам
 }
 
 export interface StudentAnalytics {

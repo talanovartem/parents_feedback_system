@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DatabaseSchema, Student } from './types/feedback';
+import { DatabaseSchema, Lesson, Student } from './types/feedback';
 import { fetchDatabase, saveDatabase, exportDatabaseToFile, logout } from './services/storage';
 import { migrateDatabase } from './services/migration';
 import { JournalTable } from './components/Journal/JournalTable';
@@ -31,13 +31,15 @@ import {
   LogOut,
   BarChart2,
   BookOpen,
+  Cloud,
+  CloudOff,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [db, setDb] = useState<DatabaseSchema | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'offline' | 'error'>('idle');
 
   // Модальні вікна
   const [isClassesModalOpen, setIsClassesModalOpen] = useState(false);
@@ -99,8 +101,8 @@ export const App: React.FC = () => {
       }
       setTimeout(() => setSaveStatus('idle'), 2500);
     } else {
-      setSaveStatus('error');
-      toast.error('Помилка збереження на сервер. Збережено в локальний кеш.');
+      setSaveStatus('offline');
+      toast.error('Автономний режим: збережено локально, сервер недоступний.');
     }
   };
 
@@ -290,6 +292,73 @@ export const App: React.FC = () => {
     }, 'Урок видалено');
   };
 
+  // Оновлення уроку (тема, дата, час, номер)
+  const handleUpdateLesson = (updatedLesson: Lesson) => {
+    updateDbAndSave((prev) => ({
+      ...prev,
+      lessons: prev.lessons.map((l) => (l.id === updatedLesson.id ? updatedLesson : l)),
+    }), 'Параметри уроку оновлено');
+  };
+
+  // Масове заповнення / очищення оцінок за критерієм для присутніх
+  const handleBulkFillLessonScore = (lessonId: string, criterionId: string, score: number | null) => {
+    updateDbAndSave((prev) => {
+      const records = { ...prev.records };
+      const lesson = prev.lessons.find((l) => l.id === lessonId);
+      if (!lesson) return prev;
+      const classStudents = prev.students.filter((s) => s.classId === lesson.classId);
+      for (const student of classStudents) {
+        const studentRec = { ...(records[student.id] || {}) };
+        const entry = { ...(studentRec[lessonId] || { scores: {} }) };
+        if (!entry.absent) {
+          const newScores = { ...(entry.scores || {}) };
+          if (score === null) {
+            delete newScores[criterionId];
+          } else {
+            newScores[criterionId] = score;
+          }
+          entry.scores = newScores;
+          studentRec[lessonId] = entry;
+          records[student.id] = studentRec;
+        }
+      }
+      return { ...prev, records };
+    }, score !== null ? `Виставлено бал ${score} усім присутнім` : 'Колонку очищено');
+  };
+
+  // Зняття "Н" з усіх учнів на уроці
+  const handleMarkAllPresent = (lessonId: string) => {
+    updateDbAndSave((prev) => {
+      const records = { ...prev.records };
+      const lesson = prev.lessons.find((l) => l.id === lessonId);
+      if (!lesson) return prev;
+      const classStudents = prev.students.filter((s) => s.classId === lesson.classId);
+      for (const student of classStudents) {
+        const studentRec = { ...(records[student.id] || {}) };
+        const entry = studentRec[lessonId];
+        if (entry?.absent) {
+          studentRec[lessonId] = { ...entry, absent: false };
+          records[student.id] = studentRec;
+        }
+      }
+      return { ...prev, records };
+    }, 'Усіх учнів позначено присутніми');
+  };
+
+  // Позначення або зняття мітки надісланого звіту за період
+  const handleToggleReportSent = (studentId: string, periodString: string) => {
+    updateDbAndSave((prev) => {
+      const sentReports = { ...(prev.sentReports || {}) };
+      const key = `${studentId}:${periodString}`;
+      if (sentReports[key]) {
+        delete sentReports[key];
+      } else {
+        sentReports[key] = new Date().toISOString();
+      }
+      return { ...prev, sentReports };
+    });
+  };
+
   // Додавання критерію
   const handleAddCriterion = (name: string, description?: string) => {
     const id = `crit-${Date.now()}`;
@@ -373,26 +442,33 @@ export const App: React.FC = () => {
               <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">
                 Журнал уроків та зворотний зв'язок
               </h1>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span>Локальний файл: <code className="text-slate-600 font-mono">data/database.json</code></span>
-                <span>•</span>
+              <div className="flex items-center gap-2.5 text-xs text-slate-500">
+                <span className="hidden sm:inline">Локальний файл: <code className="text-slate-600 font-mono">data/database.json</code></span>
+                <span className="hidden sm:inline">•</span>
                 {saveStatus === 'saving' && (
-                  <span className="flex items-center gap-1 text-amber-600 font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                     <Loader2 className="w-3 h-3 animate-spin" /> Збереження...
                   </span>
                 )}
                 {saveStatus === 'saved' && (
-                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Збережено на диск
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Збережено на сервері
+                  </span>
+                )}
+                {saveStatus === 'offline' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300" title="Зміни збережено в локальному сховищі браузера">
+                    <CloudOff className="w-3.5 h-3.5 text-amber-600" /> Автономний режим
                   </span>
                 )}
                 {saveStatus === 'error' && (
-                  <span className="flex items-center gap-1 text-rose-600 font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                     <AlertCircle className="w-3.5 h-3.5" /> Помилка сервера
                   </span>
                 )}
                 {saveStatus === 'idle' && (
-                  <span className="text-slate-400">Синхронізовано</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                    <Cloud className="w-3 h-3 text-slate-400" /> Синхронізовано
+                  </span>
                 )}
               </div>
             </div>
@@ -574,6 +650,9 @@ export const App: React.FC = () => {
             onUpdateLessonNotes={handleUpdateLessonNotes}
             onUpdateStudentNotes={handleUpdateStudentNotes}
             onDeleteLesson={handleDeleteLesson}
+            onUpdateLesson={handleUpdateLesson}
+            onBulkFillLessonScore={handleBulkFillLessonScore}
+            onMarkAllPresent={handleMarkAllPresent}
             onOpenAddLesson={() => setIsAddLessonOpen(true)}
             onOpenBulkAddLesson={() => setIsBulkAddLessonOpen(true)}
             onOpenAddStudent={() => setIsAddStudentOpen(true)}
@@ -650,6 +729,7 @@ export const App: React.FC = () => {
             setBatchReportData({ students, groupName });
           }}
           onDeleteStudent={handleDeleteStudent}
+          onToggleReportSent={handleToggleReportSent}
         />
       )}
 
@@ -664,6 +744,7 @@ export const App: React.FC = () => {
             'Клас'
           }
           db={db}
+          onToggleReportSent={handleToggleReportSent}
         />
       )}
 
@@ -697,6 +778,7 @@ export const App: React.FC = () => {
           students={batchReportData.students}
           groupName={batchReportData.groupName}
           db={db}
+          onToggleReportSent={handleToggleReportSent}
         />
       )}
     </div>

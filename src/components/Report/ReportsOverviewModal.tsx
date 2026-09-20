@@ -3,6 +3,8 @@ import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, calculateStudentTrend, getAllParallels } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
+import { getPeriodPresets } from '../../utils/periodHelper';
+import { PeriodSelector } from './PeriodSelector';
 import {
   X,
   Sparkles,
@@ -18,6 +20,8 @@ import {
   Square,
   Layers,
   ExternalLink,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 
 interface ReportsOverviewModalProps {
@@ -32,6 +36,7 @@ interface ReportsOverviewModalProps {
   onEditStudent: (student: Student) => void;
   onOpenBatchReport: (students: Student[], groupName: string) => void;
   onDeleteStudent: (studentId: string) => void;
+  onToggleReportSent?: (studentId: string, periodString: string) => void;
 }
 
 export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
@@ -46,12 +51,17 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
   onEditStudent,
   onOpenBatchReport,
   onDeleteStudent,
+  onToggleReportSent,
 }) => {
   const [selectedFilterMode, setSelectedFilterMode] = useState<string>(
     initialFilterMode || currentClassId
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+
+  const defaultPreset = getPeriodPresets()[0];
+  const [periodText, setPeriodText] = useState(defaultPreset.description);
+  const [onlyPendingSent, setOnlyPendingSent] = useState(false);
 
   useEffect(() => {
     if (initialFilterMode) {
@@ -90,6 +100,17 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
     // Сортуємо за алфавітом
     return list.slice().sort((a, b) => a.name.localeCompare(b.name));
   }, [db.students, selectedFilterMode, allParallels, searchQuery]);
+
+  // Кількість надісланих звітів
+  const sentCount = useMemo(() => {
+    return filteredStudents.filter((s) => !!db.sentReports?.[`${s.id}:${periodText}`]).length;
+  }, [filteredStudents, db.sentReports, periodText]);
+
+  // Відображувані учні (з урахуванням фільтра тільки ненадісланих)
+  const displayedStudents = useMemo(() => {
+    if (!onlyPendingSent) return filteredStudents;
+    return filteredStudents.filter((s) => !db.sentReports?.[`${s.id}:${periodText}`]);
+  }, [filteredStudents, onlyPendingSent, db.sentReports, periodText]);
 
   // Назва поточної активної групи
   const activeGroupName = useMemo(() => {
@@ -230,17 +251,44 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
             </button>
           </div>
 
-          {/* Кнопка Пакетного промпту */}
-          {selectedStudentIds.size > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Статус відправки звітів батькам */}
             <button
               type="button"
-              onClick={handleLaunchBatchReport}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg text-white bg-purple-600 hover:bg-purple-700 shadow-sm transition active:scale-95 animate-in fade-in"
+              onClick={() => setOnlyPendingSent(!onlyPendingSent)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${
+                onlyPendingSent
+                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+              title="Фільтр учнів за статусом відправки звіту батькам"
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Пакетний звіт для ШІ ({selectedStudentIds.size})</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Надіслано: <strong>{sentCount}/{filteredStudents.length}</strong></span>
+              <span className="text-slate-300">|</span>
+              <span className="text-[11px] font-normal">{onlyPendingSent ? 'Показати всіх' : 'Тільки ненадіслані'}</span>
             </button>
-          )}
+
+            {/* Кнопка Пакетного промпту */}
+            {selectedStudentIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleLaunchBatchReport}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg text-white bg-purple-600 hover:bg-purple-700 shadow-sm transition active:scale-95 animate-in fade-in"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Пакетний звіт для ШІ ({selectedStudentIds.size})</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Вибір періоду для чекліста */}
+        <div className="px-6 py-2 border-b border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
+          <PeriodSelector
+            value={periodText}
+            onChange={(newPeriod) => setPeriodText(newPeriod)}
+          />
         </div>
 
         {/* Search */}
@@ -259,17 +307,18 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
         {/* List of students */}
         <div className="p-6 overflow-y-auto space-y-2 flex-1">
-          {filteredStudents.length === 0 ? (
+          {displayedStudents.length === 0 ? (
             <p className="text-sm text-slate-400 italic text-center py-10">
-              Учнів у цій вибірці не знайдено
+              {onlyPendingSent ? 'Усі звіти за цей період уже надіслано!' : 'Учнів у цій вибірці не знайдено'}
             </p>
           ) : (
-            filteredStudents.map((student) => {
+            displayedStudents.map((student) => {
               const isSelected = selectedStudentIds.has(student.id);
               const studentClass = db.classes.find((c) => c.id === student.classId);
               const analytics = calculateStudentAnalytics(student, db);
               const trend = calculateStudentTrend(student, db);
               const badgeClass = getScoreBadgeClass(analytics.totalAverage);
+              const isSent = !!db.sentReports?.[`${student.id}:${periodText}`];
 
               return (
                 <div
@@ -277,6 +326,8 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                   className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                     isSelected
                       ? 'bg-indigo-50/60 border-indigo-300'
+                      : isSent
+                      ? 'bg-emerald-50/20 hover:bg-emerald-50/40 border-emerald-200/60'
                       : 'bg-white hover:bg-slate-50 border-slate-200/80'
                   }`}
                 >
@@ -308,6 +359,12 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         ) : (
                           <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 flex items-center gap-1">
                             <UserCheck className="w-2.5 h-2.5" /> 100%
+                          </span>
+                        )}
+
+                        {isSent && (
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                            <CheckCircle2 className="w-2.5 h-2.5" /> Надіслано
                           </span>
                         )}
                       </div>
@@ -355,6 +412,23 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-1.5">
+                      {/* Чекліст: Надіслано батькам */}
+                      {onToggleReportSent && (
+                        <button
+                          type="button"
+                          onClick={() => onToggleReportSent(student.id, periodText)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border transition ${
+                            isSent
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-800'
+                          }`}
+                          title={isSent ? 'Звіт позначено як надісланий. Натисніть, щоб скасувати' : 'Натисніть, щоб позначити як надісланий батькам'}
+                        >
+                          {isSent ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Clock className="w-3.5 h-3.5 text-slate-400" />}
+                          <span className="hidden sm:inline">{isSent ? 'Надіслано' : 'Не надіслано'}</span>
+                        </button>
+                      )}
+
                       {/* Відкрити у новій вкладці */}
                       <a
                         href={getStudentHash(student.id)}

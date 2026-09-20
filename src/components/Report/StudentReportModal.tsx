@@ -5,7 +5,7 @@ import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHe
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { AiQuickActions } from './AiQuickActions';
 import { PeriodSelector } from './PeriodSelector';
-import { X, Sparkles, FileText, Calendar } from 'lucide-react';
+import { X, Sparkles, FileText, Calendar, CheckCircle2, Clock } from 'lucide-react';
 
 interface StudentReportModalProps {
   isOpen: boolean;
@@ -13,6 +13,7 @@ interface StudentReportModalProps {
   student: Student;
   className: string;
   db: DatabaseSchema;
+  onToggleReportSent?: (studentId: string, periodString: string) => void;
 }
 
 export const StudentReportModal: React.FC<StudentReportModalProps> = ({
@@ -21,6 +22,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   student,
   className,
   db,
+  onToggleReportSent,
 }) => {
   const defaultPreset = getPeriodPresets()[0];
   const [periodText, setPeriodText] = useState(defaultPreset.description);
@@ -152,7 +154,37 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
               />
             </div>
 
-            <AiQuickActions prompt={aiPrompt} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <AiQuickActions prompt={aiPrompt} />
+
+              {onToggleReportSent && (
+                <button
+                  type="button"
+                  onClick={() => onToggleReportSent(student.id, periodText)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border transition shadow-xs ${
+                    db.sentReports?.[`${student.id}:${periodText}`]
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-800'
+                  }`}
+                  title={
+                    db.sentReports?.[`${student.id}:${periodText}`]
+                      ? 'Звіт позначено як надісланий батькам. Натисніть, щоб скасувати'
+                      : 'Натисніть після того, як надішлете текст батькам у месенджер'
+                  }
+                >
+                  {db.sentReports?.[`${student.id}:${periodText}`] ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-slate-400" />
+                  )}
+                  <span>
+                    {db.sentReports?.[`${student.id}:${periodText}`]
+                      ? 'Надіслано батькам'
+                      : 'Позначити як надіслано'}
+                  </span>
+                </button>
+              )}
+            </div>
 
             <div className="relative">
               <pre className="p-4 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto border border-slate-800 shadow-inner">

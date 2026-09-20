@@ -4,7 +4,7 @@ import { calculateStudentAnalytics, generateBatchAiPrompt } from '../../utils/an
 import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
 import { AiQuickActions } from './AiQuickActions';
 import { PeriodSelector } from './PeriodSelector';
-import { X, Users, Sparkles, Layers } from 'lucide-react';
+import { X, Users, Sparkles, Layers, CheckCircle2 } from 'lucide-react';
 
 interface BatchReportModalProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ interface BatchReportModalProps {
   students: Student[];
   groupName: string;
   db: DatabaseSchema;
+  onToggleReportSent?: (studentId: string, periodString: string) => void;
 }
 
 export const BatchReportModal: React.FC<BatchReportModalProps> = ({
@@ -20,6 +21,7 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
   students,
   groupName,
   db,
+  onToggleReportSent,
 }) => {
   const defaultPreset = getPeriodPresets()[0];
   const [periodText, setPeriodText] = useState(defaultPreset.description);
@@ -102,8 +104,26 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
         </div>
 
         {/* Quick Actions Bar */}
-        <div className="px-6 py-3 bg-white border-b border-slate-100">
+        <div className="px-6 py-3 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
           <AiQuickActions prompt={promptText} />
+
+          {onToggleReportSent && (
+            <button
+              type="button"
+              onClick={() => {
+                students.forEach((s) => {
+                  if (!db.sentReports?.[`${s.id}:${periodText}`]) {
+                    onToggleReportSent(s.id, periodText);
+                  }
+                });
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition shadow-xs"
+              title="Позначити всіх обраних учнів як таких, кому надіслано звіт за цей період"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Позначити всіх ({students.length}) як надіслано</span>
+            </button>
+          )}
         </div>
 
         {/* Content Prompt Area */}

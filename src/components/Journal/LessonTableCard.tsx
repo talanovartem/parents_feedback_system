@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Criterion, DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { ScoreCell } from './ScoreCell';
+import { EditLessonModal } from '../Modals/EditLessonModal';
 import {
   Calendar,
   Trash2,
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Edit2,
   Edit3,
   Plus,
   Clock,
@@ -27,6 +29,9 @@ interface LessonTableCardProps {
   onUpdateLessonNotes: (studentId: string, lessonId: string, notes: string) => void;
   onUpdateStudentNotes: (studentId: string, notes: string) => void;
   onDeleteLesson: (lessonId: string) => void;
+  onUpdateLesson: (updated: Lesson) => void;
+  onBulkFillLessonScore?: (lessonId: string, criterionId: string, score: number | null) => void;
+  onMarkAllPresent?: (lessonId: string) => void;
   onOpenStudentReport: (student: Student) => void;
   onOpenAddCriterion: () => void;
   onDeleteCriterion: (criterionId: string) => void;
@@ -43,12 +48,16 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   onUpdateLessonNotes,
   onUpdateStudentNotes,
   onDeleteLesson,
+  onUpdateLesson,
+  onBulkFillLessonScore,
+  onMarkAllPresent,
   onOpenStudentReport,
   onOpenAddCriterion,
   onDeleteCriterion,
 }) => {
   // Найсвіжіший урок за замовчуванням завжди розгорнутий
   const [isExpanded, setIsExpanded] = useState(isLatest);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStudentNotesId, setEditingStudentNotesId] = useState<string | null>(null);
 
   // Підрахунок відвідування на уроці
@@ -103,10 +112,29 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
             )}
           </div>
 
-          {lesson.topic && (
-            <span className="text-xs text-slate-500 font-medium hidden sm:inline truncate max-w-md">
+          {lesson.topic ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditModalOpen(true);
+              }}
+              title="Клікніть, щоб редагувати тему уроку"
+              className="text-xs text-slate-600 hover:text-indigo-600 font-medium hidden sm:inline truncate max-w-md text-left transition-colors"
+            >
               — {lesson.topic}
-            </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditModalOpen(true);
+              }}
+              className="text-[11px] text-slate-400 hover:text-indigo-600 italic hidden sm:inline transition-colors"
+            >
+              — додати тему уроку...
+            </button>
           )}
         </div>
 
@@ -126,6 +154,15 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
             >
               <Plus className="w-3 h-3" />
               + Колонка
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(true)}
+              title="Редагувати параметри уроку (тему, дату, час)"
+              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
             </button>
 
             <button
@@ -152,28 +189,67 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                   Загальні примітки
                 </th>
                 <th
-                  className="px-1 py-2.5 text-center min-w-[44px] border-r border-slate-200 font-bold text-indigo-900 bg-indigo-50/50"
+                  className="px-1 py-2 text-center min-w-[50px] border-r border-slate-200 font-bold text-indigo-900 bg-indigo-50/50"
                   title="Присутність на уроці (клікніть, щоб поставити Н і заблокувати оцінки)"
                 >
-                  Н-ка
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span>Н-ка</span>
+                    {absentCount > 0 && onMarkAllPresent && (
+                      <button
+                        type="button"
+                        onClick={() => onMarkAllPresent(lesson.id)}
+                        className="text-[9px] font-normal text-indigo-600 hover:text-indigo-800 hover:underline leading-tight"
+                        title="Зняти всі Н (позначити всіх присутніми)"
+                      >
+                        всі П
+                      </button>
+                    )}
+                  </div>
                 </th>
 
                 {criteria.map((c) => (
                   <th
                     key={c.id}
-                    className="px-1.5 py-2.5 text-center min-w-[50px] border-r border-slate-200 font-medium text-[11px] group/th relative"
+                    className="px-1 py-2 text-center min-w-[65px] border-r border-slate-200 font-medium text-[11px] group/th relative"
                     title={c.description || c.name}
                   >
-                    <div className="flex items-center justify-center gap-0.5">
-                      <span className="truncate max-w-[65px]">{c.name}</span>
-                      {criteria.length > 1 && (
-                        <button
-                          onClick={() => onDeleteCriterion(c.id)}
-                          title={`Видалити колонку "${c.name}"`}
-                          className="text-slate-300 hover:text-rose-600 opacity-0 group-hover/th:opacity-100 transition-opacity"
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex items-center justify-center gap-0.5 w-full">
+                        <span className="truncate max-w-[65px] font-semibold text-slate-700">{c.name}</span>
+                        {criteria.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteCriterion(c.id)}
+                            title={`Видалити колонку "${c.name}"`}
+                            className="text-slate-300 hover:text-rose-600 opacity-0 group-hover/th:opacity-100 transition-opacity ml-0.5"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+
+                      {onBulkFillLessonScore && (
+                        <select
+                          className="opacity-0 group-hover/th:opacity-100 focus:opacity-100 text-[9px] bg-white border border-slate-200 rounded px-1 py-0 cursor-pointer text-slate-600 hover:border-indigo-400 transition-opacity"
+                          title={`Заповнити бал усім присутнім за критерієм "${c.name}"`}
+                          defaultValue=""
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') return;
+                            const score = val === 'clear' ? null : Number(val);
+                            onBulkFillLessonScore(lesson.id, c.id, score);
+                            e.target.value = '';
+                          }}
                         >
-                          ×
-                        </button>
+                          <option value="" disabled>Заповнити...</option>
+                          <option value="12">Всім 12</option>
+                          <option value="11">Всім 11</option>
+                          <option value="10">Всім 10</option>
+                          <option value="9">Всім 9</option>
+                          <option value="8">Всім 8</option>
+                          <option value="7">Всім 7</option>
+                          <option value="clear">Очистити</option>
+                        </select>
                       )}
                     </div>
                   </th>
@@ -196,7 +272,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                   </td>
                 </tr>
               ) : (
-                students.map((student) => {
+                students.map((student, sIndex) => {
                   const analytics = calculateStudentAnalytics(student, db);
                   const avgBadge = getScoreBadgeClass(analytics.totalAverage);
 
@@ -245,7 +321,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                         </div>
                       </td>
 
-                      {/* Загальні примітки про учня */}
+                      {/* Загальні примітки про особливості дитини */}
                       <td className="px-3 py-2 border-r border-slate-200">
                         {editingStudentNotesId === student.id ? (
                           <input
@@ -258,7 +334,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
-                                onUpdateStudentNotes(student.id, e.currentTarget.value.trim());
+                                onUpdateStudentNotes(student.id, (e.target as HTMLInputElement).value.trim());
                                 setEditingStudentNotesId(null);
                               }
                             }}
@@ -285,8 +361,8 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                           onClick={() => onToggleAbsent(student.id, lesson.id)}
                           title={
                             isAbsent
-                              ? 'Учень відсутній (Н). Натисніть, щоб зробити присутнім'
-                              : 'Учень присутній (П). Натисніть, щоб поставити Н (блокує оцінки)'
+                              ? 'Учень відсутній (Н). Натисніть, щоб зробити присутнім (або клавіша Н)'
+                              : 'Учень присутній (П). Натисніть, щоб поставити Н (блокує оцінки, або клавіша Н)'
                           }
                           className={`w-7 h-7 rounded-md text-xs font-bold transition-all flex items-center justify-center mx-auto border ${
                             isAbsent
@@ -298,10 +374,14 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                         </button>
                       </td>
 
-                      {/* Колонки критеріїв (0-12) */}
-                      {criteria.map((c) => (
+                      {/* Колонки критеріїв (0-12) з клавіатурною навігацією */}
+                      {criteria.map((c, cIndex) => (
                         <ScoreCell
                           key={c.id}
+                          tableId={lesson.id}
+                          rowIndex={sIndex}
+                          colIndex={cIndex}
+                          onToggleAbsent={() => onToggleAbsent(student.id, lesson.id)}
                           score={isAbsent ? undefined : scores[c.id]}
                           disabled={isAbsent}
                           criterionName={c.name}
@@ -336,6 +416,14 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
           </table>
         </div>
       )}
+
+      {/* Модальне вікно редагування параметрів уроку */}
+      <EditLessonModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        lesson={lesson}
+        onSaveLesson={onUpdateLesson}
+      />
     </div>
   );
 };

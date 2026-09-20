@@ -9,6 +9,7 @@ describe('migration service', () => {
     expect(db.students).toEqual([]);
     expect(db.lessons).toEqual([]);
     expect(db.records).toEqual({});
+    expect(db.sentReports).toEqual({});
     expect(db.criteria).toEqual(DEFAULT_CRITERIA);
   });
 

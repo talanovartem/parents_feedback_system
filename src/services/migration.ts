@@ -22,6 +22,7 @@ export function createEmptyDatabase(): DatabaseSchema {
     criteria: [...DEFAULT_CRITERIA],
     lessons: [],
     records: {},
+    sentReports: {},
   };
 }
 
@@ -46,6 +47,7 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
       ? obj.criteria
       : [...DEFAULT_CRITERIA];
     const records = (obj.records && typeof obj.records === 'object') ? obj.records : {};
+    const sentReports = (obj.sentReports && typeof obj.sentReports === 'object') ? obj.sentReports : {};
 
     obj.version = 1;
     obj.classes = classes;
@@ -53,6 +55,7 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     obj.criteria = criteria;
     obj.lessons = lessons;
     obj.records = records;
+    obj.sentReports = sentReports;
 
     version = 1;
   }
@@ -70,5 +73,6 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     criteria: obj.criteria,
     lessons: obj.lessons,
     records: obj.records,
+    sentReports: (obj.sentReports && typeof obj.sentReports === 'object') ? obj.sentReports : {},
   };
 }

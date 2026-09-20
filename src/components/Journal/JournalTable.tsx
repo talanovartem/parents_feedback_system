@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseSchema, Student } from '../../types/feedback';
+import { DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { LessonTableCard } from './LessonTableCard';
 import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink } from 'lucide-react';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
@@ -12,6 +12,9 @@ interface JournalTableProps {
   onUpdateLessonNotes: (studentId: string, lessonId: string, notes: string) => void;
   onUpdateStudentNotes: (studentId: string, notes: string) => void;
   onDeleteLesson: (lessonId: string) => void;
+  onUpdateLesson: (updated: Lesson) => void;
+  onBulkFillLessonScore?: (lessonId: string, criterionId: string, score: number | null) => void;
+  onMarkAllPresent?: (lessonId: string) => void;
   onOpenAddLesson: () => void;
   onOpenBulkAddLesson: () => void;
   onOpenAddStudent: () => void;
@@ -28,6 +31,9 @@ export const JournalTable: React.FC<JournalTableProps> = ({
   onUpdateLessonNotes,
   onUpdateStudentNotes,
   onDeleteLesson,
+  onUpdateLesson,
+  onBulkFillLessonScore,
+  onMarkAllPresent,
   onOpenAddLesson,
   onOpenBulkAddLesson,
   onOpenAddStudent,
@@ -168,6 +174,9 @@ export const JournalTable: React.FC<JournalTableProps> = ({
               onUpdateLessonNotes={onUpdateLessonNotes}
               onUpdateStudentNotes={onUpdateStudentNotes}
               onDeleteLesson={onDeleteLesson}
+              onUpdateLesson={onUpdateLesson}
+              onBulkFillLessonScore={onBulkFillLessonScore}
+              onMarkAllPresent={onMarkAllPresent}
               onOpenStudentReport={onOpenStudentReport}
               onOpenAddCriterion={onOpenAddCriterion}
               onDeleteCriterion={onDeleteCriterion}
