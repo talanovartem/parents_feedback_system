@@ -31,6 +31,14 @@
                     {
                         "id":  "cls-9v",
                         "name":  "9-В"
+                    },
+                    {
+                        "id":  "cls-10a",
+                        "name":  "10-А"
+                    },
+                    {
+                        "id":  "cls-10v",
+                        "name":  "10-В"
                     }
                 ],
     "students":  [
@@ -369,6 +377,54 @@
                          "classId":  "cls-9v",
                          "name":  "Мандрикова Єва",
                          "notes":  ""
+                     },
+                     {
+                         "id":  "std-10a-1",
+                         "classId":  "cls-10a",
+                         "name":  "Заболотний Ілля",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10a-2",
+                         "classId":  "cls-10a",
+                         "name":  "Коваленко Віолетта",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10a-3",
+                         "classId":  "cls-10a",
+                         "name":  "Почепа Роман",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10a-4",
+                         "classId":  "cls-10a",
+                         "name":  "Рєзнікова Анна",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10a-5",
+                         "classId":  "cls-10a",
+                         "name":  "Шаврін Ярослав",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10v-1",
+                         "classId":  "cls-10v",
+                         "name":  "Левицький Владислав",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10v-2",
+                         "classId":  "cls-10v",
+                         "name":  "Лозова Еліф",
+                         "notes":  ""
+                     },
+                     {
+                         "id":  "std-10v-3",
+                         "classId":  "cls-10v",
+                         "name":  "Фоменко Дар\u0027я",
+                         "notes":  ""
                      }
                  ],
     "criteria":  [
@@ -492,6 +548,20 @@
                         "id":  "les-9v-1",
                         "classId":  "cls-9v",
                         "date":  "2026-09-03",
+                        "lessonNumber":  1,
+                        "topic":  "Вступний урок"
+                    },
+                    {
+                        "id":  "les-10a-1",
+                        "classId":  "cls-10a",
+                        "date":  "2026-09-04",
+                        "lessonNumber":  1,
+                        "topic":  "Вступний урок"
+                    },
+                    {
+                        "id":  "les-10v-1",
+                        "classId":  "cls-10v",
+                        "date":  "2026-09-04",
                         "lessonNumber":  1,
                         "topic":  "Вступний урок"
                     }
