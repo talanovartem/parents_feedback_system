@@ -13,14 +13,17 @@ import {
   Plus,
   Clock,
   ExternalLink,
+  CheckCircle2,
 } from 'lucide-react';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getLessonBadgeInfo } from '../../utils/lessonTime';
+import { getLessonCompletion } from '../../utils/lessonCompletion';
 
 interface LessonTableCardProps {
   lesson: Lesson;
+  classNameTitle?: string;
   isLatest: boolean;
   isNearest?: boolean;
   isExpanded?: boolean;
@@ -43,6 +46,7 @@ interface LessonTableCardProps {
 
 export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   lesson,
+  classNameTitle,
   isLatest,
   isNearest,
   isExpanded,
@@ -71,6 +75,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   const [editingStudentNotesId, setEditingStudentNotesId] = useState<string | null>(null);
 
   const badgeInfo = getLessonBadgeInfo(lesson, !!isNearest);
+  const completion = getLessonCompletion(lesson, students, db.records);
 
   // Підрахунок відвідування на уроці
   let presentCount = 0;
@@ -114,7 +119,12 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
             {actualExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {classNameTitle && (
+              <span className="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-indigo-600 text-white shadow-2xs tracking-wide">
+                {classNameTitle}
+              </span>
+            )}
             <span className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
               <Calendar className="w-4 h-4 text-indigo-600" />
               {lesson.date}
@@ -123,7 +133,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
               Урок №{lesson.lessonNumber}
             </span>
             {lesson.time && (
-              <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 flex items-center gap-1 border border-slate-200">
+              <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 flex items-center gap-1 border border-slate-200 font-mono">
                 <Clock className="w-3 h-3 text-slate-500" />
                 {lesson.time}
               </span>
@@ -136,6 +146,22 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
             {!isNearest && isLatest && (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
                 Останній
+              </span>
+            )}
+
+            {/* Статус заповнення оцінок */}
+            {completion.isFullyGraded ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span>Заповнено ({completion.gradedCount}/{completion.presentCount})</span>
+              </span>
+            ) : completion.isPartiallyGraded ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                <span>Частково ({completion.gradedCount}/{completion.presentCount})</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                <span>Не заповнено (0/{completion.presentCount})</span>
               </span>
             )}
           </div>

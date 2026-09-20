@@ -15,6 +15,7 @@ import { StudentAnalyticsModal } from './components/Report/StudentAnalyticsModal
 import { BatchReportModal } from './components/Report/BatchReportModal';
 import { StudentPage } from './components/Student/StudentPage';
 import { GlobalDashboard } from './components/Dashboard/GlobalDashboard';
+import { TeacherSchedulePage } from './components/Schedule/TeacherSchedulePage';
 import { useRouter, getClassHash } from './router/useRouter';
 import { Toaster, toast } from 'sonner';
 import {
@@ -31,6 +32,7 @@ import {
   LogOut,
   BarChart2,
   BookOpen,
+  Calendar,
   Cloud,
   CloudOff,
 } from 'lucide-react';
@@ -474,8 +476,21 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Навігація між основними розділами: Журнал / Дашборд */}
+          {/* Навігація між основними розділами: Розклад / Журнал / Дашборд */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => navigate('#/schedule')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                route.name === 'schedule'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Розклад</span>
+            </button>
+
             <button
               type="button"
               onClick={() => navigate('#/journal')}
@@ -486,7 +501,7 @@ export const App: React.FC = () => {
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Журнал</span>
+              <span>Журнал класів</span>
             </button>
 
             <button
@@ -608,11 +623,25 @@ export const App: React.FC = () => {
 
       {/* Основна робоча зона залежно від активного роуту */}
       <main className="flex-1 max-w-[1700px] w-full mx-auto p-4 sm:p-6 space-y-4">
-        {route.name === 'student' ? (
+        {db.classes.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs max-w-md mx-auto mt-10 space-y-3">
+            <FolderOpen className="w-10 h-10 text-indigo-600 mx-auto" />
+            <h2 className="text-lg font-bold text-slate-800">Створіть свій перший клас</h2>
+            <p className="text-xs text-slate-500">
+              Додайте класи (наприклад, 6-А, 6-Б), щоб почати роботу з журналом уроків.
+            </p>
+            <button
+              onClick={() => setIsClassesModalOpen(true)}
+              className="mt-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs"
+            >
+              Створити клас
+            </button>
+          </div>
+        ) : route.name === 'student' ? (
           <StudentPage
             studentId={route.studentId}
             db={db}
-            onBackToJournal={() => navigate('#/journal')}
+            onBackToJournal={() => navigate('#/schedule')}
             onEditStudent={(student) => setEditingStudent(student)}
           />
         ) : route.name === 'dashboard' ? (
@@ -627,21 +656,7 @@ export const App: React.FC = () => {
               setIsReportsOverviewOpen(true);
             }}
           />
-        ) : db.classes.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs max-w-md mx-auto mt-10 space-y-3">
-            <FolderOpen className="w-10 h-10 text-indigo-600 mx-auto" />
-            <h2 className="text-lg font-bold text-slate-800">Створіть свій перший клас</h2>
-            <p className="text-xs text-slate-500">
-              Додайте класи (наприклад, 6-А, 6-Б), щоб почати роботу з журналом уроків.
-            </p>
-            <button
-              onClick={() => setIsClassesModalOpen(true)}
-              className="mt-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs"
-            >
-              Створити клас
-            </button>
-          </div>
-        ) : (
+        ) : route.name === 'journal' ? (
           <JournalTable
             currentClassId={selectedClassId}
             db={db}
@@ -659,6 +674,27 @@ export const App: React.FC = () => {
             onOpenStudentReport={(student) => setReportStudent(student)}
             onOpenAddCriterion={() => setIsCriteriaOpen(true)}
             onDeleteCriterion={handleDeleteCriterion}
+          />
+        ) : (
+          <TeacherSchedulePage
+            db={db}
+            onUpdateScore={handleUpdateScore}
+            onToggleAbsent={handleToggleAbsent}
+            onUpdateLessonNotes={handleUpdateLessonNotes}
+            onUpdateStudentNotes={handleUpdateStudentNotes}
+            onDeleteLesson={handleDeleteLesson}
+            onUpdateLesson={handleUpdateLesson}
+            onBulkFillLessonScore={handleBulkFillLessonScore}
+            onMarkAllPresent={handleMarkAllPresent}
+            onOpenStudentReport={(student) => setReportStudent(student)}
+            onOpenAddCriterion={() => setIsCriteriaOpen(true)}
+            onDeleteCriterion={handleDeleteCriterion}
+            onOpenAddLesson={() => setIsAddLessonOpen(true)}
+            onOpenBulkAddLesson={() => setIsBulkAddLessonOpen(true)}
+            onNavigateToClassJournal={(classId) => {
+              setSelectedClassId(classId);
+              navigate(getClassHash(classId));
+            }}
           />
         )}
       </main>

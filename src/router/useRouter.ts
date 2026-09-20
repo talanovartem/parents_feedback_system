@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export type AppRoute =
+  | { name: 'schedule' }
   | { name: 'journal'; classId?: string }
   | { name: 'dashboard' }
   | { name: 'reports'; classOrParallelId?: string }
@@ -8,11 +9,15 @@ export type AppRoute =
 
 export function parseHash(hash: string): AppRoute {
   const clean = hash.replace(/^#\/?/, '').trim();
-  if (!clean || clean === 'journal') {
-    return { name: 'journal' };
+  if (!clean || clean === 'schedule') {
+    return { name: 'schedule' };
   }
 
   const parts = clean.split('/').filter(Boolean);
+
+  if (parts[0] === 'journal') {
+    return { name: 'journal' };
+  }
 
   if (parts[0] === 'dashboard') {
     return { name: 'dashboard' };
@@ -30,7 +35,11 @@ export function parseHash(hash: string): AppRoute {
     return { name: 'journal', classId: parts[1] };
   }
 
-  return { name: 'journal' };
+  return { name: 'schedule' };
+}
+
+export function getScheduleHash(): string {
+  return `#/schedule`;
 }
 
 export function getStudentHash(studentId: string): string {
@@ -39,6 +48,10 @@ export function getStudentHash(studentId: string): string {
 
 export function getClassHash(classId: string): string {
   return `#/class/${classId}`;
+}
+
+export function getJournalHash(classId?: string): string {
+  return classId ? `#/class/${classId}` : `#/journal`;
 }
 
 export function getDashboardHash(): string {
@@ -51,7 +64,7 @@ export function getReportsHash(filterId?: string): string {
 
 export function useRouter() {
   const [route, setRoute] = useState<AppRoute>(() =>
-    typeof window !== 'undefined' ? parseHash(window.location.hash) : { name: 'journal' }
+    typeof window !== 'undefined' ? parseHash(window.location.hash) : { name: 'schedule' }
   );
 
   useEffect(() => {
