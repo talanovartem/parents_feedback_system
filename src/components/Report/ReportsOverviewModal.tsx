@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
-import { calculateStudentAnalytics, calculateStudentTrend } from '../../utils/analytics';
+import { calculateStudentAnalytics, calculateStudentTrend, getAllParallels } from '../../utils/analytics';
+import { getStudentHash } from '../../router/useRouter';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import {
   X,
@@ -16,6 +17,7 @@ import {
   CheckSquare,
   Square,
   Layers,
+  ExternalLink,
 } from 'lucide-react';
 
 interface ReportsOverviewModalProps {
@@ -24,6 +26,7 @@ interface ReportsOverviewModalProps {
   currentClassId: string;
   className: string;
   db: DatabaseSchema;
+  initialFilterMode?: string;
   onSelectStudentForReport: (student: Student) => void;
   onOpenAnalytics: (student: Student) => void;
   onEditStudent: (student: Student) => void;
@@ -37,39 +40,44 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
   currentClassId,
   className,
   db,
+  initialFilterMode,
   onSelectStudentForReport,
   onOpenAnalytics,
   onEditStudent,
   onOpenBatchReport,
   onDeleteStudent,
 }) => {
-  const [selectedFilterMode, setSelectedFilterMode] = useState<string>(currentClassId);
+  const [selectedFilterMode, setSelectedFilterMode] = useState<string>(
+    initialFilterMode || currentClassId
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
 
-  // Визначаємо паралель для поточного класу (наприклад, для 6-А шукаємо всі 6-ті класи)
-  const currentClass = db.classes.find((c) => c.id === currentClassId);
-  const currentGradeMatch = currentClass?.name.match(/^(\d+)/);
-  const currentGrade = currentGradeMatch ? currentGradeMatch[1] : null;
+  useEffect(() => {
+    if (initialFilterMode) {
+      setSelectedFilterMode(initialFilterMode);
+    } else if (currentClassId) {
+      setSelectedFilterMode(currentClassId);
+    }
+  }, [initialFilterMode, currentClassId]);
 
-  const parallelClasses = useMemo(() => {
-    if (!currentGrade) return [];
-    return db.classes.filter((c) => {
-      const match = c.name.match(/^(\d+)/);
-      return match && match[1] === currentGrade;
-    });
-  }, [db.classes, currentGrade]);
+  // Усі паралелі школи (6-ті, 7-мі, 8-мі, 9-ті, 10-ті тощо)
+  const allParallels = useMemo(() => getAllParallels(db.classes), [db.classes]);
 
-  const hasParallel = parallelClasses.length > 1;
-  const parallelKey = `parallel-${currentGrade}`;
-
-  // Фільтруємо учнів залежно від обраного режиму (окремий клас або вся паралель)
+  // Фільтруємо учнів залежно від обраного режиму (окремий клас, вся паралель або вся школа)
   const filteredStudents = useMemo(() => {
     let list: Student[] = [];
 
-    if (selectedFilterMode === parallelKey) {
-      const parallelClassIds = new Set(parallelClasses.map((c) => c.id));
-      list = db.students.filter((s) => parallelClassIds.has(s.classId));
+    if (selectedFilterMode === 'all') {
+      list = db.students;
+    } else if (selectedFilterMode.startsWith('parallel-')) {
+      const par = allParallels.find((p) => p.id === selectedFilterMode);
+      if (par) {
+        const parClassIds = new Set(par.classIds);
+        list = db.students.filter((s) => parClassIds.has(s.classId));
+      } else {
+        list = db.students;
+      }
     } else {
       list = db.students.filter((s) => s.classId === selectedFilterMode);
     }
@@ -81,16 +89,20 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
     // Сортуємо за алфавітом
     return list.slice().sort((a, b) => a.name.localeCompare(b.name));
-  }, [db.students, selectedFilterMode, parallelKey, parallelClasses, searchQuery]);
+  }, [db.students, selectedFilterMode, allParallels, searchQuery]);
 
   // Назва поточної активної групи
   const activeGroupName = useMemo(() => {
-    if (selectedFilterMode === parallelKey) {
-      return `Паралель ${currentGrade}-х класів (${parallelClasses.map((c) => c.name).join(', ')})`;
+    if (selectedFilterMode === 'all') {
+      return 'Усі класи школи (Всі паралелі)';
+    }
+    if (selectedFilterMode.startsWith('parallel-')) {
+      const par = allParallels.find((p) => p.id === selectedFilterMode);
+      return par ? par.name : 'Паралель класів';
     }
     const found = db.classes.find((c) => c.id === selectedFilterMode);
     return found ? `Клас ${found.name}` : className;
-  }, [selectedFilterMode, parallelKey, currentGrade, parallelClasses, db.classes, className]);
+  }, [selectedFilterMode, allParallels, db.classes, className]);
 
   if (!isOpen) return null;
 
@@ -178,6 +190,18 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               }}
               className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
+              <option value="all">Усі класи школи (Всі паралелі)</option>
+
+              {allParallels.length > 0 && (
+                <optgroup label="Об'єднання за паралелями">
+                  {allParallels.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+
               <optgroup label="Окремі класи">
                 {db.classes.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -185,14 +209,6 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                   </option>
                 ))}
               </optgroup>
-
-              {hasParallel && (
-                <optgroup label="Об'єднання паралелей">
-                  <option value={parallelKey}>
-                    Паралель {currentGrade}-х класів ({parallelClasses.map((c) => c.name).join(' + ')})
-                  </option>
-                </optgroup>
-              )}
             </select>
 
             <button
@@ -339,6 +355,17 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-1.5">
+                      {/* Відкрити у новій вкладці */}
+                      <a
+                        href={getStudentHash(student.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition"
+                        title="Відкрити сторінку учня в новій вкладці браузера"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+
                       {/* Динаміка */}
                       <button
                         type="button"

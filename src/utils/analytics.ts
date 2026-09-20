@@ -1,4 +1,49 @@
-import { Criterion, DatabaseSchema, Lesson, Student, StudentAnalytics } from '../types/feedback';
+import { ClassItem, Criterion, DatabaseSchema, Lesson, Student, StudentAnalytics } from '../types/feedback';
+
+export interface ClassParallel {
+  id: string;
+  grade: string;
+  name: string;
+  classIds: string[];
+  classes: ClassItem[];
+}
+
+/**
+ * Групування класів за паралелями (6-ті, 7-мі, 8-мі, 9-ті, 10-ті класи)
+ */
+export function getAllParallels(classes: ClassItem[]): ClassParallel[] {
+  const groups: Record<string, ClassItem[]> = {};
+
+  for (const c of classes) {
+    const match = c.name.match(/^(\d+)/);
+    const grade = match ? match[1] : 'Інші';
+    if (!groups[grade]) {
+      groups[grade] = [];
+    }
+    groups[grade].push(c);
+  }
+
+  const parallels: ClassParallel[] = [];
+
+  for (const [grade, classList] of Object.entries(groups)) {
+    if (classList.length > 1) {
+      parallels.push({
+        id: `parallel-${grade}`,
+        grade,
+        name: `Паралель ${grade}-х класів (${classList.map((c) => c.name).join(' + ')})`,
+        classIds: classList.map((c) => c.id),
+        classes: classList,
+      });
+    }
+  }
+
+  return parallels.sort((a, b) => {
+    const numA = parseInt(a.grade, 10);
+    const numB = parseInt(b.grade, 10);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    return a.grade.localeCompare(b.grade);
+  });
+}
 
 export interface LessonScorePoint {
   lessonId: string;

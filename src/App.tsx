@@ -12,6 +12,9 @@ import { ReportsOverviewModal } from './components/Report/ReportsOverviewModal';
 import { EditStudentModal } from './components/Modals/EditStudentModal';
 import { StudentAnalyticsModal } from './components/Report/StudentAnalyticsModal';
 import { BatchReportModal } from './components/Report/BatchReportModal';
+import { StudentPage } from './components/Student/StudentPage';
+import { GlobalDashboard } from './components/Dashboard/GlobalDashboard';
+import { useRouter, getClassHash } from './router/useRouter';
 import { Toaster, toast } from 'sonner';
 import {
   GraduationCap,
@@ -25,6 +28,8 @@ import {
   FolderOpen,
   Sparkles,
   LogOut,
+  BarChart2,
+  BookOpen,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -44,7 +49,9 @@ export const App: React.FC = () => {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [analyticsStudent, setAnalyticsStudent] = useState<Student | null>(null);
   const [batchReportData, setBatchReportData] = useState<{ students: Student[]; groupName: string } | null>(null);
+  const [reportsInitialFilter, setReportsInitialFilter] = useState<string | undefined>(undefined);
 
+  const { route, navigate } = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Завантаження при старті
@@ -54,12 +61,27 @@ export const App: React.FC = () => {
       const data = await fetchDatabase();
       setDb(data);
       if (data.classes.length > 0) {
-        setSelectedClassId(data.classes[0].id);
+        if (route.name === 'journal' && route.classId) {
+          setSelectedClassId(route.classId);
+        } else {
+          setSelectedClassId(data.classes[0].id);
+        }
       }
       setIsLoading(false);
     }
     init();
   }, []);
+
+  // Синхронізація вибраного класу при зміні роуту
+  useEffect(() => {
+    if (route.name === 'journal' && route.classId && route.classId !== selectedClassId) {
+      setSelectedClassId(route.classId);
+    }
+    if (route.name === 'reports') {
+      setReportsInitialFilter(route.classOrParallelId);
+      setIsReportsOverviewOpen(true);
+    }
+  }, [route]);
 
   // Оновлення БД зі збереженням
   const updateDbAndSave = async (updater: (prev: DatabaseSchema) => DatabaseSchema, successToast?: string) => {
@@ -374,10 +396,42 @@ export const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Навігація між основними розділами: Журнал / Дашборд */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => navigate('#/journal')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                route.name === 'journal'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Журнал</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('#/dashboard')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                route.name === 'dashboard'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              <span>Дашборд школи</span>
+            </button>
+          </div>
+
           {/* Панель інструментів */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsReportsOverviewOpen(true)}
+              onClick={() => {
+                setReportsInitialFilter(undefined);
+                setIsReportsOverviewOpen(true);
+              }}
               className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
@@ -429,49 +483,73 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Вкладки класів (6-А, 6-Б тощо) */}
-        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 flex items-center justify-between border-t border-slate-100 bg-slate-50/70">
-          <div className="flex items-center gap-1 overflow-x-auto py-1.5 scrollbar-none">
-            {db.classes.map((c) => {
-              const isActive = c.id === selectedClassId;
-              const count = db.students.filter((s) => s.classId === c.id).length;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedClassId(c.id)}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all shrink-0 ${
-                    isActive
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                  }`}
-                >
-                  <span>{c.name}</span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                      isActive ? 'bg-indigo-700/60 text-indigo-100' : 'bg-slate-200 text-slate-600'
+        {/* Вкладки класів (відображаються у режимі журналу) */}
+        {route.name === 'journal' && (
+          <div className="max-w-[1700px] mx-auto px-4 sm:px-6 flex items-center justify-between border-t border-slate-100 bg-slate-50/70">
+            <div className="flex items-center gap-1 overflow-x-auto py-1.5 scrollbar-none">
+              {db.classes.map((c) => {
+                const isActive = c.id === selectedClassId;
+                const count = db.students.filter((s) => s.classId === c.id).length;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedClassId(c.id);
+                      navigate(getClassHash(c.id));
+                    }}
+                    className={`px-4 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all shrink-0 ${
+                      isActive
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                     }`}
                   >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+                    <span>{c.name}</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        isActive ? 'bg-indigo-700/60 text-indigo-100' : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
 
-            <button
-              onClick={() => setIsClassesModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 rounded-lg hover:bg-slate-200/50 transition-colors ml-1 shrink-0"
-              title="Додати або налаштувати класи"
-            >
-              <Settings2 className="w-3.5 h-3.5" />
-              Керування класами
-            </button>
+              <button
+                onClick={() => setIsClassesModalOpen(true)}
+                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 rounded-lg hover:bg-slate-200/50 transition-colors ml-1 shrink-0"
+                title="Додати або налаштувати класи"
+              >
+                <Settings2 className="w-3.5 h-3.5" />
+                Керування класами
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
-      {/* Основна робоча зона */}
+      {/* Основна робоча зона залежно від активного роуту */}
       <main className="flex-1 max-w-[1700px] w-full mx-auto p-4 sm:p-6 space-y-4">
-        {db.classes.length === 0 ? (
+        {route.name === 'student' ? (
+          <StudentPage
+            studentId={route.studentId}
+            db={db}
+            onBackToJournal={() => navigate('#/journal')}
+            onEditStudent={(student) => setEditingStudent(student)}
+          />
+        ) : route.name === 'dashboard' ? (
+          <GlobalDashboard
+            db={db}
+            onSelectClass={(classId) => {
+              setSelectedClassId(classId);
+              navigate(getClassHash(classId));
+            }}
+            onOpenReportsForGroup={(filterId) => {
+              setReportsInitialFilter(filterId);
+              setIsReportsOverviewOpen(true);
+            }}
+          />
+        ) : db.classes.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs max-w-md mx-auto mt-10 space-y-3">
             <FolderOpen className="w-10 h-10 text-indigo-600 mx-auto" />
             <h2 className="text-lg font-bold text-slate-800">Створіть свій перший клас</h2>
@@ -549,10 +627,14 @@ export const App: React.FC = () => {
       {currentClass && (
         <ReportsOverviewModal
           isOpen={isReportsOverviewOpen}
-          onClose={() => setIsReportsOverviewOpen(false)}
+          onClose={() => {
+            setIsReportsOverviewOpen(false);
+            setReportsInitialFilter(undefined);
+          }}
           currentClassId={selectedClassId}
           className={currentClass.name}
           db={db}
+          initialFilterMode={reportsInitialFilter}
           onSelectStudentForReport={(student) => {
             setReportStudent(student);
           }}

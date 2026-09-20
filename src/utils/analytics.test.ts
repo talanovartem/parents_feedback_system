@@ -4,6 +4,7 @@ import {
   calculateStudentTrend,
   generateAiPromptForParents,
   generateBatchAiPrompt,
+  getAllParallels,
 } from './analytics';
 import { DatabaseSchema, Student } from '../types/feedback';
 
@@ -129,5 +130,31 @@ describe('analytics module', () => {
     expect(prompt).toContain('УЧЕНЬ №2: Марія Ковальчук (6-Б)');
     expect(prompt).toContain('Індивідуальні особливості учня (контекст для вчителя, врахуй делікатно): Потребує додаткового часу на завдання');
     expect(prompt).toContain('## Повідомлення для батьків: [Ім\'я учня] ([Клас])');
+  });
+
+  it('groups classes into parallels correctly for all grade levels', () => {
+    const classes = [
+      { id: 'c1', name: '6-А' },
+      { id: 'c2', name: '6-В' },
+      { id: 'c3', name: '7-А' },
+      { id: 'c4', name: '7-Б' },
+      { id: 'c5', name: '8-А' },
+      { id: 'c6', name: '8-Б' },
+      { id: 'c7', name: '9-А' },
+      { id: 'c8', name: '9-Б' },
+      { id: 'c9', name: '10-А' },
+      { id: 'c10', name: '10-Б' },
+      { id: 'c11', name: '11' } // одиночний клас
+    ];
+
+    const parallels = getAllParallels(classes);
+
+    expect(parallels.length).toBe(5); // 6, 7, 8, 9, 10
+    expect(parallels[0].grade).toBe('6');
+    expect(parallels[0].classes.map((c) => c.name)).toEqual(['6-А', '6-В']);
+    expect(parallels[1].grade).toBe('7');
+    expect(parallels[2].grade).toBe('8');
+    expect(parallels[3].grade).toBe('9');
+    expect(parallels[4].grade).toBe('10');
   });
 });

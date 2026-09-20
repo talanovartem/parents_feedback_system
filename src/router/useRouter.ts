@@ -1,0 +1,73 @@
+import { useState, useEffect, useCallback } from 'react';
+
+export type AppRoute =
+  | { name: 'journal'; classId?: string }
+  | { name: 'dashboard' }
+  | { name: 'reports'; classOrParallelId?: string }
+  | { name: 'student'; studentId: string };
+
+export function parseHash(hash: string): AppRoute {
+  const clean = hash.replace(/^#\/?/, '').trim();
+  if (!clean || clean === 'journal') {
+    return { name: 'journal' };
+  }
+
+  const parts = clean.split('/').filter(Boolean);
+
+  if (parts[0] === 'dashboard') {
+    return { name: 'dashboard' };
+  }
+
+  if (parts[0] === 'reports') {
+    return { name: 'reports', classOrParallelId: parts[1] };
+  }
+
+  if (parts[0] === 'student' && parts[1]) {
+    return { name: 'student', studentId: parts[1] };
+  }
+
+  if (parts[0] === 'class' && parts[1]) {
+    return { name: 'journal', classId: parts[1] };
+  }
+
+  return { name: 'journal' };
+}
+
+export function getStudentHash(studentId: string): string {
+  return `#/student/${studentId}`;
+}
+
+export function getClassHash(classId: string): string {
+  return `#/class/${classId}`;
+}
+
+export function getDashboardHash(): string {
+  return `#/dashboard`;
+}
+
+export function getReportsHash(filterId?: string): string {
+  return filterId ? `#/reports/${filterId}` : `#/reports`;
+}
+
+export function useRouter() {
+  const [route, setRoute] = useState<AppRoute>(() =>
+    typeof window !== 'undefined' ? parseHash(window.location.hash) : { name: 'journal' }
+  );
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setRoute(parseHash(window.location.hash));
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigate = useCallback((hash: string) => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = hash.startsWith('#') ? hash : `#/${hash}`;
+    }
+  }, []);
+
+  return { route, navigate };
+}

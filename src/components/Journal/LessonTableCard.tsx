@@ -10,9 +10,11 @@ import {
   Edit3,
   Plus,
   Clock,
+  ExternalLink,
 } from 'lucide-react';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
+import { getStudentHash } from '../../router/useRouter';
 
 interface LessonTableCardProps {
   lesson: Lesson;
@@ -223,6 +225,15 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                             >
                               {analytics.totalAverage > 0 ? analytics.totalAverage : '-'}
                             </span>
+                            <a
+                              href={getStudentHash(student.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Відкрити картку учня в новій вкладці браузера"
+                              className="p-1 rounded text-slate-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
                             <button
                               onClick={() => onOpenStudentReport(student)}
                               title="Звіт для батьків та промпт для ШІ"
