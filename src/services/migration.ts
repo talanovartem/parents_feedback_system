@@ -1,6 +1,6 @@
 import { Criterion, DatabaseSchema, Student } from '../types/feedback';
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'behavior', name: 'Поведінка' },
@@ -39,6 +39,13 @@ export function generateStudentPin(studentId: string): string {
 }
 
 /**
+ * Генерує унікальний 6-значний цифровий код доступу для учнівського порталу.
+ */
+export function generateAccessCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
  * Створює нову порожню базу даних актуальної версії.
  */
 export function createEmptyDatabase(): DatabaseSchema {
@@ -52,6 +59,8 @@ export function createEmptyDatabase(): DatabaseSchema {
     sentReports: {},
     savedReports: {},
     lessonFeedback: {},
+    attentionTasks: [],
+    kpTransactions: [],
   };
 }
 
@@ -124,6 +133,22 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     version = 3;
   }
 
+  // Міграція v3 -> v4 (attentionTasks + kpTransactions + accessCode для учнів)
+  if (version < 4) {
+    obj.attentionTasks = Array.isArray(obj.attentionTasks) ? obj.attentionTasks : [];
+    obj.kpTransactions = Array.isArray(obj.kpTransactions) ? obj.kpTransactions : [];
+
+    if (Array.isArray(obj.students)) {
+      obj.students = obj.students.map((s: Student) => ({
+        ...s,
+        accessCode: s.accessCode || generateAccessCode(),
+      }));
+    }
+
+    obj.version = 4;
+    version = 4;
+  }
+
   return {
     version: CURRENT_SCHEMA_VERSION,
     classes: obj.classes,
@@ -134,5 +159,7 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     sentReports: (obj.sentReports && typeof obj.sentReports === 'object') ? obj.sentReports : {},
     savedReports: (obj.savedReports && typeof obj.savedReports === 'object') ? obj.savedReports : {},
     lessonFeedback: (obj.lessonFeedback && typeof obj.lessonFeedback === 'object') ? obj.lessonFeedback : {},
+    attentionTasks: Array.isArray(obj.attentionTasks) ? obj.attentionTasks : [],
+    kpTransactions: Array.isArray(obj.kpTransactions) ? obj.kpTransactions : [],
   };
 }

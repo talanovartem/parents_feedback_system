@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DatabaseSchema, Lesson, Student } from './types/feedback';
+import { AttentionTask, DatabaseSchema, KpTransaction, Lesson, Student } from './types/feedback';
 import { fetchDatabase, saveDatabase, exportDatabaseToFile, logout } from './services/storage';
-import { migrateDatabase } from './services/migration';
+import { migrateDatabase, generateAccessCode } from './services/migration';
 import { JournalTable } from './components/Journal/JournalTable';
 import { ManageClassesModal } from './components/Modals/ManageClassesModal';
 import { AddStudentModal } from './components/Modals/AddStudentModal';
@@ -18,7 +18,10 @@ import { GlobalDashboard } from './components/Dashboard/GlobalDashboard';
 import { TeacherSchedulePage } from './components/Schedule/TeacherSchedulePage';
 import { StudentFeedbackPage } from './components/StudentFeedback/StudentFeedbackPage';
 import { StudentPinsModal } from './components/Modals/StudentPinsModal';
-import { useRouter, getClassHash } from './router/useRouter';
+import { AttentionTasksModal } from './components/Modals/AttentionTasksModal';
+import { WeeklyKpModal } from './components/Modals/WeeklyKpModal';
+import { StudentPortalPage } from './components/StudentPortal/StudentPortalPage';
+import { useRouter, getClassHash, getScheduleHash } from './router/useRouter';
 import { Toaster, toast } from 'sonner';
 import {
   GraduationCap,
@@ -38,6 +41,8 @@ import {
   Cloud,
   CloudOff,
   KeyRound,
+  Bell,
+  Mountain,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -59,6 +64,8 @@ export const App: React.FC = () => {
   const [batchReportData, setBatchReportData] = useState<{ students: Student[]; groupName: string } | null>(null);
   const [reportsInitialFilter, setReportsInitialFilter] = useState<string | undefined>(undefined);
   const [isPinsModalOpen, setIsPinsModalOpen] = useState(false);
+  const [isAttentionTasksOpen, setIsAttentionTasksOpen] = useState(false);
+  const [isWeeklyKpOpen, setIsWeeklyKpOpen] = useState(false);
 
   const { route, navigate } = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -216,6 +223,7 @@ export const App: React.FC = () => {
     const newStudent: Student = {
       ...studentData,
       id: `std-${Date.now()}`,
+      accessCode: generateAccessCode(),
     };
     updateDbAndSave((prev) => {
       return {
@@ -477,7 +485,54 @@ export const App: React.FC = () => {
     });
   };
 
+  // Додавання важливого завдання / боргу учня
+  const handleAddAttentionTask = (task: Omit<AttentionTask, 'id' | 'createdAt'>) => {
+    const newTask: AttentionTask = {
+      ...task,
+      id: `task-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+    };
+    updateDbAndSave((prev) => ({
+      ...prev,
+      attentionTasks: [...(prev.attentionTasks || []), newTask],
+    }));
+  };
 
+  // Позначення завдання виконаним
+  const handleCompleteAttentionTask = (taskId: string) => {
+    updateDbAndSave((prev) => ({
+      ...prev,
+      attentionTasks: (prev.attentionTasks || []).map((t) =>
+        t.id === taskId ? { ...t, isCompleted: true, completedAt: new Date().toISOString() } : t
+      ),
+    }));
+  };
+
+  // Нарахування KP балів (щотижнево)
+  const handleAwardKp = (transactions: Omit<KpTransaction, 'id' | 'createdAt'>[]) => {
+    updateDbAndSave((prev) => {
+      const newTxs: KpTransaction[] = transactions.map((tx) => ({
+        ...tx,
+        id: `kp-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        createdAt: new Date().toISOString(),
+      }));
+      // Оновлюємо балансb учнів
+      const studentUpdates: Record<string, number> = {};
+      for (const tx of newTxs) {
+        studentUpdates[tx.studentId] = (studentUpdates[tx.studentId] || 0) + tx.amount;
+      }
+      const students = prev.students.map((s) =>
+        studentUpdates[s.id] !== undefined
+          ? { ...s, karpatyPoints: (s.karpatyPoints || 0) + studentUpdates[s.id] }
+          : s
+      );
+      return {
+        ...prev,
+        kpTransactions: [...(prev.kpTransactions || []), ...newTxs],
+        students,
+      };
+    });
+  };
 
 
   // Додавання критерію
@@ -553,6 +608,19 @@ export const App: React.FC = () => {
           lessonId={route.lessonId}
           db={db}
           onSubmitFeedback={handleSubmitFeedback}
+        />
+      </>
+    );
+  }
+
+  if (route.name === 'student-portal') {
+    return (
+      <>
+        <Toaster position="top-right" richColors />
+        <StudentPortalPage
+          studentId={route.studentId}
+          db={db}
+          onBack={() => navigate(getScheduleHash())}
         />
       </>
     );
@@ -673,6 +741,30 @@ export const App: React.FC = () => {
               <Sliders className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span className="hidden sm:inline">Критерії (0-12)</span>
               <span className="sm:hidden">Критерії</span>
+            </button>
+
+            {/* Кнопка KP */}
+            <button
+              onClick={() => setIsWeeklyKpOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-amber-700 hover:text-amber-800 bg-white border border-slate-200 hover:border-amber-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              title="Нарахування KP (Карпатики 🏔️) за тиждень"
+            >
+              <Mountain className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span className="hidden sm:inline">KP 🏔️</span>
+            </button>
+
+            {/* Кнопка Нотифікацій */}
+            <button
+              onClick={() => setIsAttentionTasksOpen(true)}
+              className="relative px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-rose-600 bg-white border border-slate-200 hover:border-rose-300 rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              title="Завдання та контроль уваги"
+            >
+              <Bell className="w-3.5 h-3.5 shrink-0" />
+              {(db.attentionTasks || []).filter((t) => !t.isCompleted).length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 animate-pulse">
+                  {(db.attentionTasks || []).filter((t) => !t.isCompleted).length}
+                </span>
+              )}
             </button>
 
             <button
@@ -976,6 +1068,21 @@ export const App: React.FC = () => {
         db={db}
         currentClassId={selectedClassId}
         onUpdateStudentPin={handleUpdateStudentPin}
+      />
+
+      <AttentionTasksModal
+        isOpen={isAttentionTasksOpen}
+        onClose={() => setIsAttentionTasksOpen(false)}
+        db={db}
+        onAddTask={handleAddAttentionTask}
+        onCompleteTask={handleCompleteAttentionTask}
+      />
+
+      <WeeklyKpModal
+        isOpen={isWeeklyKpOpen}
+        onClose={() => setIsWeeklyKpOpen(false)}
+        db={db}
+        onAwardKp={handleAwardKp}
       />
     </div>
   );

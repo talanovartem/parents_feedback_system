@@ -16,7 +16,15 @@ import {
   XCircle,
   Layers,
   Trash2,
+  AlertCircle,
+  Mountain,
+  QrCode,
+  Copy,
+  Clock,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { getStudentPortalHash } from '../../router/useRouter';
+import { generateQrSvg } from '../../utils/qrCodeGenerator';
 
 interface StudentPageProps {
   studentId: string;
@@ -37,6 +45,21 @@ export const StudentPage: React.FC<StudentPageProps> = ({
   const [periodText, setPeriodText] = useState(defaultPreset.description);
   const [periodStartDate, setPeriodStartDate] = useState<string | undefined>(defaultPreset.startDate);
   const [periodEndDate, setPeriodEndDate] = useState<string | undefined>(defaultPreset.endDate);
+  const [showQr, setShowQr] = useState(false);
+
+  const studentTasks = useMemo(() => {
+    return (db.attentionTasks || []).filter((t) => t.studentId === studentId);
+  }, [db.attentionTasks, studentId]);
+
+  const activeTasks = useMemo(() => {
+    return studentTasks.filter((t) => !t.isCompleted);
+  }, [studentTasks]);
+
+  const studentKpTransactions = useMemo(() => {
+    return (db.kpTransactions || [])
+      .filter((t) => t.studentId === studentId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [db.kpTransactions, studentId]);
 
   const student = useMemo(() => {
     return db.students.find((s) => s.id === studentId);
@@ -188,6 +211,109 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           <div className="flex-1 text-xs text-amber-900 leading-relaxed">
             <p className="font-semibold mb-0.5">Особливості сприйняття та рекомендації для вчителя:</p>
             <p>{student.notes}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Active Attention Tasks / Debts */}
+      {activeTasks.length > 0 && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 shadow-xs flex flex-col gap-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-rose-700 font-bold text-sm">
+              <AlertCircle className="w-4 h-4 text-rose-600" />
+              <span>Потребує уваги ({activeTasks.length})</span>
+            </div>
+            <span className="text-[11px] font-medium text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+              Активні борги / зауваження
+            </span>
+          </div>
+          <div className="divide-y divide-rose-200/60 bg-white/70 rounded-xl p-2 border border-rose-100">
+            {activeTasks.map((task) => (
+              <div key={task.id} className="py-2 px-1 flex items-start justify-between gap-3 text-xs">
+                <div>
+                  <p className="font-semibold text-slate-800">{task.text}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-slate-400" /> Дата: {task.date}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Student Portal & KP Currency Card */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50/70 via-white to-amber-50/70 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xl shadow-xs shrink-0">
+            <Mountain className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900">Учнівський портал та бонуси KP</h3>
+              <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-bold text-xs">
+                {student.karpatyPoints || 0} 🏔️ KP
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Код доступу до кабінету: <strong className="font-mono text-slate-800 tracking-wider">{student.accessCode || '—'}</strong> · PIN для анкет: <strong className="font-mono text-slate-800">{student.pinCode || '—'}</strong>
+            </p>
+            {studentKpTransactions.length > 0 && (
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                Останнє нарахування: <strong className="font-semibold">+{studentKpTransactions[0].amount} 🏔️</strong> ({studentKpTransactions[0].reason})
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              const url = `${window.location.origin}${window.location.pathname}${getStudentPortalHash(student.id)}`;
+              navigator.clipboard.writeText(url);
+              toast.success(`Посилання на учнівський портал ${student.name} скопійовано! 🔗`);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 shadow-2xs transition"
+          >
+            <Copy className="w-3.5 h-3.5 text-slate-500" />
+            <span>Скопіювати посилання</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowQr(!showQr)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition shadow-2xs"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>{showQr ? 'Сховати QR-код' : 'Показати QR-код'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* QR Code Container if opened */}
+      {showQr && (
+        <div className="p-5 rounded-2xl bg-white border border-indigo-100 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in duration-200">
+          <div
+            className="p-3 bg-white border border-slate-200 rounded-2xl shadow-xs"
+            dangerouslySetInnerHTML={{
+              __html: generateQrSvg(
+                `${window.location.origin}${window.location.pathname}${getStudentPortalHash(student.id)}`,
+                5,
+                2
+              ),
+            }}
+          />
+          <div className="text-center sm:text-left space-y-2 max-w-sm">
+            <h4 className="text-sm font-bold text-slate-900">QR-код для входу учня</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Учень може відсканувати цей QR-код камерою смартфона та ввести 6-значний код доступу: <span className="font-mono font-bold text-indigo-600">{student.accessCode || '—'}</span>
+            </p>
+            <div className="pt-1">
+              <span className="text-[11px] text-slate-400">
+                Автономна генерація чистим SVG без звернень до сторонніх серверів
+              </span>
+            </div>
           </div>
         </div>
       )}

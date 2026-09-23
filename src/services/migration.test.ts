@@ -6,13 +6,14 @@ import {
   DEFAULT_CRITERIA,
   guessGender,
   generateStudentPin,
+  generateAccessCode,
 } from './migration';
 
 describe('migration service', () => {
-  it('creates an empty database with CURRENT_SCHEMA_VERSION, savedReports, lessonFeedback and default criteria', () => {
+  it('creates an empty database with CURRENT_SCHEMA_VERSION, savedReports, lessonFeedback, attentionTasks, kpTransactions and default criteria', () => {
     const db = createEmptyDatabase();
     expect(db.version).toBe(CURRENT_SCHEMA_VERSION);
-    expect(db.version).toBe(3);
+    expect(db.version).toBe(4);
     expect(db.classes).toEqual([]);
     expect(db.students).toEqual([]);
     expect(db.lessons).toEqual([]);
@@ -20,6 +21,8 @@ describe('migration service', () => {
     expect(db.sentReports).toEqual({});
     expect(db.savedReports).toEqual({});
     expect(db.lessonFeedback).toEqual({});
+    expect(db.attentionTasks).toEqual([]);
+    expect(db.kpTransactions).toEqual([]);
     expect(db.criteria).toEqual(DEFAULT_CRITERIA);
   });
 
@@ -41,6 +44,13 @@ describe('migration service', () => {
     expect(Number(pin1)).toBeLessThanOrEqual(9999);
   });
 
+  it('generates 6-digit access codes', () => {
+    const code = generateAccessCode();
+    expect(code.length).toBe(6);
+    expect(Number(code)).toBeGreaterThanOrEqual(100000);
+    expect(Number(code)).toBeLessThanOrEqual(999999);
+  });
+
   it('handles null, undefined or non-object inputs safely', () => {
     expect(migrateDatabase(null)).toEqual(createEmptyDatabase());
     expect(migrateDatabase(undefined)).toEqual(createEmptyDatabase());
@@ -48,7 +58,7 @@ describe('migration service', () => {
     expect(migrateDatabase(123)).toEqual(createEmptyDatabase());
   });
 
-  it('migrates legacy v0 schema to v3 preserving all data and generating pinCode', () => {
+  it('migrates legacy v0 schema to v4 preserving all data and generating pinCode & accessCode', () => {
     const legacyData = {
       classes: [{ id: 'cls-6a', name: '6-А' }],
       students: [{ id: 'std-1', classId: 'cls-6a', name: 'Артем' }],
@@ -65,16 +75,20 @@ describe('migration service', () => {
 
     const migrated = migrateDatabase(legacyData);
 
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(4);
     expect(migrated.classes).toEqual(legacyData.classes);
     expect(migrated.students[0].name).toBe('Артем');
     expect(migrated.students[0].gender).toBe('male');
     expect(migrated.students[0].pinCode).toBeDefined();
     expect(migrated.students[0].pinCode?.length).toBe(4);
+    expect(migrated.students[0].accessCode).toBeDefined();
+    expect(migrated.students[0].accessCode?.length).toBe(6);
     expect(migrated.lessons).toEqual(legacyData.lessons);
     expect(migrated.records).toEqual(legacyData.records);
     expect(migrated.savedReports).toEqual({});
     expect(migrated.lessonFeedback).toEqual({});
+    expect(migrated.attentionTasks).toEqual([]);
+    expect(migrated.kpTransactions).toEqual([]);
     expect(migrated.criteria).toEqual(DEFAULT_CRITERIA);
   });
 
@@ -92,10 +106,10 @@ describe('migration service', () => {
 
     const migrated = migrateDatabase(dataWithCustomCriteria);
     expect(migrated.criteria).toEqual(customCriteria);
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(4);
   });
 
-  it('migrates v2 schema to v3 adding lessonFeedback and pinCode', () => {
+  it('migrates v2 schema to v4 adding lessonFeedback, pinCode, accessCode, attentionTasks and kpTransactions', () => {
     const v2Data = {
       version: 2,
       classes: [{ id: 'cls-7a', name: '7-А' }],
@@ -110,9 +124,13 @@ describe('migration service', () => {
     };
 
     const result = migrateDatabase(v2Data);
-    expect(result.version).toBe(3);
+    expect(result.version).toBe(4);
     expect(result.students[0].pinCode?.length).toBe(4);
     expect(result.students[1].pinCode).toBe('5555');
+    expect(result.students[0].accessCode?.length).toBe(6);
+    expect(result.students[1].accessCode?.length).toBe(6);
     expect(result.lessonFeedback).toEqual({});
+    expect(result.attentionTasks).toEqual([]);
+    expect(result.kpTransactions).toEqual([]);
   });
 });

@@ -11,6 +11,7 @@ export interface Student {
   gender?: 'male' | 'female'; // стать учня (для аналітики дашборду)
   pinCode?: string; // 4-значний PIN-код для входу учня у форму фідбеку
   karpatyPoints?: number; // накопичувальні бонуси «карпатики» 🏔️
+  accessCode?: string; // 6-значний код доступу для учнівського порталу
 }
 
 export type FeedbackMood = 'tired' | 'bored' | 'normal' | 'interesting' | 'excited';
@@ -58,6 +59,29 @@ export interface LessonStudentEntry {
   notes?: string; // примітки саме до цього уроку ("забув зошит", "хворіє")
 }
 
+// Важливе завдання / борг учня (потребує уваги)
+export interface AttentionTask {
+  id: string; // "task-${Date.now()}-${random}"
+  studentId: string;
+  classId: string;
+  lessonId?: string; // якщо прив'язано до конкретного уроку
+  date: string; // YYYY-MM-DD (дата фіксації або дедлайну)
+  text: string; // наприклад, "Не здав контрольну роботу"
+  isCompleted: boolean; // false = активне, true = закрито
+  createdAt: string; // ISO
+  completedAt?: string; // ISO
+}
+
+// Транзакція внутрішньої валюти KP (Карпатики 🏔️)
+export interface KpTransaction {
+  id: string; // "kp-${Date.now()}"
+  studentId: string;
+  amount: number; // +10, +15, -5, тощо
+  reason: string; // "Підсумки тижня (15.09 - 21.09)", "Бонус за ідеальне відвідування"
+  weekPeriod?: string; // наприклад "2026-W38"
+  createdAt: string; // ISO
+}
+
 export interface DatabaseSchema {
   version?: number; // Версія структури даних (для автоматичної міграції)
   classes: ClassItem[];
@@ -68,6 +92,8 @@ export interface DatabaseSchema {
   sentReports?: Record<string, string>; // "${studentId}:${period}" -> дата/час ISO відправки звіту батькам
   savedReports?: Record<string, SavedReport>; // "${studentId}:${period}" -> збережений звіт
   lessonFeedback?: Record<string, StudentLessonFeedback>; // "${studentId}:${lessonId}" -> фідбек учня
+  attentionTasks?: AttentionTask[]; // Важливі завдання / борги учнів
+  kpTransactions?: KpTransaction[]; // Транзакції внутрішньої валюти KP
 }
 
 export interface StudentAnalytics {

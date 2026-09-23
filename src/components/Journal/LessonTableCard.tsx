@@ -463,6 +463,9 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                   const scores = record?.scores || {};
                   const lessonNotes = record?.notes || '';
                   const studentFeedback = db.lessonFeedback?.[`${student.id}:${lesson.id}`];
+                  const activeTaskCount = (db.attentionTasks || []).filter(
+                    (t) => t.studentId === student.id && !t.isCompleted
+                  ).length;
 
                   return (
                     <tr
@@ -480,6 +483,14 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                         <div className="flex items-center justify-between gap-2">
                           <div className="font-semibold text-slate-800 text-xs flex items-center gap-1.5 flex-wrap">
                             <span>{student.name}</span>
+                            {activeTaskCount > 0 && (
+                              <span
+                                className="text-rose-600 flex items-center gap-0.5 cursor-help"
+                                title={`${activeTaskCount} активне завдання (борг)`}
+                              >
+                                ⚠️
+                              </span>
+                            )}
                             {studentFeedback && (
                               <span
                                 className="px-1.5 py-0.2 bg-purple-100 text-purple-800 border border-purple-200 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-help"
@@ -743,6 +754,9 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                 const lessonNotes = record?.notes || '';
                 const studentFeedback = db.lessonFeedback?.[`${student.id}:${lesson.id}`];
                 const isCardExpanded = expandedStudentIds.has(student.id);
+                const activeTaskCountCard = (db.attentionTasks || []).filter(
+                  (t) => t.studentId === student.id && !t.isCompleted
+                ).length;
 
                 // Кількість заповнених критеріїв
                 const gradedCount = Object.keys(scores).filter(
@@ -798,6 +812,12 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                             <span className="font-semibold text-slate-900 text-sm truncate">
                               {student.name}
                             </span>
+                            {activeTaskCountCard > 0 && (
+                              <span
+                                className="cursor-help"
+                                title={`${activeTaskCountCard} активне завдання (борг)`}
+                              >⚠️</span>
+                            )}
                             {student.gender === 'female' ? (
                               <span className="text-xs" title="Дівчина">👧</span>
                             ) : (

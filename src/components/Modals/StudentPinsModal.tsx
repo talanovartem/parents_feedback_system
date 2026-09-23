@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
-import { KeyRound, X, Copy, RefreshCw, Eye, EyeOff, Search } from 'lucide-react';
+import { KeyRound, X, Copy, RefreshCw, Eye, EyeOff, Search, QrCode, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { getStudentPortalHash } from '../../router/useRouter';
 
 interface StudentPinsModalProps {
   isOpen: boolean;
@@ -183,6 +184,33 @@ export const StudentPinsModal: React.FC<StudentPinsModalProps> = ({
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                   </button>
+
+                  {student.accessCode && (
+                    <>
+                      <span
+                        className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-800 tracking-widest cursor-help"
+                        title={`Код для учнівського порталу: ${student.accessCode}`}
+                      >
+                        <QrCode className="w-3 h-3 inline mr-1 text-indigo-500" />
+                        {showPins ? student.accessCode : '••••••'}
+                      </span>
+                      <a
+                        href={getStudentPortalHash(student.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Відкрити учнівський портал"
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const url = `${window.location.origin}${window.location.pathname}${getStudentPortalHash(student.id)}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success(`Посилання для ${student.name} скопійовано 🔗`);
+                        }}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </>
+                  )}
                 </div>
               </div>
             ))

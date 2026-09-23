@@ -1,0 +1,105 @@
+version: 3
+skills:
+  .::bmad-agile-workflow:
+    destination: .opencode\skills\bmad-agile-workflow,.agents\skills\bmad-agile-workflow,.claude\skills\bmad-agile-workflow,.cursor\skills\bmad-agile-workflow
+    hash: ddb06b3c259a78147123e7ff0103ec3525dd4ce61b6a1573823f068cc33b128f
+    skill: bmad-agile-workflow
+    description: Двоколійний Agile процес розробки BMAD Method (Fast-track та Full Spec Track) для AI-агентів. Використовуйте цей скил перед запуском нових фіч або епіків.
+    source: .
+    source_revision: local
+    scope: project
+  .::frontend-modularity:
+    destination: .opencode\skills\frontend-modularity,.agents\skills\frontend-modularity,.claude\skills\frontend-modularity,.cursor\skills\frontend-modularity
+    hash: 807568f76a0d2eef2c8e8e6e9428541fc4fc407ef540eabf705dbcc77ca1142f
+    skill: frontend-modularity
+    description: Правила структури коду, які запобігають необхідності рефакторингу монолітів. Використовуй при написанні нового коду, щоб він одразу був модульним. Ці правила виведені з рефакторингу модуля workbench (1926 → 809 рядків).
+    source: .
+    source_revision: local
+    scope: project
+  .::good-taste:
+    destination: .opencode\skills\good-taste,.agents\skills\good-taste,.claude\skills\good-taste,.cursor\skills\good-taste
+    hash: bd6009d1469be760d7c8ce869aea9d2da946c60d891b1f5d6750cca5a184c9e2
+    skill: good-taste
+    description: Забезпечує сучасний, естетичний та зручний UI/UX дизайн (taste-skill).
+    source: .
+    source_revision: local
+    scope: project
+  .::ponytail:
+    destination: .opencode\skills\ponytail,.agents\skills\ponytail,.claude\skills\ponytail,.cursor\skills\ponytail
+    hash: f172c9d39476b0cd968fdbcc576d5adbd851cea3097c6618efe53539a2ddf4bc
+    skill: ponytail
+    description: Філософія "Lazy Senior Developer" та драбина прийняття рішень для запобігання оверінжинірингу. Найкращий код — це код, який ви не писали. Використовуй при будь-якій розробці нового коду, рефакторингу або виправленні багів для отримання мінімалістичного, надійного та чистого результату.
+    source: .
+    source_revision: local
+    scope: project
+  .::ponytail-audit:
+    destination: .opencode\skills\ponytail-audit,.agents\skills\ponytail-audit,.claude\skills\ponytail-audit,.cursor\skills\ponytail-audit
+    hash: 1deb3c9eedfd3cded49f599fc01c5d1ff425d52c93bbc1202b52c16beed18f19
+    skill: ponytail-audit
+    description: Комплексний аудит кодової бази, підсистеми або каталогу на предмет оверінжинірингу, дублікатів, застарілого бойлерплейту та зайвих залежностей. Використовуй, коли користувач просить провести аудит на зайву складність, знайти надлишковий код або оцінити можливості для скорочення кодової бази.
+    source: .
+    source_revision: local
+    scope: project
+  .::ponytail-review:
+    destination: .opencode\skills\ponytail-review,.agents\skills\ponytail-review,.claude\skills\ponytail-review,.cursor\skills\ponytail-review
+    hash: f5e59776bde58fb1edb1f4a653516c44bfdfe3d6238eed8579e1556e0b1319b9
+    skill: ponytail-review
+    description: Рев'ю коду та diff'ів, сфокусоване виключно на боротьбі з оверінжинірингом, дублюванням та зайвим кодом. Знаходить, що можна видалити, замінити на stdlib/native або спростити. Використовуй, коли потрібно спростити diff, скоротити код або перевірити на зайву складність.
+    source: .
+    source_revision: local
+    scope: project
+  .::spec-driven-development:
+    destination: .opencode\skills\spec-driven-development,.agents\skills\spec-driven-development,.claude\skills\spec-driven-development,.cursor\skills\spec-driven-development
+    hash: 562a8709dcbd2ca076d20bd48fb2b1aa67bd84ecc4561fb25b48247df89a47d0
+    skill: spec-driven-development
+    description: Специфікація як виконуване джерело правди (Spec-Driven Development / spec-kit) для ШІ-агентів. Використовуйте для керування розробкою через специфікацію та Конституцію проєкту.
+    source: .
+    source_revision: local
+    scope: project
+  .::subagent-driven-development:
+    destination: .opencode\skills\subagent-driven-development,.agents\skills\subagent-driven-development,.claude\skills\subagent-driven-development,.cursor\skills\subagent-driven-development
+    hash: abece97dfb6f54de2aebdf38cb87db6a94a5fd4d2776f2797d5a32830537ee34
+    skill: subagent-driven-development
+    description: Use when executing implementation plans with independent tasks in the current session
+    source: .
+    source_revision: local
+    scope: project
+  .::systematic-debugging:
+    destination: .opencode\skills\systematic-debugging,.agents\skills\systematic-debugging,.claude\skills\systematic-debugging,.cursor\skills\systematic-debugging
+    hash: ef0971c299343779d79d18f5ff46ed825761638529fa77cc49ad54ae7b9fd60c
+    skill: systematic-debugging
+    description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+    source: .
+    source_revision: local
+    scope: project
+  .::testing-vitest:
+    destination: .opencode\skills\testing-vitest,.agents\skills\testing-vitest,.claude\skills\testing-vitest,.cursor\skills\testing-vitest
+    hash: 95baf965edacc5910af387fae8f603ca213a26145851063ee64ed7b71a434d18
+    skill: testing-vitest
+    description: Правила написання тестів для React (Vitest + React Testing Library).
+    source: .
+    source_revision: local
+    scope: project
+  .::verification-before-completion:
+    destination: .opencode\skills\verification-before-completion,.agents\skills\verification-before-completion,.claude\skills\verification-before-completion,.cursor\skills\verification-before-completion
+    hash: 9f704f1335e61a3ce258270d9f492cf487af55f1db0b9fc1bc5fa2173ebd38fa
+    skill: verification-before-completion
+    description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+    source: .
+    source_revision: local
+    scope: project
+assets:
+  instructions::.::AGENTS:
+    kind: instructions
+    name: AGENTS
+    hash: e3e69ec796cfba514aa50048f4fcfcef627178fb0b0c35f20f0e8377740e3d9e
+    source: .
+    destination: agg:AGENTS.md,file:.clinerules\AGENTS.md,agg:CLAUDE.md,file:.cursor\rules\AGENTS.mdc
+    source_revision: local
+  instructions::.::constitution:
+    kind: instructions
+    name: constitution
+    hash: 075e7cde42d496c14dbff3e7f70675ad9df3f4fc76e314e5bbdf9a762dadedfb
+    source: .
+    destination: agg:AGENTS.md,file:.clinerules\constitution.md,agg:CLAUDE.md,file:.cursor\rules\constitution.mdc
+    source_revision: local

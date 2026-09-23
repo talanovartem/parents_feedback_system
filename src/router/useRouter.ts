@@ -6,7 +6,8 @@ export type AppRoute =
   | { name: 'dashboard' }
   | { name: 'reports'; classOrParallelId?: string }
   | { name: 'student'; studentId: string }
-  | { name: 'feedback'; lessonId: string };
+  | { name: 'feedback'; lessonId: string }
+  | { name: 'student-portal'; studentId: string };
 
 export function parseHash(hash: string): AppRoute {
   const clean = hash.replace(/^#\/?/, '').trim();
@@ -40,6 +41,10 @@ export function parseHash(hash: string): AppRoute {
     return { name: 'journal', classId: parts[1] };
   }
 
+  if (parts[0] === 'my' && parts[1]) {
+    return { name: 'student-portal', studentId: parts[1] };
+  }
+
   return { name: 'schedule' };
 }
 
@@ -69,6 +74,10 @@ export function getDashboardHash(): string {
 
 export function getReportsHash(filterId?: string): string {
   return filterId ? `#/reports/${filterId}` : `#/reports`;
+}
+
+export function getStudentPortalHash(studentId: string): string {
+  return `#/my/${studentId}`;
 }
 
 export function useRouter() {

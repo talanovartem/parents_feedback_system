@@ -1,3 +1,4 @@
+<!-- kasetto:instruction:AGENTS-9bfab0b5 START -->
 # Проєкт parents_feedback_system — інструкції для ШІ-агентів
 
 > Усі агенти діють за єдиною **Конституцією** у [`.spec/constitution.md`](file:///.spec/constitution.md).
@@ -60,6 +61,7 @@
 
 ## CodeGraph
 У репозиторії налаштовано CodeGraph. Використовуйте MCP-інструмент `codegraph_explore` або команду `codegraph explore` для швидкої навігації та розуміння структури зв'язків.
+<!-- kasetto:instruction:AGENTS-9bfab0b5 END -->
 <!-- kasetto:instruction:AGENTS-9bfab0b5 END -->
 
 <!-- kasetto:instruction:constitution-ed97e4c0 START -->
