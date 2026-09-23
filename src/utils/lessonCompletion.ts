@@ -11,6 +11,24 @@ export interface LessonCompletionStatus {
   percentage: number; // відсоток оцінених від присутніх (0-100)
 }
 
+/** Підрахунок присутності/відсутності на уроці (спільний для шапки та подань). */
+export function getAttendanceCounts(
+  lesson: Lesson,
+  students: Student[],
+  records: Record<string, Record<string, LessonStudentEntry>>
+): { presentCount: number; absentCount: number } {
+  let presentCount = 0;
+  let absentCount = 0;
+  for (const s of students) {
+    if (records[s.id]?.[lesson.id]?.absent) {
+      absentCount += 1;
+    } else {
+      presentCount += 1;
+    }
+  }
+  return { presentCount, absentCount };
+}
+
 /**
  * Розраховує стан заповненості оцінок для конкретного уроку
  */

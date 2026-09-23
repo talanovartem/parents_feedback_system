@@ -270,8 +270,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
           <button
             type="button"
             onClick={() => {
-              const url = `${window.location.origin}${window.location.pathname}${getStudentPortalHash(student.id)}`;
-              navigator.clipboard.writeText(url);
+              navigator.clipboard.writeText(getStudentPortalHash(student.id));
               toast.success(`Посилання на учнівський портал ${student.name} скопійовано! 🔗`);
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 shadow-2xs transition"
@@ -298,7 +297,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
             className="p-3 bg-white border border-slate-200 rounded-2xl shadow-xs"
             dangerouslySetInnerHTML={{
               __html: generateQrSvg(
-                `${window.location.origin}${window.location.pathname}${getStudentPortalHash(student.id)}`,
+                getStudentPortalHash(student.id),
                 5,
                 2
               ),

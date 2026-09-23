@@ -1,4 +1,5 @@
 import { ClassItem, Lesson } from '../types/feedback';
+import { todayLocalIso } from './localDate';
 
 export interface ParsedLessonItem {
   id: string; // тимчасовий ідентифікатор для списку передперегляду
@@ -171,9 +172,8 @@ function detectDate(line: string, currentYear = 2026): { dateIso: string; matche
     return { dateIso: `${year}-${month}-${day}`, matchedText: dmyMatch[0] };
   }
 
-  // Якщо дати немає — беремо сьогоднішню дату
-  const todayIso = new Date().toISOString().slice(0, 10);
-  return { dateIso: todayIso };
+  // Якщо дати немає — беремо сьогоднішню локальну дату
+  return { dateIso: todayLocalIso() };
 }
 
 /**
@@ -245,7 +245,7 @@ export function parseLessonsInput(
     }
 
     let detectedClassId = defaultClassId;
-    let detectedDateIso = new Date().toISOString().slice(0, 10);
+    let detectedDateIso = todayLocalIso();
     let detectedNumber = 1;
     let detectedTimeStr: string | undefined = undefined;
     let topic = '';

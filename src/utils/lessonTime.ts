@@ -1,4 +1,5 @@
 import { Lesson } from '../types/feedback';
+import { toLocalIsoDate } from './localDate';
 
 /**
  * Отримує мілісекундний timestamp початку уроку за датою, часом та номером.
@@ -76,7 +77,7 @@ export function getLessonBadgeInfo(
 ): LessonBadgeInfo | null {
   if (!isNearest) return null;
 
-  const todayIso = referenceDate.toISOString().slice(0, 10);
+  const todayIso = toLocalIsoDate(referenceDate);
 
   if (lesson.date === todayIso) {
     return {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getPublicEntryUrl } from '../services/publicAccess';
 
 export type AppRoute =
   | { name: 'schedule' }
@@ -57,7 +58,7 @@ export function getStudentHash(studentId: string): string {
 }
 
 export function getLessonFeedbackHash(lessonId: string): string {
-  return `#/feedback/${lessonId}`;
+  return getPublicEntryUrl(`#/feedback/${lessonId}`);
 }
 
 export function getClassHash(classId: string): string {
@@ -77,7 +78,7 @@ export function getReportsHash(filterId?: string): string {
 }
 
 export function getStudentPortalHash(studentId: string): string {
-  return `#/my/${studentId}`;
+  return getPublicEntryUrl(`#/my/${studentId}`);
 }
 
 export function useRouter() {

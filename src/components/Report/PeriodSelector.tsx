@@ -23,6 +23,8 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
     if (!value && defaultPreset) {
       onChange(defaultPreset.description, defaultPreset.startDate, defaultPreset.endDate);
     }
+    // Лише ініціалізація при монтуванні: подальші зміни value/onChange керуються вручну
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSelectPreset = (preset: PeriodPreset) => {

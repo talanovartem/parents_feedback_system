@@ -1,108 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { DatabaseSchema, KpTransaction, Student } from '../../types/feedback';
+import { DatabaseSchema, KpTransaction } from '../../types/feedback';
 import { Mountain, X, Zap, ChevronDown, ChevronUp, History, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { getWeekPeriod, calcRecommendedKp } from '../../utils/weeklyKp';
 
 interface WeeklyKpModalProps {
   isOpen: boolean;
   onClose: () => void;
   db: DatabaseSchema;
   onAwardKp: (transactions: Omit<KpTransaction, 'id' | 'createdAt'>[]) => void;
-}
-
-function getWeekPeriod(offset: 0 | -1) {
-  const now = new Date();
-  const day = now.getDay(); // 0=Нд, 1=Пн ...
-  const diffToMon = day === 0 ? -6 : 1 - day;
-  const mon = new Date(now);
-  mon.setDate(now.getDate() + diffToMon + offset * 7);
-  const fri = new Date(mon);
-  fri.setDate(mon.getDate() + 4);
-  const fmt = (d: Date) =>
-    `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-  const year = fri.getFullYear();
-  const weekNum = Math.ceil((((fri.getTime() - new Date(year, 0, 1).getTime()) / 86400000) + new Date(year, 0, 1).getDay() + 1) / 7);
-  return {
-    label: `${fmt(mon)} – ${fmt(fri)}.${fri.getFullYear()}`,
-    iso: `${year}-W${String(weekNum).padStart(2, '0')}`,
-    monDate: mon.toISOString().slice(0, 10),
-    friDate: fri.toISOString().slice(0, 10),
-  };
-}
-
-/** Розраховує рекомендовану суму KP для учня за тиждень */
-function calcRecommendedKp(
-  student: Student,
-  db: DatabaseSchema,
-  monDate: string,
-  friDate: string
-): { total: number; breakdown: string[] } {
-  const breakdown: string[] = [];
-  let total = 0;
-
-  // Уроки за тиждень цього класу
-  const weekLessons = db.lessons.filter(
-    (l) => l.classId === student.classId && l.date >= monDate && l.date <= friDate
-  );
-
-  if (weekLessons.length === 0) {
-    return { total: 0, breakdown: ['Немає уроків'] };
-  }
-
-  // Відвідуваність
-  const absents = weekLessons.filter((l) => db.records[student.id]?.[l.id]?.absent).length;
-  if (absents === 0) {
-    total += 5;
-    breakdown.push('+5 (100% відвідуваність)');
-  } else if (absents <= 1) {
-    total += 2;
-    breakdown.push(`+2 (пропуск: ${absents})`);
-  }
-
-  // Середній бал за тиждень
-  const allScores: number[] = [];
-  for (const l of weekLessons) {
-    const entry = db.records[student.id]?.[l.id];
-    if (entry && !entry.absent) {
-      const scores = Object.values(entry.scores || {});
-      if (scores.length > 0) {
-        allScores.push(...scores);
-      }
-    }
-  }
-  if (allScores.length > 0) {
-    const avg = allScores.reduce((a, b) => a + b, 0) / allScores.length;
-    if (avg >= 10) {
-      total += 5;
-      breakdown.push(`+5 (сер. бал: ${avg.toFixed(1)})`);
-    } else if (avg >= 7) {
-      total += 3;
-      breakdown.push(`+3 (сер. бал: ${avg.toFixed(1)})`);
-    } else if (avg >= 4) {
-      total += 1;
-      breakdown.push(`+1 (сер. бал: ${avg.toFixed(1)})`);
-    }
-  }
-
-  // Фідбек учня
-  const feedbackCount = weekLessons.filter(
-    (l) => db.lessonFeedback?.[`${student.id}:${l.id}`]
-  ).length;
-  if (feedbackCount === weekLessons.length && feedbackCount > 0) {
-    total += 2;
-    breakdown.push('+2 (всі анкети заповнено)');
-  }
-
-  // Без активних боргів
-  const hasDebts = (db.attentionTasks || []).some(
-    (t) => t.studentId === student.id && !t.isCompleted
-  );
-  if (!hasDebts && total > 0) {
-    total += 1;
-    breakdown.push('+1 (без боргів)');
-  }
-
-  return { total, breakdown };
+  /** Скасування нарахування за конкретний тиждень і учня */
+  onRevokeKp: (studentId: string, weekPeriod: string) => void;
 }
 
 export const WeeklyKpModal: React.FC<WeeklyKpModalProps> = ({
@@ -110,13 +18,12 @@ export const WeeklyKpModal: React.FC<WeeklyKpModalProps> = ({
   onClose,
   db,
   onAwardKp,
+  onRevokeKp,
 }) => {
   const [weekOffset, setWeekOffset] = useState<0 | -1>(0);
   const [classId, setClassId] = useState<string>(db.classes[0]?.id || '');
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [showHistory, setShowHistory] = useState(false);
-
-  if (!isOpen) return null;
 
   const week = getWeekPeriod(weekOffset);
   const students = db.students.filter((s) => s.classId === classId);
@@ -129,6 +36,16 @@ export const WeeklyKpModal: React.FC<WeeklyKpModalProps> = ({
       }),
     [students, db, week.monDate, week.friDate]
   );
+
+  const transactions = useMemo(
+    () =>
+      [...(db.kpTransactions || [])].sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt)
+      ),
+    [db.kpTransactions]
+  );
+
+  if (!isOpen) return null;
 
   // Перевірка: чи вже нараховано за цей тиждень для цього класу
   const alreadyAwarded = (studentId: string) =>
@@ -158,14 +75,6 @@ export const WeeklyKpModal: React.FC<WeeklyKpModalProps> = ({
     toast.success(`KP нараховано ${txs.length} учням за тиждень ${week.label} 🏔️`);
     onClose();
   };
-
-  const transactions = useMemo(
-    () =>
-      [...(db.kpTransactions || [])].sort((a, b) =>
-        b.createdAt.localeCompare(a.createdAt)
-      ),
-    [db.kpTransactions]
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
@@ -275,9 +184,18 @@ export const WeeklyKpModal: React.FC<WeeklyKpModalProps> = ({
                     <span className="font-bold text-amber-700">{student.karpatyPoints || 0} 🏔️</span>
                   </div>
                   {awarded ? (
-                    <span className="shrink-0 flex items-center gap-1 text-[10px] text-emerald-600 font-semibold px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(`Скасувати нарахування KP за тиждень ${week.label} для ${student.name}?`)) {
+                          onRevokeKp(student.id, week.iso);
+                        }
+                      }}
+                      title="Скасувати нарахування за цей тиждень"
+                      className="shrink-0 flex items-center gap-1 text-[10px] text-emerald-600 font-semibold px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
+                    >
                       <Check className="w-3 h-3" /> Нараховано
-                    </span>
+                    </button>
                   ) : (
                     <div className="flex items-center gap-1.5 shrink-0">
                       <input

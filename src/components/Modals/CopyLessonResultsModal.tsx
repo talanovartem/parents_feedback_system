@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Lesson, DatabaseSchema } from '../../types/feedback';
 import { Copy, AlertTriangle, X, ArrowRight } from 'lucide-react';
 import { getLessonCompletion } from '../../utils/lessonCompletion';
@@ -27,9 +27,13 @@ export const CopyLessonResultsModal: React.FC<CopyLessonResultsModalProps> = ({
   const classStudents = db.students.filter((s) => s.classId === sourceLesson.classId);
 
   // Доступні уроки цього ж класу, окрім поточного (джерела)
-  const availableLessons = db.lessons
-    .filter((l) => l.classId === sourceLesson.classId && l.id !== sourceLesson.id)
-    .sort((a, b) => b.date.localeCompare(a.date) || (b.lessonNumber || 0) - (a.lessonNumber || 0));
+  const availableLessons = useMemo(
+    () =>
+      db.lessons
+        .filter((l) => l.classId === sourceLesson.classId && l.id !== sourceLesson.id)
+        .sort((a, b) => b.date.localeCompare(a.date) || (b.lessonNumber || 0) - (a.lessonNumber || 0)),
+    [db.lessons, sourceLesson.classId, sourceLesson.id]
+  );
 
   const [selectedTargetLessonId, setSelectedTargetLessonId] = useState<string>('');
   const [copyScores, setCopyScores] = useState(true);
@@ -44,7 +48,7 @@ export const CopyLessonResultsModal: React.FC<CopyLessonResultsModalProps> = ({
     } else {
       setSelectedTargetLessonId('');
     }
-  }, [sourceLesson.id, sourceLesson.date, availableLessons.length]);
+  }, [availableLessons, sourceLesson.date]);
 
   if (!isOpen) return null;
 

@@ -202,8 +202,7 @@ export const StudentPinsModal: React.FC<StudentPinsModalProps> = ({
                         className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                         onClick={(e) => {
                           e.preventDefault();
-                          const url = `${window.location.origin}${window.location.pathname}${getStudentPortalHash(student.id)}`;
-                          navigator.clipboard.writeText(url);
+                          navigator.clipboard.writeText(getStudentPortalHash(student.id));
                           toast.success(`Посилання для ${student.name} скопійовано 🔗`);
                         }}
                       >

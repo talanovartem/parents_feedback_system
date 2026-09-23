@@ -5,6 +5,7 @@ import { findNearestLessonId } from '../../utils/lessonTime';
 import { getLessonCompletion } from '../../utils/lessonCompletion';
 import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
+import { todayLocalIso } from '../../utils/localDate';
 import {
   Calendar,
   Clock,
@@ -178,7 +179,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
     const sortedDates = Object.keys(groups).sort((a, b) => a.localeCompare(b));
 
     // Якщо поточний день є серед уроків — виносимо його на перше місце списку
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocalIso();
     const orderedDates = sortedDates.includes(today)
       ? [today, ...sortedDates.filter((d) => d !== today)]
       : sortedDates;
@@ -198,7 +199,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
     return result;
   }, [finalFilteredLessons]);
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayLocalIso();
 
   // Форматування дати українською (наприклад, "Понеділок, 21 вересня")
   const formatDayHeading = (dateStr: string) => {

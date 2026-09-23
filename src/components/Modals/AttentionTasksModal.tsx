@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { AttentionTask, DatabaseSchema, Student } from '../../types/feedback';
+import React, { useState } from 'react';
+import { DatabaseSchema, AttentionTask, Student } from '../../types/feedback';
 import { Bell, X, CheckCircle2, Plus, AlertCircle, Clock, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { todayLocalIso } from '../../utils/localDate';
 
 interface AttentionTasksModalProps {
   isOpen: boolean;
@@ -23,29 +24,26 @@ export const AttentionTasksModal: React.FC<AttentionTasksModalProps> = ({
   const [isAdding, setIsAdding] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskStudentId, setNewTaskStudentId] = useState('');
-  const [newTaskDate, setNewTaskDate] = useState(new Date().toISOString().slice(0, 10));
-
-  if (!isOpen) return null;
+  const [newTaskDate, setNewTaskDate] = useState(todayLocalIso());
 
   const tasks = db.attentionTasks || [];
 
-  const studentMap = useMemo(() => {
-    const m: Record<string, Student> = {};
-    db.students.forEach((s) => (m[s.id] = s));
-    return m;
-  }, [db.students]);
+  const studentMap: Record<string, Student> = {};
+  db.students.forEach((s) => (studentMap[s.id] = s));
 
-  const filteredTasks = useMemo(() => {
+  if (!isOpen) return null;
+
+  const activeCount = tasks.filter((t) => !t.isCompleted).length;
+
+  const filteredTasks = (() => {
     let list = tasks;
     if (filter === 'active') list = list.filter((t) => !t.isCompleted);
     if (filterClassId) list = list.filter((t) => t.classId === filterClassId);
-    return list.sort((a, b) => {
+    return [...list].sort((a, b) => {
       if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
       return b.createdAt.localeCompare(a.createdAt);
     });
-  }, [tasks, filter, filterClassId]);
-
-  const activeCount = tasks.filter((t) => !t.isCompleted).length;
+  })();
 
   const handleAdd = () => {
     if (!newTaskText.trim() || !newTaskStudentId) {
@@ -63,7 +61,7 @@ export const AttentionTasksModal: React.FC<AttentionTasksModalProps> = ({
     });
     setNewTaskText('');
     setNewTaskStudentId('');
-    setNewTaskDate(new Date().toISOString().slice(0, 10));
+    setNewTaskDate(todayLocalIso());
     setIsAdding(false);
     toast.success('Завдання додано ⚠️');
   };

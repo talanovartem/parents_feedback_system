@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AttentionTask, DatabaseSchema, KpTransaction, Lesson, Student } from './types/feedback';
 import { fetchDatabase, saveDatabase, exportDatabaseToFile, logout } from './services/storage';
-import { migrateDatabase, generateAccessCode } from './services/migration';
+import { migrateDatabase, generateAccessCode, generateStudentPin } from './services/migration';
+import { applyFeedbackToDb } from './utils/feedbackStore';
+import { applyCopyLessonResults } from './utils/lessonResults';
+import { isPublicEntry } from './services/publicAccess';
+import { PublicEntryNotice } from './components/Common/PublicEntryNotice';
 import { JournalTable } from './components/Journal/JournalTable';
 import { ManageClassesModal } from './components/Modals/ManageClassesModal';
 import { AddStudentModal } from './components/Modals/AddStudentModal';
@@ -21,7 +25,7 @@ import { StudentPinsModal } from './components/Modals/StudentPinsModal';
 import { AttentionTasksModal } from './components/Modals/AttentionTasksModal';
 import { WeeklyKpModal } from './components/Modals/WeeklyKpModal';
 import { StudentPortalPage } from './components/StudentPortal/StudentPortalPage';
-import { useRouter, getClassHash, getScheduleHash } from './router/useRouter';
+import { useRouter, getClassHash, getScheduleHash, parseHash } from './router/useRouter';
 import { Toaster, toast } from 'sonner';
 import {
   GraduationCap,
@@ -70,15 +74,22 @@ export const App: React.FC = () => {
   const { route, navigate } = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Завантаження при старті
+  // Завантаження при старті (у публічному режимі повна база не потрібна —
+  // компоненти самі запитують обмежені дані через publicAccess)
   useEffect(() => {
+    if (isPublicEntry()) {
+      setIsLoading(false);
+      return;
+    }
     async function init() {
       setIsLoading(true);
       const data = await fetchDatabase();
       setDb(data);
       if (data.classes.length > 0) {
-        if (route.name === 'journal' && route.classId) {
-          setSelectedClassId(route.classId);
+        // Роут читаємо з поточного hash: ефект виконується лише один раз на старті
+        const initialRoute = parseHash(window.location.hash);
+        if (initialRoute.name === 'journal' && initialRoute.classId) {
+          setSelectedClassId(initialRoute.classId);
         } else {
           setSelectedClassId(data.classes[0].id);
         }
@@ -97,7 +108,7 @@ export const App: React.FC = () => {
       setReportsInitialFilter(route.classOrParallelId);
       setIsReportsOverviewOpen(true);
     }
-  }, [route]);
+  }, [route, selectedClassId]);
 
   // Оновлення БД зі збереженням
   const updateDbAndSave = async (updater: (prev: DatabaseSchema) => DatabaseSchema, successToast?: string) => {
@@ -106,13 +117,16 @@ export const App: React.FC = () => {
     setDb(updated);
     setSaveStatus('saving');
 
-    const ok = await saveDatabase(updated);
-    if (ok) {
+    const status = await saveDatabase(updated);
+    if (status === 'saved') {
       setSaveStatus('saved');
       if (successToast) {
         toast.success(successToast);
       }
       setTimeout(() => setSaveStatus('idle'), 2500);
+    } else if (status === 'conflict') {
+      setSaveStatus('error');
+      toast.error('Зміни НЕ збережено: базу змінено з іншого пристрою. Перезавантажте сторінку, щоб завантажити актуальні дані.');
     } else {
       setSaveStatus('offline');
       toast.error('Автономний режим: збережено локально, сервер недоступний.');
@@ -220,10 +234,18 @@ export const App: React.FC = () => {
 
   // Додавання учня
   const handleAddStudent = (studentData: Omit<Student, 'id'>) => {
+    const usedCodes = new Set((db?.students || []).map((s) => s.accessCode).filter(Boolean));
+    let accessCode = generateAccessCode();
+    while (usedCodes.has(accessCode)) {
+      accessCode = generateAccessCode();
+    }
+    const id = `std-${Date.now()}`;
     const newStudent: Student = {
       ...studentData,
-      id: `std-${Date.now()}`,
-      accessCode: generateAccessCode(),
+      id,
+      accessCode,
+      // PIN для форми фідбеку: якщо не передано з модалки — генеруємо детермінований
+      pinCode: studentData.pinCode || generateStudentPin(id),
     };
     updateDbAndSave((prev) => {
       return {
@@ -241,7 +263,7 @@ export const App: React.FC = () => {
     }, `Дані учня "${updatedStudent.name}" оновлено`);
   };
 
-  // Видалення учня
+  // Видалення учня (з повним очищенням пов'язаних даних: борги, KP, фідбеки, звіти)
   const handleDeleteStudent = (studentId: string): boolean => {
     const s = db?.students.find((std) => std.id === studentId);
     if (!s) return false;
@@ -251,7 +273,28 @@ export const App: React.FC = () => {
       const students = prev.students.filter((std) => std.id !== studentId);
       const records = { ...prev.records };
       delete records[studentId];
-      return { ...prev, students, records };
+
+      const byStudent = <T extends { studentId: string }>(arr: T[] | undefined): T[] | undefined =>
+        arr?.filter((t) => t.studentId !== studentId);
+      const byKeyPrefix = <T,>(obj: Record<string, T> | undefined): Record<string, T> | undefined => {
+        if (!obj) return obj;
+        const out: Record<string, T> = {};
+        for (const [k, v] of Object.entries(obj)) {
+          if (!k.startsWith(`${studentId}:`)) out[k] = v;
+        }
+        return out;
+      };
+
+      return {
+        ...prev,
+        students,
+        records,
+        attentionTasks: byStudent(prev.attentionTasks),
+        kpTransactions: byStudent(prev.kpTransactions),
+        lessonFeedback: byKeyPrefix(prev.lessonFeedback),
+        savedReports: byKeyPrefix(prev.savedReports),
+        sentReports: byKeyPrefix(prev.sentReports),
+      };
     }, `Учня "${s.name}" видалено`);
     return true;
   };
@@ -366,37 +409,13 @@ export const App: React.FC = () => {
     targetLessonId: string,
     options: { copyScores: boolean; copyAttendance: boolean; copyNotes: boolean }
   ) => {
-    const sourceLesson = db?.lessons.find((l) => l.id === sourceLessonId);
     const targetLesson = db?.lessons.find((l) => l.id === targetLessonId);
-    if (!sourceLesson || !targetLesson) return;
+    if (!targetLesson) return;
 
-    updateDbAndSave((prev) => {
-      const records = { ...prev.records };
-      const classStudents = prev.students.filter((s) => s.classId === sourceLesson.classId);
-
-      for (const student of classStudents) {
-        const studentRec = { ...(records[student.id] || {}) };
-        const sourceEntry = studentRec[sourceLessonId];
-        if (!sourceEntry) continue;
-
-        const targetEntry = { ...(studentRec[targetLessonId] || { scores: {} }) };
-
-        if (options.copyScores && sourceEntry.scores) {
-          targetEntry.scores = { ...sourceEntry.scores };
-        }
-        if (options.copyAttendance) {
-          targetEntry.absent = sourceEntry.absent;
-        }
-        if (options.copyNotes) {
-          targetEntry.notes = sourceEntry.notes;
-        }
-
-        studentRec[targetLessonId] = targetEntry;
-        records[student.id] = studentRec;
-      }
-
-      return { ...prev, records };
-    }, `Результати уроку успішно скопійовано до ${targetLesson.date} (Урок №${targetLesson.lessonNumber})! 📋`);
+    updateDbAndSave(
+      (prev) => applyCopyLessonResults(prev, sourceLessonId, targetLessonId, options),
+      `Результати уроку успішно скопійовано до ${targetLesson.date} (Урок №${targetLesson.lessonNumber})! 📋`
+    );
   };
 
   // Позначення або зняття мітки надісланого звіту за період
@@ -456,25 +475,9 @@ export const App: React.FC = () => {
   };
 
   // Збереження учнівського фідбеку до уроку та нарахування карпатиків
+  // (баланс коригується на різницю балів, транзакція — в історію KP)
   const handleSubmitFeedback = (feedback: import('./types/feedback').StudentLessonFeedback) => {
-    updateDbAndSave((prev) => {
-      const lessonFeedback = { ...(prev.lessonFeedback || {}) };
-      lessonFeedback[feedback.id] = feedback;
-
-      // Нараховуємо накопичувальні бали "карпатики" 🏔️
-      const points = feedback.karpatyPointsEarned || 0;
-      const students = prev.students.map((s) => {
-        if (s.id === feedback.studentId) {
-          return {
-            ...s,
-            karpatyPoints: (s.karpatyPoints || 0) + points,
-          };
-        }
-        return s;
-      });
-
-      return { ...prev, lessonFeedback, students };
-    }, 'Відгук збережено! Карпатики нараховано 🏔️');
+    updateDbAndSave((prev) => applyFeedbackToDb(prev, feedback), 'Відгук збережено! Карпатики нараховано 🏔️');
   };
 
   // Оновлення PIN-коду учня
@@ -534,6 +537,29 @@ export const App: React.FC = () => {
     });
   };
 
+  // Скасування тижневого нарахування KP (видаляє транзакцію, знімає баланс,
+  // тиждень стає доступним для повторного нарахування)
+  const handleRevokeWeeklyKp = (studentId: string, weekPeriod: string) => {
+    updateDbAndSave((prev) => {
+      const txs = prev.kpTransactions || [];
+      const target = txs.filter((t) => t.studentId === studentId && t.weekPeriod === weekPeriod);
+      if (target.length === 0) return prev;
+
+      const revokedIds = new Set(target.map((t) => t.id));
+      const amount = target.reduce((sum, t) => sum + t.amount, 0);
+      const students = prev.students.map((s) =>
+        s.id === studentId
+          ? { ...s, karpatyPoints: (s.karpatyPoints || 0) - amount }
+          : s
+      );
+      return {
+        ...prev,
+        students,
+        kpTransactions: txs.filter((t) => !revokedIds.has(t.id)),
+      };
+    }, 'Нарахування за тиждень скасовано');
+  };
+
 
   // Додавання критерію
   const handleAddCriterion = (name: string, description?: string) => {
@@ -590,6 +616,42 @@ export const App: React.FC = () => {
     reader.readAsText(file);
     e.target.value = '';
   };
+
+  // Публічний вхід (portal.php / ?public=1): повна база НЕ вантажиться,
+  // доступні лише маршрут учнівського порталу та форма фідбеку
+  if (isPublicEntry()) {
+    if (route.name === 'student-portal') {
+      return (
+        <>
+          <Toaster position="top-right" richColors />
+          <StudentPortalPage
+            studentId={route.studentId}
+            db={null}
+            publicMode
+          />
+        </>
+      );
+    }
+    if (route.name === 'feedback') {
+      return (
+        <>
+          <Toaster position="top-right" richColors />
+          <StudentFeedbackPage
+            lessonId={route.lessonId}
+            db={null}
+            publicMode
+            onSubmitFeedback={handleSubmitFeedback}
+          />
+        </>
+      );
+    }
+    return (
+      <>
+        <Toaster position="top-right" richColors />
+        <PublicEntryNotice />
+      </>
+    );
+  }
 
   if (isLoading || !db) {
     return (
@@ -1083,6 +1145,7 @@ export const App: React.FC = () => {
         onClose={() => setIsWeeklyKpOpen(false)}
         db={db}
         onAwardKp={handleAwardKp}
+        onRevokeKp={handleRevokeWeeklyKp}
       />
     </div>
   );

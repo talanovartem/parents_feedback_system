@@ -61,7 +61,10 @@ function localJsonApiPlugin(): Plugin {
                   // .bak копія
                   fs.copyFileSync(dbPath, dbPath + '.bak');
                   // щоденний архів
-                  const dateStr = new Date().toISOString().slice(0, 10);
+  const dateStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
                   const todayBackup = path.resolve(backupsDir, `backup_${dateStr}.json`);
                   if (!fs.existsSync(todayBackup)) {
                     fs.copyFileSync(dbPath, todayBackup);

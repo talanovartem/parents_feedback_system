@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ClassItem, Lesson } from '../../types/feedback';
 import { X, CalendarPlus } from 'lucide-react';
+import { todayLocalIso } from '../../utils/localDate';
 
 interface AddLessonModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ export const AddLessonModal: React.FC<AddLessonModalProps> = ({
   defaultClassId,
   onAddLesson,
 }) => {
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => todayLocalIso());
   const [classId, setClassId] = useState(defaultClassId);
   const [lessonNumber, setLessonNumber] = useState<number>(1);
   const [time, setTime] = useState('');

@@ -16,7 +16,7 @@ if (fs.existsSync(deployDir)) {
 fs.mkdirSync(deployDir, { recursive: true });
 
 // 2. Копіюємо PHP бекенд та конфіг
-const phpFiles = ['index.php', 'api.php', 'config.php'];
+const phpFiles = ['index.php', 'portal.php', 'api.php', 'config.php'];
 for (const file of phpFiles) {
   const src = path.resolve(rootDir, file);
   const dest = path.resolve(deployDir, file);

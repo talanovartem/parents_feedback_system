@@ -1,14 +1,30 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema, FeedbackMood, StudentLessonFeedback } from '../../types/feedback';
 import { evaluateFeedbackQuality } from '../../utils/feedbackAntiSpam';
 import { VoiceInputButton } from '../Common/VoiceInputButton';
-import { Sparkles, CheckCircle2, ArrowLeft, KeyRound, MessageSquareText, HelpCircle } from 'lucide-react';
+import {
+  Sparkles,
+  CheckCircle2,
+  ArrowLeft,
+  KeyRound,
+  MessageSquareText,
+  HelpCircle,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  fetchFeedbackMeta,
+  savePublicFeedback,
+  verifyFeedbackPin,
+  PublicFeedbackResult,
+} from '../../services/publicAccess';
 
 interface StudentFeedbackPageProps {
   lessonId: string;
-  db: DatabaseSchema;
+  db: DatabaseSchema | null;
   onSubmitFeedback: (feedback: StudentLessonFeedback) => void;
+  /** Публічний вхід: метадані та PIN перевіряються через API */
+  publicMode?: boolean;
 }
 
 const MOODS: Array<{ id: FeedbackMood; emoji: string; label: string }> = [
@@ -30,15 +46,44 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
   lessonId,
   db,
   onSubmitFeedback,
+  publicMode,
 }) => {
-  const lesson = useMemo(() => db.lessons.find((l) => l.id === lessonId), [db.lessons, lessonId]);
+  const [metaDb, setMetaDb] = useState<DatabaseSchema | null>(null);
+  const [metaLoaded, setMetaLoaded] = useState(!publicMode);
+  const [publicResult, setPublicResult] = useState<PublicFeedbackResult | null>(null);
+
+  // Публічний режим: завантажуємо лише урок, клас і список учнів (без PIN)
+  useEffect(() => {
+    if (!publicMode) return;
+    let alive = true;
+    fetchFeedbackMeta(lessonId)
+      .then((d) => {
+        if (alive) {
+          setMetaDb(d);
+          setMetaLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setMetaDb(null);
+          setMetaLoaded(true);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, [publicMode, lessonId]);
+
+  const data = db ?? metaDb;
+
+  const lesson = useMemo(() => data?.lessons.find((l) => l.id === lessonId), [data, lessonId]);
   const lessonClass = useMemo(
-    () => (lesson ? db.classes.find((c) => c.id === lesson.classId) : undefined),
-    [db.classes, lesson]
+    () => (lesson && data ? data.classes.find((c) => c.id === lesson.classId) : undefined),
+    [data, lesson]
   );
   const classStudents = useMemo(
-    () => (lesson ? db.students.filter((s) => s.classId === lesson.classId) : []),
-    [db.students, lesson]
+    () => (lesson && data ? data.students.filter((s) => s.classId === lesson.classId) : []),
+    [data, lesson]
   );
 
   // Стан вибору учня та PIN
@@ -57,8 +102,18 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
   // Перевірка наявності існуючого фідбеку
   const existingFeedback = useMemo(() => {
     if (!selectedStudentId || !lesson) return undefined;
-    return db.lessonFeedback?.[`${selectedStudentId}:${lesson.id}`];
-  }, [db.lessonFeedback, selectedStudentId, lesson]);
+    return data?.lessonFeedback?.[`${selectedStudentId}:${lesson.id}`];
+  }, [data, selectedStudentId, lesson]);
+
+  // Завантаження метаданих у публічному режимі
+  if (!metaLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-7 h-7 text-indigo-600 animate-spin" />
+        <p className="text-sm font-medium text-slate-600">Завантаження уроку...</p>
+      </div>
+    );
+  }
 
   if (!lesson || !lessonClass) {
     return (
@@ -82,7 +137,7 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
   }
 
   // Обробка авторизації учня за PIN
-  const handleAuthorize = (e: React.FormEvent) => {
+  const handleAuthorize = async (e: React.FormEvent) => {
     e.preventDefault();
     const student = classStudents.find((s) => s.id === selectedStudentId);
     if (!student) {
@@ -90,7 +145,19 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
       return;
     }
 
-    if (student.pinCode && pinInput.trim() !== student.pinCode) {
+    if (publicMode) {
+      // PIN перевіряє сервер (клієнт його не отримує)
+      try {
+        await verifyFeedbackPin(selectedStudentId, pinInput);
+      } catch (err) {
+        toast.error(
+          err instanceof Error && err.message === 'Забагато спроб. Спробуйте через 10 хвилин.'
+            ? err.message
+            : 'Невірний PIN-код. Спробуйте ще раз або зверніться до вчителя.'
+        );
+        return;
+      }
+    } else if (student.pinCode && pinInput.trim() !== student.pinCode) {
       toast.error('Невірний PIN-код. Спробуйте ще раз або зверніться до вчителя.');
       return;
     }
@@ -108,7 +175,7 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
 
   const qualityEvaluation = evaluateFeedbackQuality(insight);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudentId) return;
 
@@ -131,6 +198,25 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
       karpatyPointsEarned: earnedKarpatiki,
       createdAt: new Date().toISOString(),
     };
+
+    if (publicMode) {
+      // Збереження через API: PIN + нарахування KP робить сервер
+      try {
+        const result = await savePublicFeedback(lesson.id, selectedStudentId, pinInput, feedbackObj);
+        setPublicResult(result);
+        setIsSubmitted(true);
+        toast.success(
+          result.earned > 0
+            ? `Відгук збережено! Тобі нараховано +${result.earned} Карпатик(и) 🏔️`
+            : 'Відгук збережено! Дякуємо за вашу відповідь 👍'
+        );
+      } catch (err) {
+        toast.error(
+          err instanceof Error && err.message ? err.message : 'Не вдалося зберегти відгук. Спробуйте ще раз.'
+        );
+      }
+      return;
+    }
 
     onSubmitFeedback(feedbackObj);
     setIsSubmitted(true);
@@ -392,15 +478,20 @@ export const StudentFeedbackPage: React.FC<StudentFeedbackPageProps> = ({
               </p>
             </div>
 
-            {qualityEvaluation.bonusGranted && (
+            {(publicResult ? publicResult.earned > 0 : qualityEvaluation.bonusGranted) && (
               <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold flex flex-col items-center justify-center gap-1">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>+{insight.trim().length >= 40 ? '2 Карпатики' : '1 Карпатик'} 🏔️ за якісну рефлексію!</span>
+                  <span>
+                    +{publicResult ? publicResult.earned : insight.trim().length >= 40 ? 2 : 1}{' '}
+                    Карпатик(и) 🏔️ за якісну рефлексію!
+                  </span>
                 </div>
-                <span className="text-[11px] text-amber-700 font-normal">
-                  Твій загальний баланс: {(currentStudent?.karpatyPoints || 0) + (insight.trim().length >= 40 ? 2 : 1)} Карпатиків 🏔️
-                </span>
+                {publicResult && publicResult.balance > 0 && (
+                  <span className="text-[11px] text-amber-700 font-normal">
+                    Твій загальний баланс: {publicResult.balance} Карпатиків 🏔️
+                  </span>
+                )}
               </div>
             )}
 

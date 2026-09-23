@@ -52,6 +52,12 @@ if (empty($_SESSION['authenticated'])) {
             </p>
         </div>
 
+        <?php if (TEACHER_PASSWORD === 'teacher2026'): ?>
+            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl">
+                ⚠️ Ще не змінено пароль за замовчуванням. Відкрийте <code class="font-mono">config.php</code> та встановіть власний пароль.
+            </div>
+        <?php endif; ?>
+
         <?php if (!empty($error)): ?>
             <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
                 <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

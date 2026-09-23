@@ -16,12 +16,19 @@ export const DEFAULT_CRITERIA: Criterion[] = [
  * Повертає 'female' для жіночих закінчень, 'male' для решти.
  */
 export function guessGender(name: string): 'male' | 'female' {
-  const firstName = name.trim().split(/\s+/)[1] || name.trim().split(/\s+/)[0] || '';
-  const lc = firstName.toLowerCase();
+  const words = name.trim().toLowerCase().split(/\s+/);
+  // Чоловічі імена, що закінчуються на «а»/«я» — винятки з евристики
+  const maleExceptions = new Set(['микола', 'ілля', 'кузьма', 'сава', 'антін-микола']);
+  for (const w of words) {
+    if (maleExceptions.has(w)) return 'male';
+  }
+  const candidates = [words[1] || words[0] || '', words[0] || ''];
   // Жіночі закінчення в українських іменах
-  const femaleEndings = ['а', 'я', 'ія', 'на', 'іна', 'ина', 'ка', 'ля', 'ра', 'са'];
-  for (const ending of femaleEndings) {
-    if (lc.endsWith(ending)) return 'female';
+  const femaleEndings = ['ія', 'іна', 'ина', 'ка', 'ля', 'ра', 'са', 'на', 'а', 'я'];
+  for (const candidate of candidates) {
+    for (const ending of femaleEndings) {
+      if (candidate.endsWith(ending)) return 'female';
+    }
   }
   return 'male';
 }
@@ -139,10 +146,20 @@ export function migrateDatabase(raw: unknown): DatabaseSchema {
     obj.kpTransactions = Array.isArray(obj.kpTransactions) ? obj.kpTransactions : [];
 
     if (Array.isArray(obj.students)) {
-      obj.students = obj.students.map((s: Student) => ({
-        ...s,
-        accessCode: s.accessCode || generateAccessCode(),
-      }));
+      const usedCodes = new Set(
+        obj.students.map((s: Student) => s.accessCode).filter(Boolean)
+      );
+      obj.students = obj.students.map((s: Student) => {
+        let accessCode = s.accessCode;
+        if (!accessCode) {
+          accessCode = generateAccessCode();
+          while (usedCodes.has(accessCode)) {
+            accessCode = generateAccessCode();
+          }
+          usedCodes.add(accessCode);
+        }
+        return { ...s, accessCode };
+      });
     }
 
     obj.version = 4;

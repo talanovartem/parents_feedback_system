@@ -1,38 +1,65 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema } from '../../types/feedback';
 import { Mountain, AlertCircle, TrendingUp, BookOpen, Calendar, ArrowLeft, QrCode, Lock } from 'lucide-react';
+import { toast } from 'sonner';
+import { portalLogin } from '../../services/publicAccess';
 
 interface StudentPortalPageProps {
   studentId: string;
-  db: DatabaseSchema;
+  db: DatabaseSchema | null;
   onBack?: () => void;
+  /** Публічний вхід (portal.php): дані завантажуються після перевірки коду на сервері */
+  publicMode?: boolean;
 }
 
 // ─── Компонент входу ──────────────────────────────────────────────────────────
 
 const AccessGate: React.FC<{
   studentId: string;
-  db: DatabaseSchema;
-  onGranted: () => void;
-}> = ({ studentId, db, onGranted }) => {
+  db: DatabaseSchema | null;
+  publicMode?: boolean;
+  onGranted: (scopedDb?: DatabaseSchema | null) => void;
+}> = ({ studentId, db, publicMode, onGranted }) => {
   const [code, setCode] = useState('');
   const [error, setError] = useState(false);
-  const student = db.students.find((s) => s.id === studentId);
+  const [busy, setBusy] = useState(false);
+  const student = db?.students.find((s) => s.id === studentId);
 
-  // Перевіряємо чи вже є в sessionStorage
+  // Автовхід лише у режимі вчителя (у публічному режимі дані не кешуємо в сесії)
   useEffect(() => {
+    if (publicMode) return;
     const stored = sessionStorage.getItem(`portal_access_${studentId}`);
     if (stored === 'granted') onGranted();
-  }, [studentId, onGranted]);
+  }, [studentId, publicMode, onGranted]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const trimmed = code.trim();
+
+    if (publicMode) {
+      if (trimmed.length !== 6) {
+        toast.error('Введіть 6-значний код доступу');
+        return;
+      }
+      setBusy(true);
+      try {
+        const scoped = await portalLogin(studentId, trimmed);
+        onGranted(scoped);
+      } catch (e) {
+        toast.error(e instanceof Error && e.message ? e.message : 'Невірний код доступу');
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     const expected = student?.accessCode;
     if (!expected) return;
-    if (code.trim() === expected) {
+    if (trimmed === expected) {
       sessionStorage.setItem(`portal_access_${studentId}`, 'granted');
       onGranted();
     } else {
       setError(true);
+      toast.error('Невірний код доступу');
       setTimeout(() => setError(false), 2000);
     }
   };
@@ -64,7 +91,7 @@ const AccessGate: React.FC<{
           <input
             type="text"
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder="000000"
             className={`w-full text-center text-3xl font-mono font-bold tracking-widest border-2 rounded-xl px-4 py-4 focus:outline-none transition ${
@@ -73,18 +100,15 @@ const AccessGate: React.FC<{
                 : 'border-slate-200 focus:border-indigo-400 text-slate-900'
             }`}
             autoFocus
-            maxLength={8}
+            maxLength={6}
           />
-          {error && (
-            <p className="text-xs font-medium text-rose-600">Невірний код. Спробуйте ще раз.</p>
-          )}
         </div>
         <button
           onClick={handleSubmit}
-          disabled={code.length < 4}
+          disabled={code.length < 6 || busy}
           className="w-full py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 rounded-xl transition shadow-sm"
         >
-          Увійти
+          {busy ? 'Перевірка...' : 'Увійти'}
         </button>
         <p className="text-[10px] text-slate-400">
           Код надає вчитель. Він унікальний для кожного учня.
@@ -100,20 +124,35 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
   studentId,
   db,
   onBack,
+  publicMode,
 }) => {
+  const [publicDb, setPublicDb] = useState<DatabaseSchema | null>(null);
   const [granted, setGranted] = useState(false);
+  const effectiveDb = db ?? publicDb;
 
   if (!granted) {
     return (
       <AccessGate
         studentId={studentId}
-        db={db}
-        onGranted={() => setGranted(true)}
+        db={effectiveDb}
+        publicMode={publicMode}
+        onGranted={(scoped) => {
+          if (scoped) setPublicDb(scoped);
+          setGranted(true);
+        }}
       />
     );
   }
 
-  return <PortalDashboard studentId={studentId} db={db} onBack={onBack} />;
+  if (!effectiveDb) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Завантаження кабінету...
+      </div>
+    );
+  }
+
+  return <PortalDashboard studentId={studentId} db={effectiveDb} onBack={onBack} />;
 };
 
 // ─── Дашборд учня ─────────────────────────────────────────────────────────────
