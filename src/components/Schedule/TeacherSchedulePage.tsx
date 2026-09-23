@@ -35,6 +35,11 @@ interface TeacherSchedulePageProps {
   onOpenAddLesson: () => void;
   onOpenBulkAddLesson: () => void;
   onNavigateToClassJournal: (classId: string) => void;
+  onCopyLessonResults?: (
+    sourceLessonId: string,
+    targetLessonId: string,
+    options: { copyScores: boolean; copyAttendance: boolean; copyNotes: boolean }
+  ) => void;
 }
 
 export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
@@ -53,6 +58,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
   onOpenAddLesson,
   onOpenBulkAddLesson,
   onNavigateToClassJournal,
+  onCopyLessonResults,
 }) => {
   const periodPresets = getPeriodPresets();
   const currentWeekPreset = periodPresets.find((p) => p.id === 'current-week') || periodPresets[0];
@@ -171,9 +177,15 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
     // Сортуємо самі дати за зростанням (понеділок -> п'ятниця)
     const sortedDates = Object.keys(groups).sort((a, b) => a.localeCompare(b));
 
+    // Якщо поточний день є серед уроків — виносимо його на перше місце списку
+    const today = new Date().toISOString().slice(0, 10);
+    const orderedDates = sortedDates.includes(today)
+      ? [today, ...sortedDates.filter((d) => d !== today)]
+      : sortedDates;
+
     // Всередині кожного дня сортуємо уроки хронологічно за часом / номером
     const result: { date: string; lessons: Lesson[] }[] = [];
-    for (const d of sortedDates) {
+    for (const d of orderedDates) {
       const sortedDayLessons = groups[d].sort((a, b) => {
         if (a.time && b.time) {
           return a.time.localeCompare(b.time);
@@ -499,6 +511,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
                           onOpenStudentReport={onOpenStudentReport}
                           onOpenAddCriterion={onOpenAddCriterion}
                           onDeleteCriterion={onDeleteCriterion}
+                          onCopyLessonResults={onCopyLessonResults}
                         />
 
                         {/* Кнопка швидкого переходу у журнал цього класу */}

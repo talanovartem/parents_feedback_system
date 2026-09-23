@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   XCircle,
   Layers,
+  Trash2,
 } from 'lucide-react';
 
 interface StudentPageProps {
@@ -22,6 +23,7 @@ interface StudentPageProps {
   db: DatabaseSchema;
   onBackToJournal: () => void;
   onEditStudent: (student: Student) => void;
+  onDeleteStudent?: (studentId: string) => boolean | void;
 }
 
 export const StudentPage: React.FC<StudentPageProps> = ({
@@ -29,6 +31,7 @@ export const StudentPage: React.FC<StudentPageProps> = ({
   db,
   onBackToJournal,
   onEditStudent,
+  onDeleteStudent,
 }) => {
   const defaultPreset = getPeriodPresets()[0];
   const [periodText, setPeriodText] = useState(defaultPreset.description);
@@ -156,6 +159,23 @@ export const StudentPage: React.FC<StudentPageProps> = ({
             <UserCheck className="w-4 h-4 text-slate-500" />
             <span>Редагувати профіль / контекст</span>
           </button>
+
+          {onDeleteStudent && (
+            <button
+              type="button"
+              onClick={() => {
+                const deleted = onDeleteStudent(student.id);
+                if (deleted) {
+                  onBackToJournal();
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition"
+              title="Видалити учня з журналу"
+            >
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span>Видалити учня</span>
+            </button>
+          )}
         </div>
       </div>
 

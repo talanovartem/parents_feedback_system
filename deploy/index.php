@@ -84,12 +84,6 @@ if (empty($_SESSION['authenticated'])) {
                 Увійти до системи
             </button>
         </form>
-
-        <div class="pt-2 text-center">
-            <span class="text-[11px] text-slate-400">
-                За замовчуванням пароль: <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-mono">teacher2026</code> (можна змінити у config.php)
-            </span>
-        </div>
     </div>
 </body>
 </html>

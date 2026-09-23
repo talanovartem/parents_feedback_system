@@ -3,6 +3,7 @@ import { Criterion, DatabaseSchema, Lesson, Student } from '../../types/feedback
 import { ScoreCell } from './ScoreCell';
 import { ScoreInput } from '../ScoreInput';
 import { EditLessonModal } from '../Modals/EditLessonModal';
+import { CopyLessonResultsModal } from '../Modals/CopyLessonResultsModal';
 import { VoiceInputButton } from '../Common/VoiceInputButton';
 import { toast } from 'sonner';
 import {
@@ -14,6 +15,7 @@ import {
   Edit2,
   Edit3,
   Plus,
+  Copy,
   Clock,
   ExternalLink,
   CheckCircle2,
@@ -50,6 +52,11 @@ interface LessonTableCardProps {
   onOpenStudentReport: (student: Student) => void;
   onOpenAddCriterion: () => void;
   onDeleteCriterion: (criterionId: string) => void;
+  onCopyLessonResults?: (
+    sourceLessonId: string,
+    targetLessonId: string,
+    options: { copyScores: boolean; copyAttendance: boolean; copyNotes: boolean }
+  ) => void;
 }
 
 export const LessonTableCard: React.FC<LessonTableCardProps> = ({
@@ -75,7 +82,9 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   onOpenStudentReport,
   onOpenAddCriterion,
   onDeleteCriterion,
+  onCopyLessonResults,
 }) => {
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
   // Якщо стан розгортання передано ззовні — використовуємо його, інакше внутрішній
   const [internalExpanded, setInternalExpanded] = useState(isLatest || !!isNearest);
   const actualExpanded = typeof isExpanded === 'boolean' ? isExpanded : internalExpanded;
@@ -315,6 +324,19 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
               <Plus className="w-3 h-3" />
               + Колонка
             </button>
+
+            {onCopyLessonResults && (
+              <button
+                type="button"
+                onClick={() => setIsCopyModalOpen(true)}
+                title="Скопіювати результати (оцінки, відвідуваність, примітки) в інший урок"
+                className="px-2.5 py-1 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <Copy className="w-3 h-3 text-indigo-600 shrink-0" />
+                <span className="hidden xl:inline">Копіювати результати</span>
+                <span className="xl:hidden">Копіювати</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -585,11 +607,44 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
                         <div className="flex items-center gap-1">
                           <input
                             id={`lesson-notes-${student.id}-${lesson.id}`}
+                            data-table-id={lesson.id}
+                            data-row={sIndex}
+                            data-col={criteria.length}
                             type="text"
                             defaultValue={lessonNotes}
                             onBlur={(e) =>
                               onUpdateLessonNotes(student.id, lesson.id, e.target.value.trim())
                             }
+                            onKeyDown={(e) => {
+                              let targetRow = sIndex;
+                              let targetCol = criteria.length;
+
+                              if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                e.preventDefault();
+                                onUpdateLessonNotes(student.id, lesson.id, e.currentTarget.value.trim());
+                                targetRow += 1;
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                onUpdateLessonNotes(student.id, lesson.id, e.currentTarget.value.trim());
+                                targetRow -= 1;
+                              } else if (
+                                e.key === 'ArrowLeft' &&
+                                e.currentTarget.selectionStart === 0 &&
+                                e.currentTarget.selectionEnd === 0
+                              ) {
+                                targetCol -= 1;
+                              } else {
+                                return;
+                              }
+
+                              const nextEl = document.querySelector<HTMLInputElement>(
+                                `input[data-table-id="${lesson.id}"][data-row="${targetRow}"][data-col="${targetCol}"]`
+                              );
+                              if (nextEl) {
+                                nextEl.focus();
+                                nextEl.select();
+                              }
+                            }}
                             placeholder={isAbsent ? 'Причина пропуску...' : 'Зауваження до уроку...'}
                             className={`w-full text-[11px] px-2 py-1 border rounded focus:bg-white focus:outline-none transition-colors ${
                               isAbsent
@@ -956,6 +1011,17 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
         lesson={lesson}
         onSaveLesson={onUpdateLesson}
       />
+
+      {/* Модальне вікно копіювання результатів уроку */}
+      {onCopyLessonResults && isCopyModalOpen && (
+        <CopyLessonResultsModal
+          isOpen={isCopyModalOpen}
+          onClose={() => setIsCopyModalOpen(false)}
+          sourceLesson={lesson}
+          db={db}
+          onCopyResults={onCopyLessonResults}
+        />
+      )}
     </div>
   );
 };

@@ -22,6 +22,11 @@ interface JournalTableProps {
   onOpenStudentReport: (student: Student) => void;
   onOpenAddCriterion: () => void;
   onDeleteCriterion: (criterionId: string) => void;
+  onCopyLessonResults?: (
+    sourceLessonId: string,
+    targetLessonId: string,
+    options: { copyScores: boolean; copyAttendance: boolean; copyNotes: boolean }
+  ) => void;
 }
 
 export const JournalTable: React.FC<JournalTableProps> = ({
@@ -41,6 +46,7 @@ export const JournalTable: React.FC<JournalTableProps> = ({
   onOpenStudentReport,
   onOpenAddCriterion,
   onDeleteCriterion,
+  onCopyLessonResults,
 }) => {
   const students = db.students.filter((s) => s.classId === currentClassId);
 
@@ -318,6 +324,7 @@ export const JournalTable: React.FC<JournalTableProps> = ({
               onOpenStudentReport={onOpenStudentReport}
               onOpenAddCriterion={onOpenAddCriterion}
               onDeleteCriterion={onDeleteCriterion}
+              onCopyLessonResults={onCopyLessonResults}
             />
           ))}
         </div>

@@ -234,10 +234,10 @@ export const App: React.FC = () => {
   };
 
   // Видалення учня
-  const handleDeleteStudent = (studentId: string) => {
+  const handleDeleteStudent = (studentId: string): boolean => {
     const s = db?.students.find((std) => std.id === studentId);
-    if (!s) return;
-    if (!window.confirm(`Видалити учня "${s.name}"?`)) return;
+    if (!s) return false;
+    if (!window.confirm(`Видалити учня "${s.name}"?`)) return false;
 
     updateDbAndSave((prev) => {
       const students = prev.students.filter((std) => std.id !== studentId);
@@ -245,6 +245,7 @@ export const App: React.FC = () => {
       delete records[studentId];
       return { ...prev, students, records };
     }, `Учня "${s.name}" видалено`);
+    return true;
   };
 
   // Додавання уроку
@@ -349,6 +350,45 @@ export const App: React.FC = () => {
       }
       return { ...prev, records };
     }, 'Усіх учнів позначено присутніми');
+  };
+
+  // Копіювання результатів уроку (оцінок, відвідуваності, зауважень) в інший урок
+  const handleCopyLessonResults = (
+    sourceLessonId: string,
+    targetLessonId: string,
+    options: { copyScores: boolean; copyAttendance: boolean; copyNotes: boolean }
+  ) => {
+    const sourceLesson = db?.lessons.find((l) => l.id === sourceLessonId);
+    const targetLesson = db?.lessons.find((l) => l.id === targetLessonId);
+    if (!sourceLesson || !targetLesson) return;
+
+    updateDbAndSave((prev) => {
+      const records = { ...prev.records };
+      const classStudents = prev.students.filter((s) => s.classId === sourceLesson.classId);
+
+      for (const student of classStudents) {
+        const studentRec = { ...(records[student.id] || {}) };
+        const sourceEntry = studentRec[sourceLessonId];
+        if (!sourceEntry) continue;
+
+        const targetEntry = { ...(studentRec[targetLessonId] || { scores: {} }) };
+
+        if (options.copyScores && sourceEntry.scores) {
+          targetEntry.scores = { ...sourceEntry.scores };
+        }
+        if (options.copyAttendance) {
+          targetEntry.absent = sourceEntry.absent;
+        }
+        if (options.copyNotes) {
+          targetEntry.notes = sourceEntry.notes;
+        }
+
+        studentRec[targetLessonId] = targetEntry;
+        records[student.id] = studentRec;
+      }
+
+      return { ...prev, records };
+    }, `Результати уроку успішно скопійовано до ${targetLesson.date} (Урок №${targetLesson.lessonNumber})! 📋`);
   };
 
   // Позначення або зняття мітки надісланого звіту за період
@@ -749,6 +789,7 @@ export const App: React.FC = () => {
             db={db}
             onBackToJournal={() => navigate('#/schedule')}
             onEditStudent={(student) => setEditingStudent(student)}
+            onDeleteStudent={handleDeleteStudent}
           />
         ) : route.name === 'dashboard' ? (
           <GlobalDashboard
@@ -780,6 +821,7 @@ export const App: React.FC = () => {
             onOpenStudentReport={(student) => setReportStudent(student)}
             onOpenAddCriterion={() => setIsCriteriaOpen(true)}
             onDeleteCriterion={handleDeleteCriterion}
+            onCopyLessonResults={handleCopyLessonResults}
           />
         ) : (
           <TeacherSchedulePage
@@ -797,6 +839,7 @@ export const App: React.FC = () => {
             onDeleteCriterion={handleDeleteCriterion}
             onOpenAddLesson={() => setIsAddLessonOpen(true)}
             onOpenBulkAddLesson={() => setIsBulkAddLessonOpen(true)}
+            onCopyLessonResults={handleCopyLessonResults}
             onNavigateToClassJournal={(classId) => {
               setSelectedClassId(classId);
               navigate(getClassHash(classId));
