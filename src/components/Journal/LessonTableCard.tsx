@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { StudentLessonFeedback } from '../../types/feedback';
 import { EditLessonModal } from '../Modals/EditLessonModal';
 import { CopyLessonResultsModal } from '../Modals/CopyLessonResultsModal';
+import { LessonFeedbackModal } from '../Modals/LessonFeedbackModal';
 import { getLessonBadgeInfo } from '../../utils/lessonTime';
 import { getLessonCompletion, getAttendanceCounts } from '../../utils/lessonCompletion';
 import { LessonTableCardProps } from './lessonCardProps';
@@ -40,6 +41,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
 }) => {
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   // Якщо стан розгортання передано ззовні — використовуємо його, інакше внутрішній
   const [internalExpanded, setInternalExpanded] = useState(isLatest || !!isNearest);
@@ -107,6 +109,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
         feedbackList={feedbackList}
         setIsEditModalOpen={setIsEditModalOpen}
         setIsCopyModalOpen={setIsCopyModalOpen}
+        onOpenFeedback={() => setIsFeedbackModalOpen(true)}
       />
 
       <LessonTableView
@@ -167,6 +170,16 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
           sourceLesson={lesson}
           db={db}
           onCopyResults={onCopyLessonResults}
+        />
+      )}
+      {isFeedbackModalOpen && (
+        <LessonFeedbackModal
+          lesson={lesson}
+          students={students}
+          criteria={criteria}
+          db={db}
+          initialFeedback={feedbackList}
+          onClose={() => setIsFeedbackModalOpen(false)}
         />
       )}
     </div>

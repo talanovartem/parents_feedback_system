@@ -1,5 +1,5 @@
 import { DatabaseSchema, StudentLessonFeedback } from '../types/feedback';
-import { fetchDatabase, saveDatabase } from './storage';
+import { fetchDatabase, inspectServerDatabase, saveDatabase } from './storage';
 import { applyFeedbackToDb } from '../utils/feedbackStore';
 
 /**
@@ -49,9 +49,11 @@ export async function portalLogin(studentId: string, code: string): Promise<Data
     }
     return full;
   }
-  const res = await fetch(
-    `api.php?action=portal_auth&studentId=${encodeURIComponent(studentId)}&code=${encodeURIComponent(code)}`
-  );
+  const res = await fetch('api.php?action=portal_auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, code }),
+  });
   if (!res.ok) return errorFrom(res, 'Невірний код доступу');
   return res.json();
 }
@@ -77,15 +79,31 @@ export async function verifyFeedbackPin(studentId: string, pin: string): Promise
     if (s.pinCode && s.pinCode !== pin.trim()) throw new Error('Невірний PIN-код');
     return;
   }
-  const res = await fetch(
-    `api.php?action=feedback_auth&studentId=${encodeURIComponent(studentId)}&pin=${encodeURIComponent(pin)}`
-  );
+  const res = await fetch('api.php?action=feedback_auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, pin }),
+  });
   if (!res.ok) return errorFrom(res, 'Невірний PIN-код');
 }
 
 export interface PublicFeedbackResult {
   earned: number;
   balance: number;
+}
+
+/** Поточні відповіді до уроку для вчителя. Публічний API не віддає їх без авторизації. */
+export async function fetchLessonFeedback(lessonId: string): Promise<StudentLessonFeedback[]> {
+  if (isDevApi()) {
+    const { data } = await inspectServerDatabase();
+    return Object.values(data.lessonFeedback || {}).filter((feedback) => feedback.lessonId === lessonId);
+  }
+  const res = await fetch(`api.php?action=feedback_status&lessonId=${encodeURIComponent(lessonId)}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return errorFrom(res, 'Не вдалося оновити відповіді учнів');
+  const body: { feedback: StudentLessonFeedback[] } = await res.json();
+  return body.feedback;
 }
 
 /** Збереження фідбеку через API (бонус рахує сервер). Повертає зароблені бали та новий баланс. */
@@ -98,7 +116,8 @@ export async function savePublicFeedback(
   if (isDevApi()) {
     const full = await fetchDatabase();
     const updated = applyFeedbackToDb(full, { ...feedback, id: `${studentId}:${lessonId}` });
-    await saveDatabase(updated);
+    const status = await saveDatabase(updated);
+    if (status !== 'saved') throw new Error('Не вдалося зберегти відгук. Оновіть сторінку й спробуйте ще раз.');
     const balance = updated.students.find((s) => s.id === studentId)?.karpatyPoints || 0;
     return { earned: feedback.karpatyPointsEarned || 0, balance };
   }

@@ -18,6 +18,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 
   const [selectedPresetId, setSelectedPresetId] = useState<string>('current-week');
   const [customText, setCustomText] = useState<string>(value || defaultPreset.description);
+  const [dateBounds, setDateBounds] = useState({ from: defaultPreset.startDate || '', to: defaultPreset.endDate || '' });
 
   useEffect(() => {
     if (!value && defaultPreset) {
@@ -30,13 +31,25 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   const handleSelectPreset = (preset: PeriodPreset) => {
     setSelectedPresetId(preset.id);
     setCustomText(preset.description);
-    onChange(preset.description, preset.startDate, preset.endDate);
+    const from = preset.startDate || dateBounds.from;
+    const to = preset.endDate || dateBounds.to;
+    setDateBounds({ from, to });
+    onChange(preset.description, from, to);
   };
 
   const handleTextChange = (newText: string) => {
     setCustomText(newText);
     setSelectedPresetId('custom');
-    onChange(newText);
+    onChange(newText, dateBounds.from, dateBounds.to);
+  };
+
+  const handleDateChange = (field: 'from' | 'to', date: string) => {
+    const next = { ...dateBounds, [field]: date };
+    setDateBounds(next);
+    const label = `${next.from.split('-').reverse().join('.')} – ${next.to.split('-').reverse().join('.')}`;
+    setCustomText(label);
+    setSelectedPresetId('custom');
+    onChange(label, next.from, next.to);
   };
 
   return (
@@ -45,6 +58,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
         {/* Dropdown Preset Selector */}
         <div className="relative inline-block">
           <select
+            aria-label="Звітний період"
             value={selectedPresetId}
             onChange={(e) => {
               const found = presets.find((p) => p.id === e.target.value);
@@ -69,6 +83,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           </span>
           <input
             type="text"
+            aria-label="Назва звітного періоду"
             value={customText}
             onChange={(e) => handleTextChange(e.target.value)}
             placeholder="Наприклад: 15.09.2026 – 21.09.2026"
@@ -77,6 +92,11 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           />
         </div>
       </div>
+
+      {selectedPresetId === 'custom' && <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+        <label className="flex items-center gap-1">Від <input type="date" value={dateBounds.from} onChange={(event) => handleDateChange('from', event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5" /></label>
+        <label className="flex items-center gap-1">До <input type="date" value={dateBounds.to} onChange={(event) => handleDateChange('to', event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5" /></label>
+      </div>}
 
       {/* Helper notice */}
       <div className="flex items-center gap-1.5 text-[11px] text-slate-500">

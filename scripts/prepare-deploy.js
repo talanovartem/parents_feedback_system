@@ -31,7 +31,8 @@ if (fs.existsSync(distDir)) {
   // Копіюємо dist/index.html як app.html для безпечної роздачі через index.php
   const distHtml = path.resolve(distDir, 'index.html');
   if (fs.existsSync(distHtml)) {
-    fs.copyFileSync(distHtml, path.resolve(deployDir, 'app.html'));
+    const html = fs.readFileSync(distHtml, 'utf-8').replace(/\r+/g, '').replace(/\n\n(?=\s*<\/body>)/, '\n');
+    fs.writeFileSync(path.resolve(deployDir, 'app.html'), html, 'utf-8');
   }
 
   // Копіюємо всі статичні файли (favicon.svg тощо), крім index.html

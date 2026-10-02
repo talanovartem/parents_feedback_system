@@ -2,8 +2,6 @@ import React from 'react';
 import { StudentLessonFeedback } from '../../types/feedback';
 import { LessonBadgeInfo } from '../../utils/lessonTime';
 import { LessonCompletionStatus } from '../../utils/lessonCompletion';
-import { toast } from 'sonner';
-import { getPublicEntryUrl } from '../../services/publicAccess';
 import {
   Calendar,
   Trash2,
@@ -28,6 +26,7 @@ export interface LessonCardHeaderProps extends LessonTableCardProps, LessonViewE
   feedbackList: StudentLessonFeedback[];
   setIsEditModalOpen: (open: boolean) => void;
   setIsCopyModalOpen: (open: boolean) => void;
+  onOpenFeedback: () => void;
 }
 
 /** Шапка картки уроку: дата, номер, бейджі, лічильники та кнопки керування. */
@@ -51,6 +50,7 @@ export const LessonCardHeader: React.FC<LessonCardHeaderProps> = ({
   feedbackList,
   setIsEditModalOpen,
   setIsCopyModalOpen,
+  onOpenFeedback,
 }) => (
   <>
       {/* Шапка картки уроку */}
@@ -187,20 +187,12 @@ export const LessonCardHeader: React.FC<LessonCardHeaderProps> = ({
             {/* Кнопка посилання на фідбек учнів */}
             <button
               type="button"
-              onClick={async () => {
-                const url = getPublicEntryUrl(`#/feedback/${lesson.id}`);
-                try {
-                  await navigator.clipboard.writeText(url);
-                  toast.success('Посилання на форму фідбеку учнів скопійовано! 📋 Роздайте його класу.');
-                } catch {
-                  window.prompt('Скопіюйте посилання на форму фідбеку для учнів:', url);
-                }
-              }}
-              title="Скопіювати посилання на форму фідбеку до цього уроку для учнів"
-              className="px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+              onClick={(event) => { event.stopPropagation(); onOpenFeedback(); }}
+              title="Відкрити самооцінку учнів: QR-код, посилання та відповіді"
+              className="min-h-9 px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
             >
               <MessageSquareText className="w-3.5 h-3.5 text-purple-600" />
-              <span className="hidden sm:inline">Фідбек учнів</span>
+              <span className="sm:hidden">Відгуки</span><span className="hidden sm:inline">Фідбек учнів</span>
               {feedbackList.length > 0 && (
                 <span className="px-1.5 py-0.2 bg-purple-200 text-purple-900 rounded-full text-[10px] font-bold">
                   {feedbackList.length}/{students.length}

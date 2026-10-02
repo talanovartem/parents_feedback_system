@@ -6,6 +6,7 @@ session_start();
 
 // Заголовки відповіді
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
 $dataDir = __DIR__ . '/data';
 $dbPath = $dataDir . '/database.json';
@@ -68,15 +69,30 @@ function pfs_write_db(string $dbPath, string $backupsDir, array $decoded): bool
         }
     }
     $formattedJson = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    $tempPath = $dbPath . '.tmp.' . uniqid();
-    if (file_put_contents($tempPath, $formattedJson) === false) {
+    if ($formattedJson === false) {
         return false;
     }
-    if (!rename($tempPath, $dbPath)) {
-        file_put_contents($dbPath, $formattedJson);
+    $tempPath = $dbPath . '.tmp.' . uniqid();
+    if (@file_put_contents($tempPath, $formattedJson) !== strlen($formattedJson)) {
         @unlink($tempPath);
+        return false;
+    }
+    if (!@rename($tempPath, $dbPath)) {
+        @unlink($tempPath);
+        return false;
     }
     return true;
+}
+
+/** Спільний замок для повного запису вчителя й публічного фідбеку. */
+function pfs_lock_db(string $dbPath)
+{
+    $lock = @fopen($dbPath . '.lock', 'c');
+    if ($lock === false || !flock($lock, LOCK_EX)) {
+        if ($lock !== false) fclose($lock);
+        return false;
+    }
+    return $lock;
 }
 
 function pfs_find(array $db, string $key, string $id): ?array
@@ -120,13 +136,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 $action = $_GET['action'] ?? '';
 
 if ($action === 'portal_auth') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['error' => 'Метод не підтримується']);
+        exit;
+    }
     if (pfs_throttle_blocked()) {
         http_response_code(429);
         echo json_encode(['error' => 'Забагато спроб. Спробуйте через 10 хвилин.']);
         exit;
     }
-    $studentId = $_GET['studentId'] ?? '';
-    $code = $_GET['code'] ?? '';
+    $input = json_decode((string)file_get_contents('php://input'), true);
+    $studentId = is_array($input) ? (string)($input['studentId'] ?? '') : '';
+    $code = is_array($input) ? (string)($input['code'] ?? '') : '';
     $db = pfs_read_db($dbPath, $defaultDbPath);
     $student = $db ? pfs_find($db, 'students', $studentId) : null;
     $ok = $student !== null
@@ -199,13 +221,19 @@ if ($action === 'feedback_meta') {
 }
 
 if ($action === 'feedback_auth') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['error' => 'Метод не підтримується']);
+        exit;
+    }
     if (pfs_throttle_blocked()) {
         http_response_code(429);
         echo json_encode(['error' => 'Забагато спроб. Спробуйте через 10 хвилин.']);
         exit;
     }
-    $studentId = $_GET['studentId'] ?? '';
-    $pin = (string)($_GET['pin'] ?? '');
+    $input = json_decode((string)file_get_contents('php://input'), true);
+    $studentId = is_array($input) ? (string)($input['studentId'] ?? '') : '';
+    $pin = is_array($input) ? (string)($input['pin'] ?? '') : '';
     $db = pfs_read_db($dbPath, $defaultDbPath);
     $student = $db ? pfs_find($db, 'students', $studentId) : null;
     $expected = (string)($student['pinCode'] ?? '');
@@ -236,6 +264,13 @@ if ($action === 'save_feedback') {
     $studentId = (string)($input['studentId'] ?? '');
     $pin = (string)($input['pin'] ?? '');
     $fb = is_array($input['feedback'] ?? null) ? $input['feedback'] : [];
+
+    $lock = pfs_lock_db($dbPath);
+    if ($lock === false) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Не вдалося заблокувати файл бази даних']);
+        exit;
+    }
 
     $db = pfs_read_db($dbPath, $defaultDbPath);
     $lesson = $db ? pfs_find($db, 'lessons', $lessonId) : null;
@@ -307,6 +342,8 @@ if ($action === 'save_feedback') {
         echo json_encode(['error' => 'Не вдалося зберегти файл на диску']);
         exit;
     }
+    flock($lock, LOCK_UN);
+    fclose($lock);
     echo json_encode(['success' => true, 'karpatyPointsEarned' => $newPts, 'balance' => $savedBalance]);
     exit;
 }
@@ -318,14 +355,35 @@ if (empty($_SESSION['authenticated'])) {
     exit;
 }
 
+if ($action === 'feedback_status') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(['error' => 'Метод не підтримується']);
+        exit;
+    }
+    $lessonId = (string)($_GET['lessonId'] ?? '');
+    $db = pfs_read_db($dbPath, $defaultDbPath);
+    if (!$db || !pfs_find($db, 'lessons', $lessonId)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Урок не знайдено']);
+        exit;
+    }
+    $feedback = array_values(array_filter($db['lessonFeedback'] ?? [], fn($item) => ($item['lessonId'] ?? '') === $lessonId));
+    echo json_encode(['feedback' => $feedback]);
+    exit;
+}
+
 // GET: Отримання даних
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (!file_exists($dbPath)) {
+    if (!file_exists($dbPath)) pfs_read_db($dbPath, $defaultDbPath);
+    $raw = @file_get_contents($dbPath);
+    if ($raw === false) {
         http_response_code(404);
         echo json_encode(['error' => 'Файл бази даних не знайдено']);
         exit;
     }
-    readfile($dbPath);
+    header('ETag: "' . hash('sha256', $raw) . '"');
+    echo $raw;
     exit;
 }
 
@@ -335,9 +393,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Перевіряємо валідність JSON
     $decoded = json_decode($rawInput, true);
-    if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+    if (!is_array($decoded)) {
         http_response_code(400);
         echo json_encode(['error' => 'Некоректний JSON: ' . json_last_error_msg()]);
+        exit;
+    }
+
+    $lock = pfs_lock_db($dbPath);
+    if ($lock === false) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Не вдалося заблокувати файл бази даних']);
+        exit;
+    }
+    if (!file_exists($dbPath)) pfs_read_db($dbPath, $defaultDbPath);
+    $current = @file_get_contents($dbPath);
+    if ($current === false) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Не вдалося прочитати файл бази даних']);
+        exit;
+    }
+    $revision = '"' . hash('sha256', $current) . '"';
+    if (!hash_equals($revision, (string)($_SERVER['HTTP_IF_MATCH'] ?? ''))) {
+        http_response_code(409);
+        header('ETag: ' . $revision);
+        echo json_encode(['error' => 'Базу даних змінено. Оновіть дані перед повторним збереженням.']);
         exit;
     }
 
@@ -347,6 +426,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $newRevision = @hash_file('sha256', $dbPath);
+    if ($newRevision === false) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Не вдалося перевірити збережений файл']);
+        exit;
+    }
+    flock($lock, LOCK_UN);
+    fclose($lock);
+    header('ETag: "' . $newRevision . '"');
     echo json_encode(['success' => true, 'timestamp' => date('c')]);
     exit;
 }

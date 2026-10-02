@@ -6,6 +6,9 @@ import { getLessonCompletion } from '../../utils/lessonCompletion';
 import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
 import { todayLocalIso } from '../../utils/localDate';
+import { suggestNextWeekLessons } from '../../utils/nextWeekSchedule';
+import { SaveStatus } from '../../services/storage';
+import { NextWeekPreviewModal } from './NextWeekPreviewModal';
 import {
   Calendar,
   Clock,
@@ -28,13 +31,14 @@ interface TeacherSchedulePageProps {
   onUpdateStudentNotes: (studentId: string, notes: string) => void;
   onDeleteLesson: (lessonId: string) => void;
   onUpdateLesson: (updated: Lesson) => void;
-  onBulkFillLessonScore?: (lessonId: string, criterionId: string, score: number | null) => void;
+  onBulkFillLessonScore?: (lessonId: string, criterionId: string, score: number | null, onlyEmpty?: boolean) => void;
   onMarkAllPresent?: (lessonId: string) => void;
   onOpenStudentReport: (student: Student) => void;
   onOpenAddCriterion: () => void;
   onDeleteCriterion: (criterionId: string) => void;
   onOpenAddLesson: () => void;
   onOpenBulkAddLesson: () => void;
+  onCreateNextWeek: (lessons: Omit<Lesson, 'id'>[]) => Promise<SaveStatus>;
   onNavigateToClassJournal: (classId: string) => void;
   onCopyLessonResults?: (
     sourceLessonId: string,
@@ -58,6 +62,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
   onDeleteCriterion,
   onOpenAddLesson,
   onOpenBulkAddLesson,
+  onCreateNextWeek,
   onNavigateToClassJournal,
   onCopyLessonResults,
 }) => {
@@ -66,6 +71,8 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
 
   // Вибір тижня (за замовчуванням: поточний тиждень)
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>('current-week');
+  const [showNextWeekPreview, setShowNextWeekPreview] = useState(false);
+  const nextWeekSuggestions = useMemo(() => suggestNextWeekLessons(db.lessons), [db.lessons]);
 
   // Фільтр за класом ('all' або classId)
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
@@ -221,6 +228,10 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
 
   return (
     <div className="space-y-4 max-w-[1700px] mx-auto animate-in fade-in duration-200">
+      {nextWeekSuggestions.length > 0 && <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+        <div className="flex items-center gap-2 text-sm text-indigo-950"><CalendarPlus className="h-5 w-5 shrink-0" /><span>Можна підготувати <strong>{nextWeekSuggestions.length} уроків</strong> наступного тижня за поточним розкладом.</span></div>
+        <button type="button" onClick={() => setShowNextWeekPreview(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-800">Переглянути уроки</button>
+      </div>}
       {/* Верхня панель розкладу: вибір тижня, фільтри та статистика */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -538,6 +549,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
           })}
         </div>
       )}
+      {showNextWeekPreview && <NextWeekPreviewModal suggestions={nextWeekSuggestions} classes={db.classes} onClose={() => setShowNextWeekPreview(false)} onCreate={onCreateNextWeek} />}
     </div>
   );
 };

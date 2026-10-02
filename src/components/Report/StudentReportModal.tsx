@@ -4,11 +4,14 @@ import { calculateStudentAnalytics, generateAiPromptForParents } from '../../uti
 import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { buildSavedReport } from '../../utils/reportParser';
+import { getStudentReports } from '../../utils/savedReports';
 import { AiQuickActions } from './AiQuickActions';
 import { PeriodSelector } from './PeriodSelector';
 import { EditSavedReportModal } from './EditSavedReportModal';
+import { CopySavedReportButton } from './CopySavedReportButton';
 import { X, Sparkles, FileText, Calendar, CheckCircle2, Clock, Save, Pencil, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { SaveStatus } from '../../services/storage';
 
 interface StudentReportModalProps {
   isOpen: boolean;
@@ -17,8 +20,8 @@ interface StudentReportModalProps {
   className: string;
   db: DatabaseSchema;
   onToggleReportSent?: (studentId: string, periodString: string) => void;
-  onSaveSingleReport?: (report: SavedReport) => void;
-  onSaveSingleReportContent?: (studentId: string, period: string, content: string) => void;
+  onSaveSingleReport?: (report: SavedReport) => Promise<SaveStatus>;
+  onSaveSingleReportContent?: (studentId: string, period: string, content: string) => Promise<SaveStatus>;
 }
 
 export const StudentReportModal: React.FC<StudentReportModalProps> = ({
@@ -38,11 +41,14 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   const [importText, setImportText] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const validDateRange = !!startDate && !!endDate && startDate <= endDate;
 
   if (!isOpen) return null;
 
   const reportKey = `${student.id}:${periodText}`;
   const savedReport = db.savedReports?.[reportKey];
+  const studentReports = getStudentReports(db.savedReports, student.id);
   const isSent = !!(savedReport?.sentAt || db.sentReports?.[reportKey]);
 
   // Фільтруємо уроки саме цього класу
@@ -51,19 +57,26 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
     .sort((a, b) => a.date.localeCompare(b.date));
 
   // Уроки за вибраний діапазон дат
-  const matchedLessons = filterLessonsByDateRange(classLessons, startDate, endDate);
-  const periodLessons = matchedLessons.length > 0 ? matchedLessons : classLessons;
+  const matchedLessons = validDateRange ? filterLessonsByDateRange(classLessons, startDate, endDate) : [];
+  const periodLessons = matchedLessons;
 
   const analytics = calculateStudentAnalytics(student, db, periodLessons);
-  const aiPrompt = generateAiPromptForParents(analytics, db.criteria, className, periodText);
+  const aiPrompt = periodLessons.length ? generateAiPromptForParents(analytics, db.criteria, className, periodText) : '';
 
-  const handleSaveImport = () => {
-    if (!importText.trim()) return;
+  const handleSaveImport = async () => {
+    if (isSaving || !importText.trim()) return;
+    if (savedReport && !window.confirm('Замінити збережений коментар за цей період?')) return;
     const report = buildSavedReport(student.id, periodText, importText.trim());
-    onSaveSingleReport?.(report);
-    toast.success('Звіт для батьків збережено ✅');
-    setImportText('');
-    setShowImport(false);
+    setIsSaving(true);
+    try {
+      const status = await onSaveSingleReport?.(report);
+      if (status !== 'saved') return;
+      toast.success('Звіт для батьків збережено ✅');
+      setImportText('');
+      setShowImport(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCopySaved = async () => {
@@ -106,7 +119,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
           <div>
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
               <FileText className="w-4 h-4 text-indigo-600" />
-              Середні показники за {classLessons.length} уроків
+              Середні показники за {periodLessons.length} уроків
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {db.criteria.map((c) => {
@@ -233,11 +246,11 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
                     <button
                       type="button"
                       onClick={handleSaveImport}
-                      disabled={!importText.trim()}
+                      disabled={isSaving || !importText.trim()}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition disabled:opacity-50"
                     >
                       <Save className="w-3.5 h-3.5" />
-                      Зберегти звіт
+                      {isSaving ? 'Збереження...' : 'Зберегти звіт'}
                     </button>
                     <button
                       type="button"
@@ -261,6 +274,24 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
             </div>
           )}
 
+          {studentReports.length > 0 && (
+            <section className="space-y-2 border-t border-slate-100 pt-4" aria-label="Збережені коментарі учня">
+              <h3 className="text-sm font-bold text-slate-800">Усі збережені коментарі</h3>
+              <div className="space-y-2">
+                {studentReports.map((report) => (
+                  <div key={report.id} className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-800">{report.period}</p>
+                      <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs text-slate-600">{report.content}</p>
+                      <p className="mt-1 text-[11px] text-slate-400">Оновлено: {new Date(report.updatedAt).toLocaleString('uk-UA')}</p>
+                    </div>
+                    <CopySavedReportButton report={report} studentName={student.name} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Промпт для ШІ */}
           <div className="border-t border-slate-100 pt-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -271,7 +302,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <AiQuickActions prompt={aiPrompt} />
+              {aiPrompt ? <AiQuickActions prompt={aiPrompt} /> : <p className="text-sm text-slate-600">У вибраному періоді немає уроків. Оберіть інші дати для промпту.</p>}
 
               {onToggleReportSent && (
                 <button
@@ -300,14 +331,14 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
               )}
             </div>
 
-            <div className="relative">
+            {aiPrompt && <div className="relative">
               <pre className="p-4 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto border border-slate-800 shadow-inner">
                 {aiPrompt}
               </pre>
-            </div>
-            <p className="text-[11px] text-slate-400">
+            </div>}
+            {aiPrompt && <p className="text-[11px] text-slate-400">
               Скористайтесь кнопками вище, щоб скопіювати промпт та одразу перейти до обраного ШІ (ChatGPT, Gemini або Claude).
-            </p>
+            </p>}
           </div>
         </div>
 
@@ -317,7 +348,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
             Оцінки від 0 до 12 підраховуються автоматично
           </span>
           <div className="flex items-center gap-3">
-            <AiQuickActions compact prompt={aiPrompt} />
+            {aiPrompt && <AiQuickActions compact prompt={aiPrompt} />}
             <button
               onClick={onClose}
               className="px-4 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition-colors"
@@ -335,10 +366,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
           onClose={() => setIsEditModalOpen(false)}
           student={student}
           report={savedReport}
-          onSave={(content) => {
-            onSaveSingleReportContent?.(student.id, periodText, content);
-            setIsEditModalOpen(false);
-          }}
+          onSave={(content) => onSaveSingleReportContent?.(student.id, periodText, content) || Promise.resolve('offline')}
           onToggleSent={() => onToggleReportSent?.(student.id, periodText)}
         />
       )}

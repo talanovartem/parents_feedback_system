@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { getPublicEntryUrl } from '../services/publicAccess';
 
 export type AppRoute =
+  | { name: 'today' }
   | { name: 'schedule' }
   | { name: 'journal'; classId?: string }
   | { name: 'dashboard' }
+  | { name: 'kp' }
   | { name: 'reports'; classOrParallelId?: string }
   | { name: 'student'; studentId: string }
   | { name: 'feedback'; lessonId: string }
@@ -12,7 +14,10 @@ export type AppRoute =
 
 export function parseHash(hash: string): AppRoute {
   const clean = hash.replace(/^#\/?/, '').trim();
-  if (!clean || clean === 'schedule') {
+  if (!clean || clean === 'today') {
+    return { name: 'today' };
+  }
+  if (clean === 'schedule') {
     return { name: 'schedule' };
   }
 
@@ -24,6 +29,10 @@ export function parseHash(hash: string): AppRoute {
 
   if (parts[0] === 'dashboard') {
     return { name: 'dashboard' };
+  }
+
+  if (parts[0] === 'kp') {
+    return { name: 'kp' };
   }
 
   if (parts[0] === 'reports') {
@@ -83,7 +92,7 @@ export function getStudentPortalHash(studentId: string): string {
 
 export function useRouter() {
   const [route, setRoute] = useState<AppRoute>(() =>
-    typeof window !== 'undefined' ? parseHash(window.location.hash) : { name: 'schedule' }
+    typeof window !== 'undefined' ? parseHash(window.location.hash) : { name: 'today' }
   );
 
   useEffect(() => {

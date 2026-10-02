@@ -2,6 +2,7 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 
 function localJsonApiPlugin(): Plugin {
   const dataDir = path.resolve(__dirname, 'data');
@@ -28,6 +29,8 @@ function localJsonApiPlugin(): Plugin {
               if (fs.existsSync(dbPath)) {
                 const data = fs.readFileSync(dbPath, 'utf-8');
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.setHeader('Cache-Control', 'no-store');
+                res.setHeader('ETag', `"${createHash('sha256').update(data).digest('hex')}"`);
                 res.end(data);
               } else {
                 res.statusCode = 404;
@@ -51,6 +54,14 @@ function localJsonApiPlugin(): Plugin {
               try {
                 // Валідуємо валідність JSON перед записом
                 const parsed = JSON.parse(body);
+                const current = fs.existsSync(dbPath) ? fs.readFileSync(dbPath, 'utf-8') : '';
+                const revision = `"${createHash('sha256').update(current).digest('hex')}"`;
+                if (req.headers['if-match'] !== revision) {
+                  res.statusCode = 409;
+                  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                  res.end(JSON.stringify({ error: 'Базу даних змінено' }));
+                  return;
+                }
 
                 // Створюємо бекапи перед збереженням
                 if (!fs.existsSync(backupsDir)) {
@@ -78,6 +89,7 @@ function localJsonApiPlugin(): Plugin {
                 fs.renameSync(tempPath, dbPath);
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.setHeader('ETag', `"${createHash('sha256').update(formatted).digest('hex')}"`);
                 res.end(JSON.stringify({ success: true, timestamp: new Date().toISOString() }));
               } catch (err: any) {
                 res.statusCode = 400;

@@ -79,6 +79,7 @@ export interface KpTransaction {
   amount: number; // +10, +15, -5, тощо
   reason: string; // "Підсумки тижня (15.09 - 21.09)", "Бонус за ідеальне відвідування"
   weekPeriod?: string; // наприклад "2026-W38"
+  operationKey?: string; // ключ ручної операції для захисту від повторної відправки
   createdAt: string; // ISO
 }
 

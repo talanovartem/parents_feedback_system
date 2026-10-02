@@ -5,8 +5,9 @@ import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHe
 import { parseBatchAiResponse, buildSavedReport } from '../../utils/reportParser';
 import { AiQuickActions } from './AiQuickActions';
 import { PeriodSelector } from './PeriodSelector';
-import { X, Users, Sparkles, Layers, CheckCircle2, Download, AlertCircle, Save } from 'lucide-react';
+import { X, Users, Sparkles, Layers, CheckCircle2, Download, AlertCircle, Save, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { SaveStatus } from '../../services/storage';
 
 interface BatchReportModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface BatchReportModalProps {
   groupName: string;
   db: DatabaseSchema;
   onToggleReportSent?: (studentId: string, periodString: string) => void;
-  onSaveBatchReports?: (reports: SavedReport[]) => void;
+  onSaveBatchReports?: (reports: SavedReport[]) => Promise<SaveStatus>;
 }
 
 export const BatchReportModal: React.FC<BatchReportModalProps> = ({
@@ -35,25 +36,29 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
   const [importText, setImportText] = useState('');
   const [parsedReports, setParsedReports] = useState<ReturnType<typeof parseBatchAiResponse> | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
+  const validDateRange = !!startDate && !!endDate && startDate <= endDate;
 
-  const promptText = useMemo(() => {
-    if (students.length === 0) return '';
-
-    const batchData = students.map((std) => {
+  const { promptText, eligibleCount } = useMemo(() => {
+    if (!startDate || !endDate || startDate > endDate) return { promptText: '', eligibleCount: 0 };
+    const batchData = students.flatMap((std) => {
       const cls = db.classes.find((c) => c.id === std.classId);
       const studentLessons = db.lessons.filter((l) => l.classId === std.classId);
       const matched = filterLessonsByDateRange(studentLessons, startDate, endDate);
-      const periodLessons = matched.length > 0 ? matched : studentLessons;
+      if (matched.length === 0) return [];
 
-      const analytics = calculateStudentAnalytics(std, db, periodLessons);
-      return {
+      const analytics = calculateStudentAnalytics(std, db, matched);
+      return [{
         student: std,
         className: cls?.name || 'Клас',
         analytics,
-      };
+      }];
     });
 
-    return generateBatchAiPrompt(batchData, db.criteria, groupName, periodText);
+    return {
+      promptText: batchData.length ? generateBatchAiPrompt(batchData, db.criteria, groupName, periodText) : '',
+      eligibleCount: batchData.length,
+    };
   }, [students, db, groupName, periodText, startDate, endDate]);
 
   if (!isOpen) return null;
@@ -69,14 +74,32 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
     }
   };
 
-  const handleSaveAll = () => {
-    if (!parsedReports || parsedReports.matched.length === 0) return;
+  const handleSaveAll = async () => {
+    if (isSaving || !parsedReports || parsedReports.matched.length === 0) return;
     const reports = parsedReports.matched.map((r) =>
       buildSavedReport(r.studentId, periodText, r.content)
     );
-    onSaveBatchReports?.(reports);
-    setSavedIds(new Set(parsedReports.matched.map((r) => r.studentId)));
-    toast.success(`Збережено ${reports.length} звітів ✅`);
+    const replacements = reports.filter((report) => db.savedReports?.[report.id]?.content !== undefined && db.savedReports?.[report.id]?.content !== report.content);
+    if (replacements.length && !window.confirm(`Замінити ${replacements.length} збережених коментарів за цей період?`)) return;
+    setIsSaving(true);
+    try {
+      const status = await onSaveBatchReports?.(reports);
+      if (status !== 'saved') return;
+      setSavedIds(new Set(parsedReports.matched.map((r) => r.studentId)));
+      toast.success(`Збережено ${reports.length} звітів ✅`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const assignUnmatched = (index: number, studentId: string) => {
+    const student = students.find((item) => item.id === studentId);
+    if (!student || !parsedReports) return;
+    const block = parsedReports.unmatched[index];
+    setParsedReports({
+      matched: [...parsedReports.matched, { studentId, studentName: student.name, content: block.content }],
+      unmatched: parsedReports.unmatched.filter((_, itemIndex) => itemIndex !== index),
+    });
   };
 
   return (
@@ -129,7 +152,7 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
             </div>
             <div className="text-xs text-slate-500 flex items-center gap-1.5 shrink-0">
               <Users className="w-3.5 h-3.5 text-slate-400" />
-              <span>У вибірці: <strong className="text-slate-800">{students.length} учнів</strong></span>
+              <span>У вибірці: <strong className="text-slate-800">{students.length} учнів</strong>, з уроками: <strong>{eligibleCount}</strong></span>
             </div>
           </div>
 
@@ -166,7 +189,7 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
         {activeTab === 'prompt' && (
           <>
             <div className="px-6 py-3 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-              <AiQuickActions prompt={promptText} />
+              {promptText && <AiQuickActions prompt={promptText} />}
 
               {onToggleReportSent && (
                 <button
@@ -188,13 +211,16 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {eligibleCount < students.length && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Учнів без уроків у вибраному періоді не включено до промпту: {students.length - eligibleCount}.</p>}
+              {!validDateRange && <p className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Укажіть коректні дати початку й завершення періоду.</p>}
+              {validDateRange && !promptText && <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">У вибраному періоді немає уроків для цих учнів. Оберіть інші дати або додайте уроки.</p>}
               <div className="relative">
-                <textarea
+                {promptText && <textarea
                   readOnly
                   rows={15}
                   value={promptText}
                   className="w-full font-mono text-xs p-4 rounded-xl border border-slate-200 bg-slate-50/90 text-slate-800 focus:outline-none leading-relaxed select-all"
-                />
+                />}
               </div>
 
               <div className="p-4 rounded-xl bg-blue-50 border border-blue-200/80 text-xs text-blue-900 leading-relaxed space-y-1">
@@ -249,9 +275,25 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
                     <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold mb-1">Не вдалося зіставити {parsedReports.unmatched.length} блок(и) з учнями:</p>
-                      <ul className="list-disc list-inside space-y-0.5 text-amber-700">
-                        {parsedReports.unmatched.map((u, i) => <li key={i} className="truncate">{u}</li>)}
-                      </ul>
+                      <div className="space-y-2">
+                        {parsedReports.unmatched.map((block, i) => (
+                          <div key={i} className="rounded-lg border border-amber-200 bg-white p-2">
+                            <p className="font-semibold">{block.header}</p>
+                            <p className="line-clamp-2 whitespace-pre-wrap">{block.content}</p>
+                            <select
+                              defaultValue=""
+                              onChange={(event) => assignUnmatched(i, event.target.value)}
+                              aria-label={`Оберіть учня для блоку ${block.header}`}
+                              className="mt-2 rounded border border-amber-300 bg-white p-1 text-xs"
+                            >
+                              <option value="" disabled>Оберіть учня</option>
+                              {students.filter((student) => !parsedReports.matched.some((report) => report.studentId === student.id)).map((student) => (
+                                <option key={student.id} value={student.id}>{student.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -265,11 +307,11 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
                       <button
                         type="button"
                         onClick={handleSaveAll}
-                        disabled={savedIds.size === parsedReports.matched.length}
+                        disabled={isSaving || savedIds.size === parsedReports.matched.length}
                         className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition disabled:opacity-50 shadow-sm"
                       >
                         <Save className="w-3.5 h-3.5" />
-                        {savedIds.size === parsedReports.matched.length
+                        {isSaving ? 'Збереження...' : savedIds.size === parsedReports.matched.length
                           ? '✅ Всі збережено'
                           : `Зберегти всі (${parsedReports.matched.length})`}
                       </button>
@@ -289,6 +331,22 @@ export const BatchReportModal: React.FC<BatchReportModalProps> = ({
                               {savedIds.has(r.studentId) && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                               {r.studentName}
                             </span>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(r.content);
+                                  toast.success(`Коментар для ${r.studentName} скопійовано`);
+                                } catch {
+                                  toast.error('Не вдалося скопіювати коментар');
+                                }
+                              }}
+                              title={`Скопіювати коментар для ${r.studentName}`}
+                              aria-label={`Скопіювати коментар для ${r.studentName}`}
+                              className="rounded p-1 text-indigo-700 hover:bg-indigo-100"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                           <p className="text-slate-600 leading-relaxed line-clamp-3">{r.content}</p>
                         </div>

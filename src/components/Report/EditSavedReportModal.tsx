@@ -3,13 +3,14 @@ import { SavedReport, Student } from '../../types/feedback';
 import { X, FileText, Copy, CheckCircle2, Clock } from 'lucide-react';
 import { VoiceInputButton } from '../Common/VoiceInputButton';
 import { toast } from 'sonner';
+import { SaveStatus } from '../../services/storage';
 
 interface EditSavedReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: Student;
   report: SavedReport;
-  onSave: (content: string) => void;
+  onSave: (content: string) => Promise<SaveStatus>;
   onToggleSent: () => void;
 }
 
@@ -22,6 +23,7 @@ export const EditSavedReportModal: React.FC<EditSavedReportModalProps> = ({
   onToggleSent,
 }) => {
   const [content, setContent] = useState(report.content);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setContent(report.content);
@@ -38,10 +40,17 @@ export const EditSavedReportModal: React.FC<EditSavedReportModalProps> = ({
     }
   };
 
-  const handleSave = () => {
-    onSave(content.trim());
-    toast.success('Звіт збережено ✅');
-    onClose();
+  const handleSave = async () => {
+    if (isSaving || !content.trim()) return;
+    setIsSaving(true);
+    try {
+      const status = await onSave(content.trim());
+      if (status !== 'saved') return;
+      toast.success('Звіт збережено ✅');
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const isSent = !!report.sentAt;
@@ -125,10 +134,10 @@ export const EditSavedReportModal: React.FC<EditSavedReportModalProps> = ({
             <button
               type="button"
               onClick={handleSave}
-              disabled={!content.trim()}
+              disabled={isSaving || !content.trim()}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition disabled:opacity-50 shadow-sm"
             >
-              Зберегти зміни
+              {isSaving ? 'Збереження...' : 'Зберегти зміни'}
             </button>
           </div>
         </div>

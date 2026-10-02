@@ -4,6 +4,8 @@ import { VoiceInputButton } from '../Common/VoiceInputButton';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
+import { getStudentReports } from '../../utils/savedReports';
+import { CopySavedReportButton } from '../Report/CopySavedReportButton';
 import { ExternalLink, Sparkles, Edit3 } from 'lucide-react';
 import { LessonTableCardProps, LessonViewExtras } from './lessonCardProps';
 
@@ -82,25 +84,25 @@ export const LessonTableView: React.FC<LessonTableCardProps & LessonViewExtras> 
 
                       {onBulkFillLessonScore && (
                         <select
-                          className="opacity-0 group-hover/th:opacity-100 focus:opacity-100 text-[9px] bg-white border border-slate-200 rounded px-1 py-0 cursor-pointer text-slate-600 hover:border-indigo-400 transition-opacity"
-                          title={`Заповнити бал усім присутнім за критерієм "${c.name}"`}
+                          className="w-full cursor-pointer rounded border border-slate-200 bg-white px-1 py-1 text-[10px] text-slate-600 hover:border-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
+                          aria-label={`Швидке оцінювання за критерієм ${c.name}`}
+                          title={`Заповнити порожні клітинки або замінити всі бали за критерієм "${c.name}"`}
                           defaultValue=""
                           onChange={(e) => {
                             const val = e.target.value;
                             if (val === '') return;
-                            const score = val === 'clear' ? null : Number(val);
-                            onBulkFillLessonScore(lesson.id, c.id, score);
+                            if (val === 'clear') onBulkFillLessonScore(lesson.id, c.id, null);
+                            else {
+                              const [mode, rawScore] = val.split(':');
+                              onBulkFillLessonScore(lesson.id, c.id, Number(rawScore), mode === 'empty');
+                            }
                             e.target.value = '';
                           }}
                         >
-                          <option value="" disabled>Заповнити...</option>
-                          <option value="12">Всім 12</option>
-                          <option value="11">Всім 11</option>
-                          <option value="10">Всім 10</option>
-                          <option value="9">Всім 9</option>
-                          <option value="8">Всім 8</option>
-                          <option value="7">Всім 7</option>
-                          <option value="clear">Очистити</option>
+                          <option value="" disabled>Швидко…</option>
+                          <optgroup label="Лише порожні клітинки">{Array.from({ length: 13 }, (_, score) => 12 - score).map((score) => <option key={`empty-${score}`} value={`empty:${score}`}>Порожнім {score}</option>)}</optgroup>
+                          <optgroup label="Замінити всі бали">{Array.from({ length: 13 }, (_, score) => 12 - score).map((score) => <option key={`all-${score}`} value={`all:${score}`}>Усім {score}</option>)}</optgroup>
+                          <option value="clear">Очистити колонку</option>
                         </select>
                       )}
                     </div>
@@ -133,6 +135,7 @@ export const LessonTableView: React.FC<LessonTableCardProps & LessonViewExtras> 
                   const scores = record?.scores || {};
                   const lessonNotes = record?.notes || '';
                   const studentFeedback = db.lessonFeedback?.[`${student.id}:${lesson.id}`];
+                  const latestReport = getStudentReports(db.savedReports, student.id)[0];
                   const activeTaskCount = (db.attentionTasks || []).filter(
                     (t) => t.studentId === student.id && !t.isCompleted
                   ).length;
@@ -153,6 +156,12 @@ export const LessonTableView: React.FC<LessonTableCardProps & LessonViewExtras> 
                         <div className="flex items-center justify-between gap-2">
                           <div className="font-semibold text-slate-800 text-xs flex items-center gap-1.5 flex-wrap">
                             <span>{student.name}</span>
+                            {latestReport && (
+                              <CopySavedReportButton
+                                report={latestReport}
+                                studentName={student.name}
+                              />
+                            )}
                             {activeTaskCount > 0 && (
                               <span
                                 className="text-rose-600 flex items-center gap-0.5 cursor-help"

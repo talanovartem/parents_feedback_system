@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getScoreBadgeClass, sanitizeScore } from '../utils/scoreColors';
 
 interface ScoreInputProps {
@@ -22,19 +22,36 @@ export const ScoreInput: React.FC<ScoreInputProps> = ({
   colIndex,
   onToggleAbsent,
 }) => {
+  const valueText = value === undefined || value === null ? '' : String(value);
+  const [draft, setDraft] = useState(valueText);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastCommitted = useRef(valueText);
+
+  useEffect(() => {
+    if (document.activeElement !== inputRef.current) {
+      setDraft(valueText);
+      lastCommitted.current = valueText;
+    }
+  }, [valueText, disabled]);
+
   const badgeClass = disabled
     ? 'bg-slate-100 text-slate-300 border-dashed border-slate-300 cursor-not-allowed opacity-60'
     : getScoreBadgeClass(value);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const commit = () => {
     if (disabled) return;
-    const raw = e.target.value;
-    if (raw === '') {
-      onChange(null);
+    const raw = draft.trim();
+    if (raw && !/^\d{1,2}$/.test(raw)) {
+      setDraft(valueText);
       return;
     }
-    const sanitized = sanitizeScore(raw);
-    onChange(sanitized);
+    const score = raw ? sanitizeScore(raw) : null;
+    const normalized = score === null ? '' : String(score);
+    setDraft(normalized);
+    if (normalized !== lastCommitted.current) {
+      lastCommitted.current = normalized;
+      onChange(score);
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -46,25 +63,44 @@ export const ScoreInput: React.FC<ScoreInputProps> = ({
     if (e.key === 'н' || e.key === 'Н' || e.key === 'n' || e.key === 'N') {
       e.preventDefault();
       if (onToggleAbsent) {
+        setDraft(valueText);
         onToggleAbsent();
       }
       return;
     }
 
-    if (!tableId || rowIndex === undefined || colIndex === undefined) return;
+    if (e.key === 'Escape') {
+      setDraft(valueText);
+      return;
+    }
+
+    if (!tableId || rowIndex === undefined || colIndex === undefined) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commit();
+        e.currentTarget.blur();
+      }
+      return;
+    }
 
     let targetRow = rowIndex;
     let targetCol = colIndex;
 
     if (e.key === 'ArrowDown' || e.key === 'Enter') {
       e.preventDefault();
+      commit();
       targetRow += 1;
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      commit();
       targetRow -= 1;
     } else if (e.key === 'ArrowRight' && (e.currentTarget.selectionStart === e.currentTarget.value.length)) {
+      e.preventDefault();
+      commit();
       targetCol += 1;
     } else if (e.key === 'ArrowLeft' && e.currentTarget.selectionStart === 0) {
+      e.preventDefault();
+      commit();
       targetCol -= 1;
     } else {
       return;
@@ -82,14 +118,16 @@ export const ScoreInput: React.FC<ScoreInputProps> = ({
   return (
     <div className="relative inline-flex items-center justify-center">
       <input
+        ref={inputRef}
         type="text"
         inputMode="numeric"
         disabled={disabled}
         data-table-id={tableId}
         data-row={rowIndex}
         data-col={colIndex}
-        value={disabled ? '' : (value !== undefined && value !== null ? value : '')}
-        onChange={handleChange}
+        value={disabled ? '' : draft}
+        onChange={(event) => { if (/^\d{0,2}$/.test(event.target.value)) setDraft(event.target.value); }}
+        onBlur={commit}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         placeholder={disabled ? '—' : '-'}

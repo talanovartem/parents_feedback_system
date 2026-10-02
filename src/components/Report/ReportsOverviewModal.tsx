@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
-import { toast } from 'sonner';
 import { calculateStudentAnalytics, calculateStudentTrend, getAllParallels } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { getPeriodPresets } from '../../utils/periodHelper';
 import { PeriodSelector } from './PeriodSelector';
+import { CopySavedReportButton } from './CopySavedReportButton';
+import { getStudentReports, isReportSent } from '../../utils/savedReports';
 import {
   X,
   Sparkles,
@@ -23,11 +24,11 @@ import {
   ExternalLink,
   CheckCircle2,
   Clock,
-  Copy,
 } from 'lucide-react';
 
 interface ReportsOverviewModalProps {
   isOpen: boolean;
+  presentation?: 'modal' | 'page';
   onClose: () => void;
   currentClassId: string;
   className: string;
@@ -43,6 +44,7 @@ interface ReportsOverviewModalProps {
 
 export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
   isOpen,
+  presentation = 'modal',
   onClose,
   currentClassId,
   className,
@@ -63,7 +65,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
   const defaultPreset = getPeriodPresets()[0];
   const [periodText, setPeriodText] = useState(defaultPreset.description);
-  const [onlyPendingSent, setOnlyPendingSent] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'missing' | 'ready' | 'sent'>('all');
 
   useEffect(() => {
     if (initialFilterMode) {
@@ -105,14 +107,20 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
 
   // Кількість надісланих звітів
   const sentCount = useMemo(() => {
-    return filteredStudents.filter((s) => !!db.sentReports?.[`${s.id}:${periodText}`]).length;
-  }, [filteredStudents, db.sentReports, periodText]);
+    return filteredStudents.filter((s) => isReportSent(db, s.id, periodText)).length;
+  }, [filteredStudents, db, periodText]);
 
-  // Відображувані учні (з урахуванням фільтра тільки ненадісланих)
+  // Відображувані учні за станом повідомлення у вибраному періоді
   const displayedStudents = useMemo(() => {
-    if (!onlyPendingSent) return filteredStudents;
-    return filteredStudents.filter((s) => !db.sentReports?.[`${s.id}:${periodText}`]);
-  }, [filteredStudents, onlyPendingSent, db.sentReports, periodText]);
+    return filteredStudents.filter((student) => {
+      const sent = isReportSent(db, student.id, periodText);
+      const hasText = !!db.savedReports?.[`${student.id}:${periodText}`]?.content.trim();
+      if (statusFilter === 'sent') return sent;
+      if (statusFilter === 'ready') return hasText && !sent;
+      if (statusFilter === 'missing') return !hasText && !sent;
+      return true;
+    });
+  }, [filteredStudents, statusFilter, db, periodText]);
 
   // Назва поточної активної групи
   const activeGroupName = useMemo(() => {
@@ -130,22 +138,22 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
   if (!isOpen) return null;
 
   const allFilteredSelected =
-    filteredStudents.length > 0 &&
-    filteredStudents.every((s) => selectedStudentIds.has(s.id));
+    displayedStudents.length > 0 &&
+    displayedStudents.every((s) => selectedStudentIds.has(s.id));
 
   const handleToggleSelectAll = () => {
     if (allFilteredSelected) {
       // Зняти вибір з відфільтрованих
       setSelectedStudentIds((prev) => {
         const next = new Set(prev);
-        filteredStudents.forEach((s) => next.delete(s.id));
+        displayedStudents.forEach((s) => next.delete(s.id));
         return next;
       });
     } else {
       // Додати всіх відфільтрованих
       setSelectedStudentIds((prev) => {
         const next = new Set(prev);
-        filteredStudents.forEach((s) => next.add(s.id));
+        displayedStudents.forEach((s) => next.add(s.id));
         return next;
       });
     }
@@ -170,8 +178,8 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+    <div className={presentation === 'page' ? 'w-full' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'}>
+      <div className={`bg-white rounded-2xl w-full flex flex-col overflow-hidden border border-slate-200 ${presentation === 'page' ? 'shadow-sm' : 'shadow-2xl max-w-4xl max-h-[90vh]'}`}>
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-3">
@@ -247,29 +255,19 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               ) : (
                 <>
                   <Square className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Вибрати всіх ({filteredStudents.length})</span>
+                  <span>Вибрати видимих ({displayedStudents.length})</span>
                 </>
               )}
             </button>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Статус відправки звітів батькам */}
-            <button
-              type="button"
-              onClick={() => setOnlyPendingSent(!onlyPendingSent)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${
-                onlyPendingSent
-                  ? 'bg-amber-50 text-amber-800 border-amber-300'
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-              }`}
-              title="Фільтр учнів за статусом відправки звіту батькам"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Надіслано: <strong>{sentCount}/{filteredStudents.length}</strong></span>
-              <span className="text-slate-300">|</span>
-              <span className="text-[11px] font-normal">{onlyPendingSent ? 'Показати всіх' : 'Тільки ненадіслані'}</span>
-            </button>
+            <span className="text-xs font-semibold text-emerald-700">Надіслано: {sentCount}/{filteredStudents.length}</span>
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">Стан
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800">
+                <option value="all">Усі</option><option value="missing">Без тексту</option><option value="ready">Готові до надсилання</option><option value="sent">Надіслані</option>
+              </select>
+            </label>
 
             {/* Кнопка Пакетного промпту */}
             {selectedStudentIds.size > 0 && (
@@ -311,7 +309,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-2 flex-1">
           {displayedStudents.length === 0 ? (
             <p className="text-sm text-slate-400 italic text-center py-10">
-              {onlyPendingSent ? 'Усі звіти за цей період уже надіслано!' : 'Учнів у цій вибірці не знайдено'}
+              'Учнів із таким станом у цій вибірці немає'
             </p>
           ) : (
             displayedStudents.map((student) => {
@@ -320,8 +318,9 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               const analytics = calculateStudentAnalytics(student, db);
               const trend = calculateStudentTrend(student, db);
               const badgeClass = getScoreBadgeClass(analytics.totalAverage);
-              const isSent = !!(db.sentReports?.[`${student.id}:${periodText}`] || db.savedReports?.[`${student.id}:${periodText}`]?.sentAt);
+              const isSent = isReportSent(db, student.id, periodText);
               const savedReport = db.savedReports?.[`${student.id}:${periodText}`];
+              const latestReport = getStudentReports(db.savedReports, student.id)[0];
 
               return (
                 <div
@@ -348,6 +347,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         <span className="font-semibold text-slate-800 text-sm">
                           {student.name}
                         </span>
+                        {latestReport && <CopySavedReportButton report={latestReport} studentName={student.name} />}
 
                         {studentClass && (
                           <span className="px-1.5 py-0.2 text-[10px] font-semibold rounded bg-slate-100 text-slate-600">
@@ -386,6 +386,9 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                           {trend.totalCount} уроків в базі
                         </p>
                       )}
+                      {savedReport?.content && <p className="max-w-2xl text-xs leading-relaxed text-slate-600 line-clamp-2" title={savedReport.content}>{savedReport.content}</p>}
+                      {savedReport?.content && <p className="text-[11px] text-slate-400">Збережено {new Date(savedReport.updatedAt).toLocaleDateString('uk-UA')}</p>}
+                      {!savedReport && latestReport && <p className="text-[11px] text-amber-700">Останній текст: {latestReport.period}</p>}
                     </div>
                   </div>
 
@@ -434,25 +437,6 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         >
                           {isSent ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Clock className="w-3.5 h-3.5 text-slate-400" />}
                           <span className="hidden sm:inline">{isSent ? 'Надіслано' : 'Не надіслано'}</span>
-                        </button>
-                      )}
-
-                      {/* Скопіювати збережений звіт */}
-                      {savedReport && (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(savedReport.content);
-                              toast.success(`Звіт для ${student.name} скопійовано 📋`);
-                            } catch {
-                              toast.error('Не вдалося скопіювати');
-                            }
-                          }}
-                          className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition"
-                          title={`Скопіювати збережений звіт для ${student.name}`}
-                        >
-                          <Copy className="w-4 h-4" />
                         </button>
                       )}
 
@@ -523,6 +507,9 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               <span className="ml-2 text-indigo-600 font-semibold">
                 (Обрано для пакетного звіту: {selectedStudentIds.size})
               </span>
+            )}
+            {selectedStudentIds.size > 0 && selectedStudentIds.size > displayedStudents.filter((student) => selectedStudentIds.has(student.id)).length && (
+              <button type="button" onClick={() => setSelectedStudentIds(new Set(displayedStudents.filter((student) => selectedStudentIds.has(student.id)).map((student) => student.id)))} className="ml-2 font-semibold text-amber-800 underline">Прибрати прихованих із вибору</button>
             )}
           </div>
 

@@ -8,7 +8,7 @@ export interface ParsedStudentReport {
 
 export interface ParseBatchResult {
   matched: ParsedStudentReport[];
-  unmatched: string[]; // блоки, що не вдалося зіставити з учнем
+  unmatched: Array<{ header: string; content: string }>;
 }
 
 /**
@@ -85,28 +85,28 @@ function levenshtein(a: string, b: string): number {
  * Повертає studentId або null якщо нічого не знайдено з прийнятною схожістю.
  */
 function findBestStudent(header: string, students: Student[]): Student | null {
-  const headerLower = header.toLowerCase().trim();
+  const headerLower = header.toLowerCase().replace(/\s*\([^)]*\)\s*$/, '').trim();
 
-  // Точне входження
-  for (const s of students) {
-    if (headerLower.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(headerLower)) {
-      return s;
-    }
-  }
+  const exact = students.filter((s) => headerLower.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(headerLower));
+  if (exact.length > 0) return exact.length === 1 ? exact[0] : null;
 
   // Нечітке: знаходимо учня з найменшою відстанню Левенштейна
   let best: Student | null = null;
   let bestDist = Infinity;
+  let ambiguous = false;
   for (const s of students) {
     const dist = levenshtein(headerLower, s.name.toLowerCase());
-    // Допустимо до 30% похибки від довжини рядка
-    const threshold = Math.floor(Math.max(headerLower.length, s.name.length) * 0.4);
+    // Невеликі описки можна виправити; менш певні збіги вчитель призначає вручну.
+    const threshold = Math.floor(Math.max(headerLower.length, s.name.length) * 0.2);
     if (dist < bestDist && dist <= threshold) {
       bestDist = dist;
       best = s;
+      ambiguous = false;
+    } else if (dist === bestDist) {
+      ambiguous = true;
     }
   }
-  return best;
+  return ambiguous ? null : best;
 }
 
 /**
@@ -115,18 +115,20 @@ function findBestStudent(header: string, students: Student[]): Student | null {
 export function parseBatchAiResponse(rawText: string, students: Student[]): ParseBatchResult {
   const blocks = extractBlocks(rawText);
   const matched: ParsedStudentReport[] = [];
-  const unmatched: string[] = [];
+  const unmatched: ParseBatchResult['unmatched'] = [];
+  const matchedIds = new Set<string>();
 
   for (const block of blocks) {
     const student = findBestStudent(block.header, students);
-    if (student) {
+    if (student && !matchedIds.has(student.id)) {
+      matchedIds.add(student.id);
       matched.push({
         studentId: student.id,
         studentName: student.name,
         content: block.content,
       });
     } else {
-      unmatched.push(`${block.header}: ${block.content.slice(0, 80)}...`);
+      unmatched.push(block);
     }
   }
 

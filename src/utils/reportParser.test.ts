@@ -72,7 +72,17 @@ describe('reportParser', () => {
     const result = parseBatchAiResponse(rawAiOutput, mockStudents);
     expect(result.matched.length).toBe(0);
     expect(result.unmatched.length).toBe(1);
-    expect(result.unmatched[0]).toContain('Невідомий Студент');
+    expect(result.unmatched[0].header).toContain('Невідомий Студент');
+  });
+
+  it('leaves ambiguous names for manual assignment', () => {
+    const raw = '=== ЗВІТ ДЛЯ: Сидоренко ===\nГотовий текст.\n=== КІНЕЦЬ ЗВІТУ ===';
+    const students = [...mockStudents, { id: 'std-4', classId: 'cls-1', name: 'Сидоренко Петро' }];
+
+    const result = parseBatchAiResponse(raw, students);
+
+    expect(result.matched).toEqual([]);
+    expect(result.unmatched[0].header).toBe('Сидоренко');
   });
 
   it('builds a SavedReport object correctly', () => {

@@ -19,7 +19,7 @@ export interface LessonTableCardProps {
   onUpdateStudentNotes: (studentId: string, notes: string) => void;
   onDeleteLesson: (lessonId: string) => void;
   onUpdateLesson: (updated: Lesson) => void;
-  onBulkFillLessonScore?: (lessonId: string, criterionId: string, score: number | null) => void;
+  onBulkFillLessonScore?: (lessonId: string, criterionId: string, score: number | null, onlyEmpty?: boolean) => void;
   onMarkAllPresent?: (lessonId: string) => void;
   onOpenStudentReport: (student: Student) => void;
   onOpenAddCriterion: () => void;

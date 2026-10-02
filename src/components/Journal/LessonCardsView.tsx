@@ -4,6 +4,8 @@ import { VoiceInputButton } from '../Common/VoiceInputButton';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { calculateStudentAnalytics } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
+import { getStudentReports } from '../../utils/savedReports';
+import { CopySavedReportButton } from '../Report/CopySavedReportButton';
 import {
   ChevronUp,
   ChevronDown,
@@ -123,6 +125,7 @@ export const LessonCardsView: React.FC<LessonTableCardProps & LessonViewExtras> 
                 const scores = record?.scores || {};
                 const lessonNotes = record?.notes || '';
                 const studentFeedback = db.lessonFeedback?.[`${student.id}:${lesson.id}`];
+                const latestReport = getStudentReports(db.savedReports, student.id)[0];
                 const isCardExpanded = expandedStudentIds.has(student.id);
                 const activeTaskCountCard = (db.attentionTasks || []).filter(
                   (t) => t.studentId === student.id && !t.isCompleted
@@ -182,6 +185,12 @@ export const LessonCardsView: React.FC<LessonTableCardProps & LessonViewExtras> 
                             <span className="font-semibold text-slate-900 text-sm truncate">
                               {student.name}
                             </span>
+                            {latestReport && (
+                              <CopySavedReportButton
+                                report={latestReport}
+                                studentName={student.name}
+                              />
+                            )}
                             {activeTaskCountCard > 0 && (
                               <span
                                 className="cursor-help"
