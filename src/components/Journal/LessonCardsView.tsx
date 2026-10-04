@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScoreInput } from '../ScoreInput';
 import { VoiceInputButton } from '../Common/VoiceInputButton';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
+import { getLegacyScoresTitle } from '../../utils/assessmentCriteria';
 import { calculateStudentAnalytics } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getStudentReports } from '../../utils/savedReports';
@@ -132,9 +133,7 @@ export const LessonCardsView: React.FC<LessonTableCardProps & LessonViewExtras> 
                 ).length;
 
                 // Кількість заповнених критеріїв
-                const gradedCount = Object.keys(scores).filter(
-                  (k) => scores[k] !== undefined && scores[k] !== null
-                ).length;
+                const gradedCount = criteria.filter((criterion) => scores[criterion.id] !== undefined).length;
 
                 return (
                   <div
@@ -302,7 +301,7 @@ export const LessonCardsView: React.FC<LessonTableCardProps & LessonViewExtras> 
                                     >
                                       <span
                                         className="text-xs font-medium text-slate-700 truncate"
-                                        title={c.description || c.name}
+                                        title={c.id === 'efficiency' ? getLegacyScoresTitle(scores) || c.description || c.name : c.description || c.name}
                                       >
                                         {c.name}
                                       </span>

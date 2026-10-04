@@ -1,4 +1,7 @@
 import { ClassItem, Criterion, DatabaseSchema, Lesson, Student, StudentAnalytics } from '../types/feedback';
+import { getReportCriteria, getScoringScores } from './assessmentCriteria';
+
+const TEACHER_VOICE_INSTRUCTION = 'Автор повідомлень — учитель-чоловік. У висловлюваннях від першої особи використовуй чоловічий рід («буду вдячний», «радий», «переконаний»); виправ жіночі форми, якщо вони є у вихідному тексті. Рід учня чи учениці добирай окремо.';
 
 export interface ClassParallel {
   id: string;
@@ -128,6 +131,17 @@ export function calculateStudentAnalytics(
           scoreTotals[critId].sum += score;
           scoreTotals[critId].count += 1;
 
+        }
+      }
+      const scoringScores = getScoringScores(entry.scores, db.criteria);
+      if (entry.scores.efficiency === undefined && scoringScores.efficiency !== undefined) {
+        const totals = scoreTotals.efficiency || { sum: 0, count: 0 };
+        totals.sum += scoringScores.efficiency;
+        totals.count += 1;
+        scoreTotals.efficiency = totals;
+      }
+      for (const score of Object.values(scoringScores)) {
+        if (typeof score === 'number' && Number.isFinite(score)) {
           overallSum += score;
           overallCount += 1;
         }
@@ -176,7 +190,7 @@ export function calculateStudentTrend(
   for (const lesson of lessons) {
     const entry = studentRecords[lesson.id];
     const isAbsent = Boolean(entry?.absent);
-    const scores = entry?.scores || {};
+    const scores = getScoringScores(entry?.scores || {}, db.criteria);
     const notes = entry?.notes;
 
     if (isAbsent) {
@@ -278,7 +292,7 @@ export function generateAiPromptForParents(
 ): string {
   const { student, averageScores, totalAverage, lessonNotes, totalLessons, absentLessonsCount } = analytics;
 
-  const criteriaLines = criteria
+  const criteriaLines = getReportCriteria(criteria)
     .map((c) => {
       const avg = averageScores[c.id];
       if (avg !== undefined) {
@@ -308,6 +322,7 @@ export function generateAiPromptForParents(
       : `- Відвідування: 100% присутність на всіх ${totalLessons} уроках\n`;
 
   return `Дій як доброзичливий, підтримуючий та професійний шкільний вчитель.
+${TEACHER_VOICE_INSTRUCTION}
 Склади стисле, тепле і конструктивне повідомлення для батьків учня/учениці щодо успіхів за період (${periodDescription}).
 
 Інформація про учня:
@@ -327,7 +342,10 @@ ${notesLines}
 3. М'яко та конструктивно вкажи на зони розвитку або моменти, де дитині потрібна підтримка (якщо середні бали нижче 8 або є пропуски уроків чи зауваження).
 4. Запропонуй прості рекомендації чи слова підтримки для вдома.
 5. Обсяг: 2-3 компактні абзаци, зручні для читання в месенджері (Viber/Telegram). Без надмірної формальності.
-6. Додай 2-4 доречні, теплі емодзі (наприклад: 🌟, 📚, 💡, 👏, ✨, 🎯, 🤗), щоб оживити повідомлення, але без надмірності.`;
+6. Бали в даних потрібні лише для аналізу. У повідомленні батькам не пиши жодних числових оцінок, середніх балів або шкали /12; опиши результат словами.
+7. Якщо є труднощі, пропуски або зауваження, назви їх конкретно й делікатно та запропонуй підтримку; не замовчуй негативні спостереження.
+8. Назви саме вказаний звітний період, без автоматичної заміни на «цей тиждень».
+9. Додай 2-4 доречні, теплі емодзі (наприклад: 🌟, 📚, 💡, 👏, ✨, 🎯, 🤗), щоб оживити повідомлення, але без надмірності.`;
 }
 
 /**
@@ -345,7 +363,7 @@ export function generateBatchAiPrompt(
       const { student, averageScores, totalAverage, lessonNotes, totalLessons, absentLessonsCount } =
         analytics;
 
-      const criteriaSummary = criteria
+      const criteriaSummary = getReportCriteria(criteria)
         .map((c) => {
           const avg = averageScores[c.id];
           return avg !== undefined ? `${c.name}: ${avg}/12` : null;
@@ -383,6 +401,7 @@ ${notesSummary}
     .join('\n');
 
   return `Дій як професійний, доброзичливий і тактовний шкільний вчитель.
+${TEACHER_VOICE_INSTRUCTION}
 Перед тобою дані успішності групи учнів (${groupName}) за період: ${periodDescription}.
 
 ТВОЄ ЗАВДАННЯ:
@@ -396,7 +415,10 @@ ${notesSummary}
    - Якщо вказані індивідуальні особливості сприйняття дитини, врахуй їх у вигляді делікатних рекомендацій для підтримки вдома.
 3. Обсяг: 2-3 компактні абзаци на одного учня, зручні для читання з екрана смартфона.
 4. Додай 2-4 доречні, теплі емодзі (🌟, 📚, 💡, 👏, ✨, 🎯, 🤗) до кожного повідомлення — щоб воно було живим і позитивним.
-5. ФОРМАТ ВІДПОВІДІ (ОБОВ'ЯЗКОВО):
+5. Бали в даних призначені лише для твого аналізу. У повідомленні батькам не вказуй числові оцінки, середні бали або шкалу /12; передай результат словами.
+6. Якщо є труднощі, пропуски чи зауваження, назви їх конкретно, тактовно й без осуду, з практичною порадою. Не приховуй негативні спостереження за загальними похвалами.
+7. Використовуй саме вказаний період і його тривалість; не пиши «цього тижня», якщо період довший за тиждень.
+8. ФОРМАТ ВІДПОВІДІ (ОБОВ'ЯЗКОВО):
    Для кожного учня використовуй точно такий роздільник — це потрібно для автоматичного збереження в систему:
 
    === ЗВІТ ДЛЯ: [Ім'я учня] ===
@@ -406,4 +428,22 @@ ${notesSummary}
 СПИСОК УЧНІВ ТА ДАНІ:
 ${studentsSections}
 `;
+}
+
+export function generateBatchRevisionPrompt(
+  reports: Array<{ studentName: string; content: string }>,
+  periodDescription: string,
+  comments: string
+): string {
+  const sections = reports.map(({ studentName, content }) =>
+    `=== ЗВІТ ДЛЯ: ${studentName} ===\n${content}\n=== КІНЕЦЬ ЗВІТУ ===`
+  ).join('\n\n');
+
+  return `Відредагуй наведені повідомлення для батьків за період ${periodDescription}.
+${TEACHER_VOICE_INSTRUCTION}
+Побажання вчителя до правок: ${comments.trim()}
+Збережи факти про кожного учня. Якщо є складнощі або негативні спостереження, назви їх конкретно й делікатно, не приховуй. Не вказуй числові оцінки, середні бали чи шкалу /12. Використовуй саме вказаний період, без слова «тиждень» для довшого періоду.
+Поверни лише оновлені повідомлення для перелічених учнів у тому самому форматі з маркерами «=== ЗВІТ ДЛЯ: ... ===» і «=== КІНЕЦЬ ЗВІТУ ===»:
+
+${sections}`;
 }

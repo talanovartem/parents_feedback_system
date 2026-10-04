@@ -148,4 +148,14 @@ describe('calcRecommendedKp', () => {
     const res = calcRecommendedKp(student(db), db, MON, FRI);
     expect(res.breakdown).toContain('+2 (пропуск: 1)');
   });
+
+  it('рахує обʼєднану оцінку лише один раз для бонусу', () => {
+    const db = base();
+    db.lessons.push({ id: 'l1', classId: 'c1', date: '2026-09-22', lessonNumber: 1 });
+    db.records.s1 = { l1: { scores: { behavior: 0, condition: 0, efficiency: 12, activity: 12 } } };
+
+    const res = calcRecommendedKp(student(db), db, MON, FRI);
+
+    expect(res.breakdown).toContain('+5 (сер. бал: 12.0)');
+  });
 });

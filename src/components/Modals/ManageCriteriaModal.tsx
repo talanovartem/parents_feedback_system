@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Criterion } from '../../types/feedback';
+import { getReportCriteria } from '../../utils/assessmentCriteria';
 import { X, Plus, Trash2, Sliders } from 'lucide-react';
 
 interface ManageCriteriaModalProps {
@@ -49,7 +50,7 @@ export const ManageCriteriaModal: React.FC<ManageCriteriaModalProps> = ({
 
         <div className="p-6 space-y-4">
           <p className="text-xs text-slate-500">
-            Усі критерії оцінюються за єдиною шкалою від 0 до 12 балів. Вони з'являються як підколонки у кожному уроці.
+            Оцінки за поведінку та стан дитини збережено як історичні. Нові оцінки роботи на уроці вносяться в одну колонку.
           </p>
 
           <form onSubmit={handleSubmit} className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
@@ -80,7 +81,7 @@ export const ManageCriteriaModal: React.FC<ManageCriteriaModalProps> = ({
           </form>
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {criteria.map((crit) => (
+            {getReportCriteria(criteria).map((crit) => (
               <div
                 key={crit.id}
                 className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200/80 shadow-xs"
@@ -93,9 +94,9 @@ export const ManageCriteriaModal: React.FC<ManageCriteriaModalProps> = ({
                 </div>
                 <button
                   onClick={() => onDeleteCriterion(crit.id)}
-                  disabled={criteria.length <= 1}
+                  disabled={criteria.length <= 1 || (criteria.some((item) => item.id === 'efficiency') && ['behavior', 'condition', 'efficiency'].includes(crit.id))}
                   className="text-slate-400 hover:text-rose-600 p-1.5 rounded hover:bg-rose-50 transition-colors disabled:opacity-30"
-                  title="Видалити критерій"
+                  title={criteria.some((item) => item.id === 'efficiency') && ['behavior', 'condition', 'efficiency'].includes(crit.id) ? 'Базовий або історичний критерій не видаляється' : 'Видалити критерій'}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

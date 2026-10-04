@@ -1,53 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { getPeriodPresets, PeriodPreset } from '../../utils/periodHelper';
 import { Calendar, Clock, ChevronDown } from 'lucide-react';
 
 interface PeriodSelectorProps {
   value: string;
+  startDate: string;
+  endDate: string;
   onChange: (periodText: string, startDate?: string, endDate?: string) => void;
   className?: string;
 }
 
 export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   value,
+  startDate,
+  endDate,
   onChange,
   className = '',
 }) => {
   const presets = getPeriodPresets();
-  const defaultPreset = presets[0]; // 'current-week'
-
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('current-week');
-  const [customText, setCustomText] = useState<string>(value || defaultPreset.description);
-  const [dateBounds, setDateBounds] = useState({ from: defaultPreset.startDate || '', to: defaultPreset.endDate || '' });
-
-  useEffect(() => {
-    if (!value && defaultPreset) {
-      onChange(defaultPreset.description, defaultPreset.startDate, defaultPreset.endDate);
-    }
-    // Лише ініціалізація при монтуванні: подальші зміни value/onChange керуються вручну
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(() =>
+    presets.find((preset) => preset.id !== 'custom' && preset.description === value &&
+      preset.startDate === startDate && preset.endDate === endDate)?.id || 'custom'
+  );
 
   const handleSelectPreset = (preset: PeriodPreset) => {
     setSelectedPresetId(preset.id);
-    setCustomText(preset.description);
-    const from = preset.startDate || dateBounds.from;
-    const to = preset.endDate || dateBounds.to;
-    setDateBounds({ from, to });
-    onChange(preset.description, from, to);
+    if (preset.id === 'custom') {
+      onChange(value, startDate, endDate);
+    } else {
+      onChange(preset.description, preset.startDate, preset.endDate);
+    }
   };
 
   const handleTextChange = (newText: string) => {
-    setCustomText(newText);
     setSelectedPresetId('custom');
-    onChange(newText, dateBounds.from, dateBounds.to);
+    onChange(newText, startDate, endDate);
   };
 
   const handleDateChange = (field: 'from' | 'to', date: string) => {
-    const next = { ...dateBounds, [field]: date };
-    setDateBounds(next);
+    const next = { from: field === 'from' ? date : startDate, to: field === 'to' ? date : endDate };
     const label = `${next.from.split('-').reverse().join('.')} – ${next.to.split('-').reverse().join('.')}`;
-    setCustomText(label);
     setSelectedPresetId('custom');
     onChange(label, next.from, next.to);
   };
@@ -84,7 +76,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
           <input
             type="text"
             aria-label="Назва звітного періоду"
-            value={customText}
+            value={value}
             onChange={(e) => handleTextChange(e.target.value)}
             placeholder="Наприклад: 15.09.2026 – 21.09.2026"
             className="w-full text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-xs"
@@ -94,15 +86,15 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
       </div>
 
       {selectedPresetId === 'custom' && <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-        <label className="flex items-center gap-1">Від <input type="date" value={dateBounds.from} onChange={(event) => handleDateChange('from', event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5" /></label>
-        <label className="flex items-center gap-1">До <input type="date" value={dateBounds.to} onChange={(event) => handleDateChange('to', event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5" /></label>
+        <label className="flex items-center gap-1">Від <input type="date" value={startDate} onChange={(event) => handleDateChange('from', event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5" /></label>
+        <label className="flex items-center gap-1">До <input type="date" value={endDate} onChange={(event) => handleDateChange('to', event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5" /></label>
       </div>}
 
       {/* Helper notice */}
       <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
         <Clock className="w-3 h-3 text-indigo-500 shrink-0" />
         <span>
-          Звітний період: <strong className="text-slate-700">{customText}</strong> (підставляється у запит для ШІ)
+          Звітний період: <strong className="text-slate-700">{value}</strong> (підставляється у запит для ШІ)
         </span>
       </div>
     </div>

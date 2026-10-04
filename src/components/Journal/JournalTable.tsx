@@ -4,6 +4,7 @@ import { LessonTableCard } from './LessonTableCard';
 import { CalendarPlus, UserPlus, Plus, Layers, ExternalLink, ArrowUpDown, ChevronDown, ChevronUp, Table, LayoutGrid } from 'lucide-react';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
 import { findNearestLessonId } from '../../utils/lessonTime';
+import { getActiveCriteria } from '../../utils/assessmentCriteria';
 
 interface JournalTableProps {
   currentClassId: string;
@@ -167,7 +168,7 @@ export const JournalTable: React.FC<JournalTableProps> = ({
           <div className="flex items-center gap-3 text-xs text-slate-500">
             <span>Уроків у класі: <strong className="text-slate-800 font-semibold">{sortedLessons.length}</strong></span>
             <span>Учнів: <strong className="text-slate-800 font-semibold">{students.length}</strong></span>
-            <span className="hidden sm:inline">Колонок: <strong className="text-slate-800 font-semibold">{db.criteria.length}</strong></span>
+            <span className="hidden sm:inline">Колонок: <strong className="text-slate-800 font-semibold">{getActiveCriteria(db.criteria).length}</strong></span>
           </div>
 
           {sortedLessons.length > 0 && (

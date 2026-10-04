@@ -6,6 +6,7 @@ import { calculateStudentAnalytics } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getStudentReports } from '../../utils/savedReports';
 import { CopySavedReportButton } from '../Report/CopySavedReportButton';
+import { getLegacyScoresTitle } from '../../utils/assessmentCriteria';
 import { ExternalLink, Sparkles, Edit3 } from 'lucide-react';
 import { LessonTableCardProps, LessonViewExtras } from './lessonCardProps';
 
@@ -70,7 +71,7 @@ export const LessonTableView: React.FC<LessonTableCardProps & LessonViewExtras> 
                     <div className="flex flex-col items-center gap-1">
                       <div className="flex items-center justify-center gap-0.5 w-full">
                         <span className="truncate max-w-[65px] font-semibold text-slate-700">{c.name}</span>
-                        {criteria.length > 1 && (
+                        {criteria.length > 1 && c.id !== 'efficiency' && (
                           <button
                             type="button"
                             onClick={() => onDeleteCriterion(c.id)}
@@ -286,6 +287,7 @@ export const LessonTableView: React.FC<LessonTableCardProps & LessonViewExtras> 
                           disabled={isAbsent}
                           criterionName={c.name}
                           studentName={student.name}
+                          title={c.id === 'efficiency' ? getLegacyScoresTitle(scores) : undefined}
                           onChange={(newScore) =>
                             onUpdateScore(student.id, lesson.id, c.id, newScore)
                           }

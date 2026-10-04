@@ -1,5 +1,6 @@
 import { DatabaseSchema, KpTransaction, Student } from '../types/feedback';
 import { toLocalIsoDate } from './localDate';
+import { getScoringScores } from './assessmentCriteria';
 
 /**
  * ISO-тиждень (Пн–Нд) для дати. Повертає рік ISO-тижня (рік найближчого четверга),
@@ -200,7 +201,7 @@ export function calcRecommendedKp(
   for (const l of weekLessons) {
     const entry = db.records[student.id]?.[l.id];
     if (entry && !entry.absent) {
-      const scores = Object.values(entry.scores || {});
+      const scores = Object.values(getScoringScores(entry.scores || {}, db.criteria));
       if (scores.length > 0) {
         allScores.push(...scores);
       }

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { DatabaseSchema, SavedReport, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, generateAiPromptForParents } from '../../utils/analytics';
-import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
+import { describePeriodDuration, filterLessonsByDateRange, getReportPeriod, saveReportPeriod } from '../../utils/periodHelper';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
 import { buildSavedReport } from '../../utils/reportParser';
 import { getStudentReports } from '../../utils/savedReports';
+import { getReportCriteria } from '../../utils/assessmentCriteria';
 import { AiQuickActions } from './AiQuickActions';
 import { PeriodSelector } from './PeriodSelector';
 import { EditSavedReportModal } from './EditSavedReportModal';
@@ -34,10 +35,8 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   onSaveSingleReport,
   onSaveSingleReportContent,
 }) => {
-  const defaultPreset = getPeriodPresets()[0];
-  const [periodText, setPeriodText] = useState(defaultPreset.description);
-  const [startDate, setStartDate] = useState<string | undefined>(defaultPreset.startDate);
-  const [endDate, setEndDate] = useState<string | undefined>(defaultPreset.endDate);
+  const [period, setPeriod] = useState(getReportPeriod);
+  const { text: periodText, startDate, endDate } = period;
   const [importText, setImportText] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -61,7 +60,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   const periodLessons = matchedLessons;
 
   const analytics = calculateStudentAnalytics(student, db, periodLessons);
-  const aiPrompt = periodLessons.length ? generateAiPromptForParents(analytics, db.criteria, className, periodText) : '';
+  const aiPrompt = periodLessons.length ? generateAiPromptForParents(analytics, db.criteria, className, `${periodText} (тривалість: ${describePeriodDuration(startDate, endDate)})`) : '';
 
   const handleSaveImport = async () => {
     if (isSaving || !importText.trim()) return;
@@ -122,7 +121,7 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
               Середні показники за {periodLessons.length} уроків
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {db.criteria.map((c) => {
+              {getReportCriteria(db.criteria).filter((c) => !['behavior', 'condition'].includes(c.id) || analytics.averageScores[c.id] !== undefined).map((c) => {
                 const avg = analytics.averageScores[c.id];
                 const badge = getScoreBadgeClass(avg);
                 return (
@@ -183,10 +182,12 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
           <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
             <PeriodSelector
               value={periodText}
+              startDate={startDate}
+              endDate={endDate}
               onChange={(newText, start, end) => {
-                setPeriodText(newText);
-                setStartDate(start);
-                setEndDate(end);
+                const next = { text: newText, startDate: start || '', endDate: end || '' };
+                setPeriod(next);
+                saveReportPeriod(next);
                 setShowImport(false);
               }}
             />

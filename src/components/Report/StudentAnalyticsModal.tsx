@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentTrend, calculateStudentAnalytics } from '../../utils/analytics';
+import { getReportCriteria } from '../../utils/assessmentCriteria';
 import {
   X,
   TrendingUp,
@@ -346,7 +347,7 @@ export const StudentAnalyticsModal: React.FC<StudentAnalyticsModalProps> = ({
               Середні бали за критеріями
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {db.criteria.map((c) => {
+              {getReportCriteria(db.criteria).filter((c) => !['behavior', 'condition'].includes(c.id) || generalAnalytics.averageScores[c.id] !== undefined).map((c) => {
                 const score = generalAnalytics.averageScores[c.id];
                 return (
                   <div

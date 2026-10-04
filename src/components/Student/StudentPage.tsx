@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, calculateStudentTrend, generateAiPromptForParents } from '../../utils/analytics';
-import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
+import { describePeriodDuration, filterLessonsByDateRange, getReportPeriod, saveReportPeriod } from '../../utils/periodHelper';
 import { StudentChartSwitcher } from './StudentChartSwitcher';
 import { AiQuickActions } from '../Report/AiQuickActions';
 import { PeriodSelector } from '../Report/PeriodSelector';
@@ -41,10 +41,8 @@ export const StudentPage: React.FC<StudentPageProps> = ({
   onEditStudent,
   onDeleteStudent,
 }) => {
-  const defaultPreset = getPeriodPresets()[0];
-  const [periodText, setPeriodText] = useState(defaultPreset.description);
-  const [periodStartDate, setPeriodStartDate] = useState<string | undefined>(defaultPreset.startDate);
-  const [periodEndDate, setPeriodEndDate] = useState<string | undefined>(defaultPreset.endDate);
+  const [period, setPeriod] = useState(getReportPeriod);
+  const { text: periodText, startDate: periodStartDate, endDate: periodEndDate } = period;
   const [showQr, setShowQr] = useState(false);
 
   const studentTasks = useMemo(() => {
@@ -86,8 +84,9 @@ export const StudentPage: React.FC<StudentPageProps> = ({
 
   // Уроки, що потрапляють у вибраний діапазон дат (якщо є співпадіння)
   const periodLessons = useMemo(() => {
-    const matched = filterLessonsByDateRange(classLessons, periodStartDate, periodEndDate);
-    return matched.length > 0 ? matched : classLessons;
+    return periodStartDate && periodEndDate && periodStartDate <= periodEndDate
+      ? filterLessonsByDateRange(classLessons, periodStartDate, periodEndDate)
+      : [];
   }, [classLessons, periodStartDate, periodEndDate]);
 
   const analytics = useMemo(() => {
@@ -101,9 +100,9 @@ export const StudentPage: React.FC<StudentPageProps> = ({
   }, [student, db, classLessons]);
 
   const aiPrompt = useMemo(() => {
-    if (!student || !analytics || !studentClass) return '';
-    return generateAiPromptForParents(analytics, db.criteria, studentClass.name, periodText);
-  }, [student, analytics, studentClass, db.criteria, periodText]);
+    if (!student || !analytics || !studentClass || !periodLessons.length) return '';
+    return generateAiPromptForParents(analytics, db.criteria, studentClass.name, `${periodText} (тривалість: ${describePeriodDuration(periodStartDate, periodEndDate)})`);
+  }, [student, analytics, studentClass, db.criteria, periodText, periodStartDate, periodEndDate, periodLessons.length]);
 
   if (!student || !analytics || !trendData) {
     return (
@@ -412,10 +411,12 @@ export const StudentPage: React.FC<StudentPageProps> = ({
         <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
           <PeriodSelector
             value={periodText}
+            startDate={periodStartDate}
+            endDate={periodEndDate}
             onChange={(newText, start, end) => {
-              setPeriodText(newText);
-              setPeriodStartDate(start);
-              setPeriodEndDate(end);
+              const next = { text: newText, startDate: start || '', endDate: end || '' };
+              setPeriod(next);
+              saveReportPeriod(next);
             }}
           />
         </div>

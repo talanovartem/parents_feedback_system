@@ -6,10 +6,11 @@ interface CopySavedReportButtonProps {
   report: SavedReport;
   studentName: string;
   className?: string;
+  label?: string;
 }
 
-export function CopySavedReportButton({ report, studentName, className = '' }: CopySavedReportButtonProps) {
-  const label = `Скопіювати коментар для ${studentName} за період ${report.period}`;
+export function CopySavedReportButton({ report, studentName, className = '', label }: CopySavedReportButtonProps) {
+  const title = `Скопіювати звіт для ${studentName} за період ${report.period}`;
 
   return (
     <button
@@ -18,16 +19,17 @@ export function CopySavedReportButton({ report, studentName, className = '' }: C
         event.stopPropagation();
         try {
           await navigator.clipboard.writeText(report.content);
-          toast.success(`Коментар для ${studentName} скопійовано`);
+          toast.success(`Звіт для ${studentName} скопійовано`);
         } catch {
-          toast.error('Не вдалося скопіювати коментар');
+          toast.error('Не вдалося скопіювати звіт');
         }
       }}
-      title={label}
-      aria-label={label}
-      className={`inline-flex items-center gap-1 rounded-lg p-1.5 text-indigo-700 hover:bg-indigo-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 ${className}`}
+      title={title}
+      aria-label={title}
+      className={`inline-flex items-center gap-1 rounded-lg ${label ? 'px-2.5 py-1.5' : 'p-1.5'} text-indigo-700 hover:bg-indigo-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 ${className}`}
     >
       <Copy className="h-3.5 w-3.5" />
+      {label && <span className="text-xs font-semibold">{label}</span>}
     </button>
   );
 }

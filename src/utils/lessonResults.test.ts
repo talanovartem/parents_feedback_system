@@ -31,7 +31,7 @@ function makeDb(): DatabaseSchema {
 describe('applyCopyLessonResults', () => {
   it('копіює оцінки, відвідуваність і примітки', () => {
     const res = applyCopyLessonResults(makeDb(), 'src', 'dst', all);
-    expect(res.records.s1.dst).toEqual({ scores: { behavior: 10 }, absent: false, notes: 'активний' });
+    expect(res.records.s1.dst).toEqual({ scores: { efficiency: 10 }, absent: false, notes: 'активний' });
   });
 
   it('учні без запису в джерелі очищують ціль (дзеркальна семантика)', () => {
@@ -57,7 +57,7 @@ describe('applyCopyLessonResults', () => {
       copyAttendance: false,
       copyNotes: false,
     });
-    expect(res.records.s1.dst.scores).toEqual({ behavior: 10 });
+    expect(res.records.s1.dst.scores).toEqual({ efficiency: 10 });
     expect(res.records.s1.dst.absent).toBeUndefined(); // у цілі не було
     expect(res.records.s1.dst.notes).toBeUndefined();
   });

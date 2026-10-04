@@ -1,4 +1,5 @@
 import { DatabaseSchema } from '../types/feedback';
+import { getScoringScores } from './assessmentCriteria';
 
 export interface CopyLessonOptions {
   copyScores: boolean;
@@ -37,7 +38,7 @@ export function applyCopyLessonResults(
     };
 
     if (options.copyScores) {
-      targetEntry.scores = { ...(sourceEntry?.scores || {}) };
+      targetEntry.scores = getScoringScores(sourceEntry?.scores || {}, db.criteria);
     }
     if (options.copyAttendance) {
       if (sourceEntry && typeof sourceEntry.absent === 'boolean') {

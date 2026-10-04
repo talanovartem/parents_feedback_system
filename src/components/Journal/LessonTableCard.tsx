@@ -9,6 +9,7 @@ import { LessonTableCardProps } from './lessonCardProps';
 import { LessonCardHeader } from './LessonCardHeader';
 import { LessonTableView } from './LessonTableView';
 import { LessonCardsView } from './LessonCardsView';
+import { getActiveCriteria } from '../../utils/assessmentCriteria';
 
 /**
  * Картка уроку: шапка + табличне / карткове подання оцінювання.
@@ -57,6 +58,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
   };
 
   const badgeInfo = getLessonBadgeInfo(lesson, !!isNearest);
+  const activeCriteria = getActiveCriteria(criteria);
   const completion = getLessonCompletion(lesson, students, db.records);
   const { presentCount, absentCount } = getAttendanceCounts(lesson, students, db.records);
 
@@ -87,7 +89,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
         isLatest={isLatest}
         isNearest={isNearest}
         students={students}
-        criteria={criteria}
+        criteria={activeCriteria}
         db={db}
         onUpdateScore={onUpdateScore}
         onToggleAbsent={onToggleAbsent}
@@ -115,7 +117,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
       <LessonTableView
         lesson={lesson}
         students={students}
-        criteria={criteria}
+        criteria={activeCriteria}
         db={db}
         onUpdateScore={onUpdateScore}
         onToggleAbsent={onToggleAbsent}
@@ -136,7 +138,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
       <LessonCardsView
         lesson={lesson}
         students={students}
-        criteria={criteria}
+        criteria={activeCriteria}
         db={db}
         onUpdateScore={onUpdateScore}
         onToggleAbsent={onToggleAbsent}
@@ -176,7 +178,7 @@ export const LessonTableCard: React.FC<LessonTableCardProps> = ({
         <LessonFeedbackModal
           lesson={lesson}
           students={students}
-          criteria={criteria}
+          criteria={activeCriteria}
           db={db}
           initialFeedback={feedbackList}
           onClose={() => setIsFeedbackModalOpen(false)}

@@ -3,7 +3,7 @@ import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, calculateStudentTrend, getAllParallels } from '../../utils/analytics';
 import { getStudentHash } from '../../router/useRouter';
 import { getScoreBadgeClass } from '../../utils/scoreColors';
-import { getPeriodPresets } from '../../utils/periodHelper';
+import { getReportPeriod, saveReportPeriod } from '../../utils/periodHelper';
 import { PeriodSelector } from './PeriodSelector';
 import { CopySavedReportButton } from './CopySavedReportButton';
 import { getStudentReports, isReportSent } from '../../utils/savedReports';
@@ -63,8 +63,8 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
 
-  const defaultPreset = getPeriodPresets()[0];
-  const [periodText, setPeriodText] = useState(defaultPreset.description);
+  const [period, setPeriod] = useState(getReportPeriod);
+  const periodText = period.text;
   const [statusFilter, setStatusFilter] = useState<'all' | 'missing' | 'ready' | 'sent'>('all');
 
   useEffect(() => {
@@ -287,7 +287,13 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
         <div className="px-6 py-2 border-b border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
           <PeriodSelector
             value={periodText}
-            onChange={(newPeriod) => setPeriodText(newPeriod)}
+            startDate={period.startDate}
+            endDate={period.endDate}
+            onChange={(text, startDate, endDate) => {
+              const next = { text, startDate: startDate || '', endDate: endDate || '' };
+              setPeriod(next);
+              saveReportPeriod(next);
+            }}
           />
         </div>
 
@@ -321,6 +327,7 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
               const isSent = isReportSent(db, student.id, periodText);
               const savedReport = db.savedReports?.[`${student.id}:${periodText}`];
               const latestReport = getStudentReports(db.savedReports, student.id)[0];
+              const copyReport = savedReport?.content.trim() ? savedReport : latestReport;
 
               return (
                 <div
@@ -347,8 +354,6 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                         <span className="font-semibold text-slate-800 text-sm">
                           {student.name}
                         </span>
-                        {latestReport && <CopySavedReportButton report={latestReport} studentName={student.name} />}
-
                         {studentClass && (
                           <span className="px-1.5 py-0.2 text-[10px] font-semibold rounded bg-slate-100 text-slate-600">
                             {studentClass.name}
@@ -422,7 +427,8 @@ export const ReportsOverviewModal: React.FC<ReportsOverviewModalProps> = ({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {copyReport && <CopySavedReportButton report={copyReport} studentName={student.name} label={copyReport === savedReport ? 'Копіювати звіт' : 'Копіювати останній'} className="border border-indigo-200 bg-white" />}
                       {/* Чекліст: Надіслано батькам */}
                       {onToggleReportSent && (
                         <button

@@ -4,6 +4,7 @@ import {
   calculateStudentTrend,
   generateAiPromptForParents,
   generateBatchAiPrompt,
+  generateBatchRevisionPrompt,
   getAllParallels,
 } from './analytics';
 import { DatabaseSchema, Student } from '../types/feedback';
@@ -76,6 +77,34 @@ describe('analytics module', () => {
     expect(analytics.lessonNotes.length).toBe(3);
   });
 
+  it('counts one new work score once and keeps older separate scores in history', () => {
+    const db: DatabaseSchema = {
+      ...mockDb,
+      criteria: [
+        { id: 'behavior', name: 'Поведінка' },
+        { id: 'condition', name: 'Стан дитини' },
+        { id: 'efficiency', name: 'Працездатність' },
+        { id: 'activity', name: 'Активність' },
+      ],
+      lessons: mockDb.lessons.slice(0, 2),
+      records: {
+        'std-1': {
+          'les-1': { scores: { behavior: 6, condition: 8, efficiency: 10 } },
+          'les-2': { scores: { efficiency: 8, activity: 12 } },
+        },
+      },
+    };
+
+    const analytics = calculateStudentAnalytics(mockStudent, db);
+    const prompt = generateAiPromptForParents(analytics, db.criteria, '6-А', 'вересень 2026');
+
+    expect(analytics.totalAverage).toBe(10);
+    expect(db.records['std-1']['les-2'].scores).toEqual({ efficiency: 8, activity: 12 });
+    expect(prompt).toContain('Поведінка (історичні оцінки): 6 / 12');
+    expect(prompt).toContain('Робота на уроці: 9 / 12');
+    expect(prompt).toContain('Ініціативність: 12 / 12');
+  });
+
   it('generates prompt with expected format and student info', () => {
     const analytics = calculateStudentAnalytics(mockStudent, mockDb);
     const prompt = generateAiPromptForParents(analytics, mockDb.criteria, '6-А', 'вересень 2026');
@@ -83,7 +112,8 @@ describe('analytics module', () => {
     expect(prompt).toContain('Олександр Шевченко');
     expect(prompt).toContain('6-А');
     expect(prompt).toContain('Поведінка: 9 / 12');
-    expect(prompt).toContain('Активність: 10 / 12');
+    expect(prompt).toContain('Ініціативність: 10 / 12');
+    expect(prompt).toContain('Автор повідомлень — учитель-чоловік');
     expect(prompt).toContain('Гарна відповідь');
     expect(prompt).toContain('Активний, любить англійську');
   });
@@ -129,6 +159,23 @@ describe('analytics module', () => {
     expect(prompt).toContain('Індивідуальні особливості учня (контекст для вчителя, врахуй делікатно): Активний, любить англійську');
     expect(prompt).toContain('УЧЕНЬ №2: Марія Ковальчук (6-Б)');
     expect(prompt).toContain('=== ЗВІТ ДЛЯ: [Ім\'я учня] ===');
+    expect(prompt).toContain('не вказуй числові оцінки');
+    expect(prompt).toContain('Не приховуй негативні спостереження');
+    expect(prompt).toContain('«буду вдячний»');
+  });
+
+  it('limits a revision prompt to selected reports and includes the teacher comment', () => {
+    const prompt = generateBatchRevisionPrompt(
+      [{ studentName: 'Олександр Шевченко', content: 'Попередній текст.' }],
+      '21.09.2026 – 04.10.2026 (тривалість: два тижні)',
+      'Додай конкретну пораду'
+    );
+    expect(prompt).toContain('Олександр Шевченко');
+    expect(prompt).toContain('Попередній текст.');
+    expect(prompt).toContain('Додай конкретну пораду');
+    expect(prompt).toContain('два тижні');
+    expect(prompt).toContain('Не вказуй числові оцінки');
+    expect(prompt).toContain('Автор повідомлень — учитель-чоловік');
   });
 
   it('groups classes into parallels correctly for all grade levels', () => {

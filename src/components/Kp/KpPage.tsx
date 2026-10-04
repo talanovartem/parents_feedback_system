@@ -22,6 +22,7 @@ export const KpPage: React.FC<KpPageProps> = ({ db, onAwardKp, onRevokeKp }) => 
   const [bulkAmount, setBulkAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<'coverage' | 'award' | 'manual' | 'balances' | 'history'>('coverage');
+  const [balanceSort, setBalanceSort] = useState<'asc' | 'desc'>('desc');
   const [historyQuery, setHistoryQuery] = useState('');
   const [historyPeriodOnly, setHistoryPeriodOnly] = useState(false);
   const [manualStudentId, setManualStudentId] = useState('');
@@ -77,6 +78,11 @@ export const KpPage: React.FC<KpPageProps> = ({ db, onAwardKp, onRevokeKp }) => 
   });
   const totalBalance = db.students.filter((student) => selectedSet.has(student.classId))
     .reduce((sum, student) => sum + (student.karpatyPoints || 0), 0);
+  const balanceStudents = db.students
+    .filter((student) => selectedSet.has(student.classId))
+    .sort((a, b) => (balanceSort === 'asc'
+      ? (a.karpatyPoints || 0) - (b.karpatyPoints || 0)
+      : (b.karpatyPoints || 0) - (a.karpatyPoints || 0)) || a.name.localeCompare(b.name, 'uk'));
 
   const changePeriod = (offset: number) => {
     setAwardPreview(null);
@@ -297,8 +303,14 @@ export const KpPage: React.FC<KpPageProps> = ({ db, onAwardKp, onRevokeKp }) => 
         </section>
       ) : tab === 'balances' ? (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 px-4 py-3 text-sm font-bold text-slate-800">Баланс учнів вибраних класів</div>
-          {db.students.filter((student) => selectedSet.has(student.classId)).length === 0 ? <p className="p-8 text-center text-sm text-slate-500">Учнів немає.</p> : <div className="divide-y divide-slate-100">{db.students.filter((student) => selectedSet.has(student.classId)).map((student) => <div key={student.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
+            <span className="text-sm font-bold text-slate-800">Баланс учнів вибраних класів</span>
+            <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1" role="group" aria-label="Сортування за балансом KP">
+              <button type="button" onClick={() => setBalanceSort('asc')} aria-label="Сортувати баланс KP за зростанням" aria-pressed={balanceSort === 'asc'} className={`rounded-md px-2.5 py-1 text-xs font-semibold ${balanceSort === 'asc' ? 'bg-white text-amber-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>KP ↑</button>
+              <button type="button" onClick={() => setBalanceSort('desc')} aria-label="Сортувати баланс KP за спаданням" aria-pressed={balanceSort === 'desc'} className={`rounded-md px-2.5 py-1 text-xs font-semibold ${balanceSort === 'desc' ? 'bg-white text-amber-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>KP ↓</button>
+            </div>
+          </div>
+          {balanceStudents.length === 0 ? <p className="p-8 text-center text-sm text-slate-500">Учнів немає.</p> : <div className="divide-y divide-slate-100">{balanceStudents.map((student) => <div key={student.id} className="flex items-center gap-3 px-4 py-3 text-sm">
             <span className="flex-1 font-semibold text-slate-800">{student.name}</span>
             <span className="text-xs text-slate-500">{classNames.get(student.classId)}</span>
             <span className="min-w-16 text-right font-bold text-amber-700">{student.karpatyPoints || 0} KP</span>

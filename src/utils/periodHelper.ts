@@ -8,6 +8,43 @@ export interface PeriodPreset {
   endDate?: string;   // YYYY-MM-DD
 }
 
+export interface ReportPeriod {
+  text: string;
+  startDate: string;
+  endDate: string;
+}
+
+const REPORT_PERIOD_KEY = 'parents-feedback-report-period';
+
+export function getReportPeriod(): ReportPeriod {
+  const preset = getPeriodPresets()[0];
+  const fallback = { text: preset.description, startDate: preset.startDate!, endDate: preset.endDate! };
+  try {
+    const saved = JSON.parse(localStorage.getItem(REPORT_PERIOD_KEY) || 'null');
+    return saved && typeof saved.text === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(saved.startDate) &&
+      /^\d{4}-\d{2}-\d{2}$/.test(saved.endDate)
+      ? saved as ReportPeriod : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function saveReportPeriod(period: ReportPeriod): void {
+  try {
+    localStorage.setItem(REPORT_PERIOD_KEY, JSON.stringify(period));
+  } catch {
+    // Звіт працює й тоді, коли браузер блокує локальне сховище.
+  }
+}
+
+export function describePeriodDuration(startDate: string, endDate: string): string {
+  const days = Math.round((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86400000) + 1;
+  if (days === 7) return 'один тиждень';
+  if (days === 14) return 'два тижні';
+  return `${days} календарних днів`;
+}
+
 function formatDateDMY(d: Date): string {
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');

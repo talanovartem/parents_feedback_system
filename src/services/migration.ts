@@ -5,8 +5,8 @@ export const CURRENT_SCHEMA_VERSION = 4;
 export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'behavior', name: 'Поведінка' },
   { id: 'condition', name: 'Стан дитини' },
-  { id: 'efficiency', name: 'Працездатність' },
-  { id: 'activity', name: 'Активність' },
+  { id: 'efficiency', name: 'Робота на уроці' },
+  { id: 'activity', name: 'Ініціативність' },
   { id: 'progress', name: 'Покращення' },
   { id: 'grade', name: 'Оцінка за урок' },
 ];

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPeriodPresets, filterLessonsByDateRange } from './periodHelper';
+import { getPeriodPresets, filterLessonsByDateRange, describePeriodDuration, getReportPeriod, saveReportPeriod } from './periodHelper';
 import { Lesson } from '../types/feedback';
 
 describe('periodHelper', () => {
@@ -33,5 +33,28 @@ describe('periodHelper', () => {
     const filtered = filterLessonsByDateRange(lessons, '2026-09-14', '2026-09-20');
     expect(filtered.length).toBe(1);
     expect(filtered[0].id).toBe('2');
+  });
+
+  it('describes a two-week period correctly', () => {
+    expect(describePeriodDuration('2026-09-21', '2026-10-04')).toBe('два тижні');
+  });
+
+  it('keeps a custom period when the report dialog is reopened', () => {
+    const values = new Map<string, string>();
+    const previous = globalThis.localStorage;
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (key: string) => values.get(key) || null,
+        setItem: (key: string, value: string) => { values.set(key, value); },
+      },
+    });
+    try {
+      const selected = { text: '21.09.2026 – 04.10.2026', startDate: '2026-09-21', endDate: '2026-10-04' };
+      saveReportPeriod(selected);
+      expect(getReportPeriod()).toEqual(selected);
+    } finally {
+      Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: previous });
+    }
   });
 });

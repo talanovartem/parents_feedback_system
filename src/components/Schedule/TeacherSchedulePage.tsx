@@ -3,12 +3,13 @@ import { DatabaseSchema, Lesson, Student } from '../../types/feedback';
 import { LessonTableCard } from '../Journal/LessonTableCard';
 import { findNearestLessonId } from '../../utils/lessonTime';
 import { getLessonCompletion } from '../../utils/lessonCompletion';
-import { filterLessonsByDateRange, getPeriodPresets } from '../../utils/periodHelper';
+import { filterLessonsByDateRange } from '../../utils/periodHelper';
 import { getSchoolTodayUrl } from '../../utils/lessonParser';
 import { todayLocalIso } from '../../utils/localDate';
 import { suggestNextWeekLessons } from '../../utils/nextWeekSchedule';
 import { SaveStatus } from '../../services/storage';
 import { NextWeekPreviewModal } from './NextWeekPreviewModal';
+import { ScheduleDayPicker } from './ScheduleDayPicker';
 import {
   Calendar,
   Clock,
@@ -66,11 +67,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
   onNavigateToClassJournal,
   onCopyLessonResults,
 }) => {
-  const periodPresets = getPeriodPresets();
-  const currentWeekPreset = periodPresets.find((p) => p.id === 'current-week') || periodPresets[0];
-
-  // Вибір тижня (за замовчуванням: поточний тиждень)
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>('current-week');
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => todayLocalIso());
   const [showNextWeekPreview, setShowNextWeekPreview] = useState(false);
   const nextWeekSuggestions = useMemo(() => suggestNextWeekLessons(db.lessons), [db.lessons]);
 
@@ -80,18 +77,16 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
   // Фільтр за статусом ('all' або 'unfilled')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unfilled'>('all');
 
-  // Визначення дат вибраного періоду
-  const activePreset = periodPresets.find((p) => p.id === selectedPeriodId);
-  const startDate = activePreset?.startDate;
-  const endDate = activePreset?.endDate;
-
-  // Фільтрація уроків за періодом
+  // Один день за замовчуванням; повний журнал доступний окремою дією.
   const periodLessons = useMemo(() => {
-    if (!startDate || !endDate) {
-      return [...db.lessons];
-    }
-    return filterLessonsByDateRange(db.lessons, startDate, endDate);
-  }, [db.lessons, startDate, endDate]);
+    return selectedDate ? filterLessonsByDateRange(db.lessons, selectedDate, selectedDate) : db.lessons;
+  }, [db.lessons, selectedDate]);
+
+  const pickerLessons = useMemo(() => {
+    return selectedClassFilter === 'all'
+      ? db.lessons
+      : db.lessons.filter((lesson) => lesson.classId === selectedClassFilter);
+  }, [db.lessons, selectedClassFilter]);
 
   // Фільтрація за класом
   const classFilteredLessons = useMemo(() => {
@@ -148,7 +143,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
     setExpandedLessonIds(new Set());
   };
 
-  // Розрахунок статистики за вибраний період
+  // Розрахунок статистики за вибраний день або всі уроки
   const stats = useMemo(() => {
     let fullyGraded = 0;
     let partiallyGraded = 0;
@@ -232,7 +227,7 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
         <div className="flex items-center gap-2 text-sm text-indigo-950"><CalendarPlus className="h-5 w-5 shrink-0" /><span>Можна підготувати <strong>{nextWeekSuggestions.length} уроків</strong> наступного тижня за поточним розкладом.</span></div>
         <button type="button" onClick={() => setShowNextWeekPreview(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-800">Переглянути уроки</button>
       </div>}
-      {/* Верхня панель розкладу: вибір тижня, фільтри та статистика */}
+      {/* Верхня панель розкладу: вибір дня, фільтри та статистика */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Заголовок щоденника */}
@@ -298,48 +293,18 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
           </div>
         </div>
 
-        {/* Панель фільтрів: Тиждень / Клас / Статус заповнення */}
+        <div className="border-t border-slate-100 pt-3">
+          <ScheduleDayPicker
+            selectedDate={selectedDate}
+            lessons={pickerLessons}
+            onSelectDate={setSelectedDate}
+            onShowAll={() => setSelectedDate(null)}
+          />
+        </div>
+
+        {/* Панель фільтрів: Клас / Статус заповнення */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <div className="flex flex-wrap items-center gap-2">
-            {/* Вибір періоду (тижня) */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full">
-              <button
-                type="button"
-                onClick={() => setSelectedPeriodId('current-week')}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all shrink-0 ${
-                  selectedPeriodId === 'current-week'
-                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Поточний тиждень<span className="hidden md:inline"> ({currentWeekPreset.description})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedPeriodId('next-week')}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                  selectedPeriodId === 'next-week'
-                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Наступний тиждень
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedPeriodId('all')}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                  selectedPeriodId === 'all'
-                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Всі уроки
-              </button>
-            </div>
-
             {/* Фільтр за класом */}
             <div className="flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
@@ -404,10 +369,10 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
               <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
                 <button
                   type="button"
-                  onClick={expandedLessonIds.size === finalFilteredLessons.length ? handleCollapseAll : handleExpandAll}
+                  onClick={finalFilteredLessons.every((lesson) => expandedLessonIds.has(lesson.id)) ? handleCollapseAll : handleExpandAll}
                   className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition-colors flex items-center gap-1"
                 >
-                  {expandedLessonIds.size === finalFilteredLessons.length ? (
+                  {finalFilteredLessons.every((lesson) => expandedLessonIds.has(lesson.id)) ? (
                     <>
                       <ChevronUp className="w-3.5 h-3.5" />
                       <span>Згорнути всі</span>
@@ -432,12 +397,12 @@ export const TeacherSchedulePage: React.FC<TeacherSchedulePageProps> = ({
           <h3 className="text-base font-bold text-slate-800">
             {statusFilter === 'unfilled'
               ? 'Усі уроки за вибраними критеріями вже заповнено! 🎉'
-              : 'У розкладі на вибраний період ще немає уроків'}
+              : selectedDate ? 'На вибраний день уроків немає' : 'У розкладі ще немає уроків'}
           </h3>
           <p className="text-xs text-slate-500">
             {statusFilter === 'unfilled'
               ? 'Чудова робота! Журнал актуальний та повністю заповнений.'
-              : 'Додайте заняття зі School Today або створити новий урок.'}
+              : 'Додайте заняття зі School Today або створіть новий урок.'}
           </p>
           <div className="flex justify-center gap-2 pt-2">
             {statusFilter === 'unfilled' ? (

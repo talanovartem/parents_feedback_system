@@ -3,6 +3,7 @@ import { DatabaseSchema } from '../../types/feedback';
 import { Mountain, AlertCircle, TrendingUp, BookOpen, Calendar, ArrowLeft, QrCode, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { portalLogin } from '../../services/publicAccess';
+import { getScoringScores } from '../../utils/assessmentCriteria';
 
 interface StudentPortalPageProps {
   studentId: string;
@@ -180,11 +181,11 @@ const PortalDashboard: React.FC<{
     for (const l of lessons) {
       const entry = db.records[studentId]?.[l.id];
       if (entry && !entry.absent) {
-        vals.push(...Object.values(entry.scores || {}));
+        vals.push(...Object.values(getScoringScores(entry.scores || {}, db.criteria)));
       }
     }
     return vals;
-  }, [db.records, lessons, studentId]);
+  }, [db.records, db.criteria, lessons, studentId]);
 
   const avgScore = allScores.length > 0
     ? (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1)
@@ -308,7 +309,7 @@ const PortalDashboard: React.FC<{
           <div className="divide-y divide-slate-100">
             {lessons.slice(0, 10).map((l) => {
               const entry = db.records[studentId]?.[l.id];
-              const scores = entry ? Object.values(entry.scores || {}) : [];
+              const scores = entry ? Object.values(getScoringScores(entry.scores || {}, db.criteria)) : [];
               const avg = scores.length > 0
                 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
                 : null;

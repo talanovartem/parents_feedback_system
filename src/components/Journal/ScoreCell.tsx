@@ -11,6 +11,7 @@ interface ScoreCellProps {
   rowIndex?: number;
   colIndex?: number;
   onToggleAbsent?: () => void;
+  title?: string;
 }
 
 export const ScoreCell: React.FC<ScoreCellProps> = ({
@@ -23,9 +24,10 @@ export const ScoreCell: React.FC<ScoreCellProps> = ({
   rowIndex,
   colIndex,
   onToggleAbsent,
+  title,
 }) => {
   return (
-    <td className="px-1.5 py-2 text-center border-r border-slate-100 last:border-r-0">
+    <td title={title} className="px-1.5 py-2 text-center border-r border-slate-100 last:border-r-0">
       <ScoreInput
         value={score}
         onChange={onChange}

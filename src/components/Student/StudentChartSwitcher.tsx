@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DatabaseSchema, Student } from '../../types/feedback';
 import { calculateStudentAnalytics, calculateStudentTrend } from '../../utils/analytics';
+import { getReportCriteria } from '../../utils/assessmentCriteria';
 import {
   TrendingUp,
   BarChart3,
@@ -420,7 +421,7 @@ export const StudentChartSwitcher: React.FC<StudentChartSwitcherProps> = ({ stud
             </div>
 
             <div className="space-y-3">
-              {db.criteria.map((crit) => {
+              {getReportCriteria(db.criteria).filter((crit) => !['behavior', 'condition'].includes(crit.id) || studentAnalytics.averageScores[crit.id] !== undefined || classCriteriaAverages[crit.id] > 0).map((crit) => {
                 const studentScore = studentAnalytics.averageScores[crit.id] || 0;
                 const classAvg = classCriteriaAverages[crit.id] || 0;
                 const diff = Number((studentScore - classAvg).toFixed(1));
